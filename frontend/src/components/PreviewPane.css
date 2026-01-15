@@ -4,6 +4,7 @@
   width: 50%;
   background-color: #fafafa;
   overflow: hidden;
+  height: 100%;
 }
 
 .preview-header {
@@ -39,17 +40,24 @@
   margin: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+  min-height: calc(100vh - 200px);
 }
 
 .preview-content.device-mobile {
   max-width: 375px;
   margin: 16px auto;
   padding: 16px;
+  width: calc(100% - 32px);
+  min-width: 320px;
 }
 
 .preview-content.device-desktop {
   max-width: 800px;
   margin: 16px auto;
+  width: calc(100% - 32px);
+  min-width: 400px;
 }
 
 .empty-preview {
@@ -73,7 +81,7 @@
 }
 
 .preview-content h1 {
-  font-size: 20px;
+  font-size: 24px;
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
   text-align: center;

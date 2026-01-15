@@ -225,7 +225,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   h1Elements.forEach((h1) => {
     const h1El = h1 as HTMLElement;
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
-    h1El.style.fontSize = '20px';
+    h1El.style.fontSize = '24px';
     h1El.style.marginTop = '24px';
     h1El.style.marginBottom = '16px';
     h1El.style.marginLeft = '0';

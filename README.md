@@ -251,7 +251,9 @@ npm run build
 
 ## 📄 许可证
 
-MIT License
+本项目采用 MIT License 许可证。
+
+详细信息请查看 [LICENSE](LICENSE) 文件。
 
 ## 🤝 贡献
 
