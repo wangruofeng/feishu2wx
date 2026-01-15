@@ -328,6 +328,16 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     bqEl.style.color = '#333';
     bqEl.style.borderRadius = '0 4px 4px 0';
     bqEl.style.fontFamily = fontFamily;
+    
+    // 处理 blockquote 内部元素的 margin，确保上下 padding 一致
+    const firstChild = bqEl.firstElementChild as HTMLElement;
+    const lastChild = bqEl.lastElementChild as HTMLElement;
+    if (firstChild) {
+      firstChild.style.marginTop = '0';
+    }
+    if (lastChild) {
+      lastChild.style.marginBottom = '0';
+    }
   });
 
   // 处理链接（使用主题颜色）
