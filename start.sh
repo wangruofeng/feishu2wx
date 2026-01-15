@@ -21,17 +21,6 @@ echo "✅ Node.js 版本: $(node -v)"
 echo "✅ npm 版本: $(npm -v)"
 echo ""
 
-# 安装后端依赖
-if [ ! -d "backend/node_modules" ]; then
-    echo "📦 正在安装后端依赖..."
-    cd backend
-    npm install
-    cd ..
-    echo "✅ 后端依赖安装完成"
-else
-    echo "✅ 后端依赖已存在"
-fi
-
 # 安装前端依赖
 if [ ! -d "frontend/node_modules" ]; then
     echo "📦 正在安装前端依赖..."
@@ -46,15 +35,8 @@ fi
 echo ""
 echo "🎉 准备就绪！"
 echo ""
-echo "请分别在两个终端窗口中运行："
-echo ""
-echo "终端 1 - 启动后端服务:"
-echo "  cd backend && npm start"
-echo ""
-echo "终端 2 - 启动前端应用:"
+echo "启动前端应用:"
 echo "  cd frontend && npm start"
 echo ""
-echo "或者使用以下命令同时启动（需要安装 concurrently）:"
-echo "  npm install -g concurrently"
-echo "  concurrently \"cd backend && npm start\" \"cd frontend && npm start\""
+echo "前端应用将在 http://localhost:3000 启动，浏览器会自动打开"
 echo ""

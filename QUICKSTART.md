@@ -18,30 +18,21 @@
 ### 1. 安装依赖
 
 ```bash
-# 安装前端依赖（必需）
+# 安装前端依赖
 cd frontend
-npm install
-
-# 安装后端依赖（可选，仅当需要后端功能时）
-cd ../backend
 npm install
 ```
 
 ### 2. 启动服务
 
-**启动前端（必需）：**
+**启动前端：**
 ```bash
 cd frontend
 npm start
 ```
 前端将在 `http://localhost:3000` 运行，浏览器会自动打开
 
-**启动后端（可选）：**
-```bash
-cd backend
-npm start
-```
-后端将在 `http://localhost:5000` 运行
+> 💡 **提示**：本项目为纯前端应用，无需启动后端服务。
 
 > **提示**：如果只需要使用前端功能（编辑、预览、复制到微信公众号），可以只启动前端服务，无需启动后端。
 
@@ -81,12 +72,7 @@ npm run dev
 
 ### 端口被占用
 
-如果 3000 或 5000 端口被占用，可以：
-
-**修改后端端口：**
-```bash
-PORT=5001 cd backend && npm start
-```
+如果 3000 端口被占用，可以：
 
 **修改前端端口：**
 编辑 `frontend/package.json`，在 `scripts.start` 中添加：
