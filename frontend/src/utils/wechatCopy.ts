@@ -177,6 +177,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     codeEl.style.fontSize = '0.9em';
     codeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
     codeEl.style.color = '#333';
+    codeEl.style.fontWeight = 'bold';
   });
 
   // 处理代码块：微信公众号不支持代码高亮，转换为纯文本样式

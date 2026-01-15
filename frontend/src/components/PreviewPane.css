@@ -126,6 +126,7 @@
   border-radius: 3px;
   font-size: 0.9em;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-weight: bold;
 }
 
 .preview-content pre {
@@ -139,6 +140,7 @@
 .preview-content pre code {
   background-color: transparent;
   padding: 0;
+  font-weight: normal;
 }
 
 .preview-content img {
