@@ -85,10 +85,16 @@
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
   text-align: center;
+  margin-top: 40px;
+}
+
+.preview-content h1:first-of-type {
+  margin-top: 24px;
 }
 
 .preview-content h2 {
   font-size: 18px;
+  margin-top: 40px;
 }
 
 .preview-content h3 {
