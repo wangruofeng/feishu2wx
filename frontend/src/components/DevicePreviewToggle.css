@@ -1,0 +1,40 @@
+.device-toggle {
+  display: flex;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.device-btn {
+  padding: 6px 12px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+  font-size: 12px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.device-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.device-btn.active {
+  background-color: white;
+  color: #52c41a;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .device-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .device-btn {
+    flex: 1;
+  }
+}
