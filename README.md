@@ -4,8 +4,6 @@
 
 **一个现代化的工具，帮助您快速将飞书文档转换为微信公众号文章格式。**
 
-> 🎨 **特色亮点**：标题采用飞书主题色（#00BECA）和微信主题色（#07C160）高亮显示，视觉识别度更高
-
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Create React App](https://img.shields.io/badge/Create%20React%20App-09D3AC?style=flat&logo=react&logoColor=white)](https://create-react-app.dev/)
