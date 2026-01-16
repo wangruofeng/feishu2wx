@@ -41,10 +41,13 @@
 @media (max-width: 768px) {
   .device-toggle {
     width: 100%;
+    flex: 1;
+    min-width: 0;
     justify-content: space-between;
   }
 
   .device-btn {
     flex: 1;
+    min-width: 0;
   }
 }

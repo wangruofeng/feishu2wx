@@ -207,8 +207,13 @@
 
   .header-controls-row {
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     width: 100%;
+  }
+
+  .header-controls-row > * {
+    flex: 1;
+    min-width: 0;
   }
 
   .header-controls-row-theme {
@@ -220,6 +225,8 @@
   .header-btn {
     font-size: 11px;
     padding: 6px 10px;
+    flex: 1;
+    min-width: 0;
   }
 
   .main-container {
