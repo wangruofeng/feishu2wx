@@ -44,7 +44,7 @@
 .app-title {
   font-size: 20px;
   font-weight: 500;
-  margin: 0;
+  margin: 8px 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,7 +56,7 @@
 }
 
 .title-wechat {
-  color: #ff6b9d;
+  color: #07C160;
   font-weight: 600;
   text-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
 }

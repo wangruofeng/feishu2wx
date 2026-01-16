@@ -97,7 +97,7 @@ const App: React.FC = () => {
       <header className={`app-header ${isFullscreen ? 'fullscreen-header' : ''}`}>
         <div className="header-content">
           <h1 className="app-title">
-            飞书文档 → <span className="title-wechat">微信</span>公众号排版器
+            飞书文档 → <span className="title-wechat">微信公众号</span>排版器
           </h1>
           <div className="header-controls">
             <div className="header-controls-wrapper">
