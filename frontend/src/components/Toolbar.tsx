@@ -6,9 +6,13 @@ interface Props {
   setMarkdown: (md: string) => void;
   onCopyToWeChat: () => void;
   isCopying: boolean;
+  showH1: boolean;
+  onToggleH1: () => void;
+  imageBorderStyle: 'border' | 'shadow';
+  onToggleImageBorder: () => void;
 }
 
-const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying }) => {
+const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, imageBorderStyle, onToggleImageBorder }) => {
   const handleClear = () => {
     if (window.confirm('确定要清空所有内容吗？')) {
       setMarkdown('');
@@ -84,6 +88,20 @@ function greet(name) {
         </button>
         <button className="toolbar-btn" onClick={handleClear}>
           🗑️ 清空
+        </button>
+        <button
+          className="toolbar-btn"
+          onClick={onToggleH1}
+          title={showH1 ? '隐藏 H1 底部横线' : '显示 H1 底部横线'}
+        >
+          {showH1 ? '👁️ 隐藏 H1 底线' : '📝 显示 H1 底线'}
+        </button>
+        <button
+          className="toolbar-btn"
+          onClick={onToggleImageBorder}
+          title={imageBorderStyle === 'border' ? '切换为阴影模式' : '切换为边框模式'}
+        >
+          {imageBorderStyle === 'border' ? '🖼️ 边框模式' : '🌫️ 阴影模式'}
         </button>
       </div>
       <div className="toolbar-right">

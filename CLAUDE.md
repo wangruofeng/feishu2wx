@@ -99,6 +99,8 @@ Fonts are loaded via Google Fonts CDN in `public/index.html`.
 - `showEditor`: Toggle editor visibility
 - `devicePreview`: 'desktop' | 'mobile' - affects preview width
 - `isFullscreen`: Fullscreen preview mode
+- `showH1`: Toggle H1 bottom border display (default: true)
+- `imageBorderStyle`: Toggle between 'border' and 'shadow' mode for images (default: 'border')
 - `htmlPasteDetected`: Shows modal when HTML paste is detected
 
 ### Component Structure
@@ -141,6 +143,24 @@ for (let item of items) {
 Two different treatments:
 1. **Preview**: Full syntax highlighting with highlight.js, custom wrapper with language header
 2. **WeChat output**: Plain gray background, monospace font (WeChat strips syntax highlighting)
+
+### H1 Bottom Border Toggle
+
+Users can show/hide the bottom border on H1 headings:
+- **Preview**: Controlled via CSS class `.hide-h1` applied to preview container
+- **WeChat output**: Conditionally applied `borderBottom` style in `formatForWeChat()`
+- State: `showH1` (default: true)
+- Button: "👁️ 隐藏 H1 底线" / "📝 显示 H1 底线"
+
+### Image Style Toggle
+
+Users can switch between border and shadow modes for images:
+- **Border mode** (default): `border: 0.5px solid #e0e0e0`, no shadow
+- **Shadow mode**: `box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05)`, no border
+- **Preview**: Controlled via CSS class `.image-shadow` on preview container
+- **WeChat output**: Conditionally applied inline styles in `formatForWeChat()`
+- State: `imageBorderStyle` (default: 'border')
+- Button: "🖼️ 边框模式" / "🌫️ 阴影模式"
 
 ## Testing Changes
 

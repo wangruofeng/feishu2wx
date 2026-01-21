@@ -158,14 +158,14 @@ function getFontFamily(fontKey: string): string {
  * 微信公众号编辑器使用的是富文本格式，需要特殊处理
  * 所有样式都必须以内联样式的方式添加，确保完整复制
  */
-export function formatForWeChat(html: string, theme: string = 'green', font: string = 'default'): string {
+export function formatForWeChat(html: string, theme: string = 'green', font: string = 'default', showH1: boolean = true, imageBorderStyle: 'border' | 'shadow' = 'border'): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
-  
+
   // 创建一个临时div来处理HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
-  
+
   // 首先设置容器的字体，作为默认字体
   tempDiv.style.fontFamily = fontFamily;
 
@@ -180,7 +180,17 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     imgEl.style.display = 'block';
     imgEl.style.margin = '16px auto';
     imgEl.style.borderRadius = '4px';
-    imgEl.style.border = '0.5px solid #e0e0e0';
+
+    // 根据图片边框模式设置样式
+    if (imageBorderStyle === 'border') {
+      imgEl.style.border = '0.5px solid #e0e0e0';
+      imgEl.style.boxShadow = 'none';
+    } else {
+      // 阴影模式：原始阴影效果
+      imgEl.style.border = 'none';
+      imgEl.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
+    }
+
     // 确保图片有完整的URL
     if (imgEl.src && !imgEl.src.startsWith('http') && !imgEl.src.startsWith('data:')) {
       if (imgEl.src.startsWith('/')) {
@@ -256,7 +266,8 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     h1El.style.marginRight = '0';
     h1El.style.fontWeight = 'bold';
     h1El.style.lineHeight = '1.25';
-    h1El.style.borderBottom = `1px solid ${themeStyles.headingColor}`;
+    // 根据 showH1 决定是否显示底部横线
+    h1El.style.borderBottom = showH1 ? `1px solid ${themeStyles.headingColor}` : 'none';
     h1El.style.borderTop = 'none';
     h1El.style.borderLeft = 'none';
     h1El.style.borderRight = 'none';
@@ -328,6 +339,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     listEl.style.paddingLeft = '30px';
     listEl.style.color = '#333';
     listEl.style.fontFamily = fontFamily;
+    listEl.style.textAlign = 'left';
   });
 
   // 处理列表项
@@ -509,12 +521,12 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
  * 复制HTML内容到微信公众号编辑器
  * 使用 Clipboard API 的 write 方法来复制富文本格式
  */
-export async function copyHtmlToWeChat(html: string, theme: string = 'green', font: string = 'default'): Promise<{ success: boolean; message: string }> {
+export async function copyHtmlToWeChat(html: string, theme: string = 'green', font: string = 'default', showH1: boolean = true, imageBorderStyle: 'border' | 'shadow' = 'border'): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
-  const formattedHtml = formatForWeChat(html, theme, font);
+  const formattedHtml = formatForWeChat(html, theme, font, showH1, imageBorderStyle);
   
   try {
     // 方法1: 使用 Clipboard API 的 write 方法（推荐，支持富文本）

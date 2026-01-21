@@ -102,6 +102,10 @@
   margin-top: 24px;
 }
 
+.preview-content.hide-h1 h1 {
+  border-bottom: none;
+}
+
 .preview-content h2 {
   font-size: 18px;
   margin-top: 40px;
@@ -136,6 +140,7 @@
 .preview-content ol {
   margin-bottom: 16px;
   padding-left: 30px;
+  text-align: left;
 }
 
 .preview-content li {
@@ -189,6 +194,12 @@
   margin: 16px auto;
   border-radius: 4px;
   border: 0.5px solid #e0e0e0;
+}
+
+/* 阴影模式：原始阴影效果 */
+.preview-content.image-shadow img {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .preview-content a {

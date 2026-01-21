@@ -20,6 +20,8 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>('default');
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
+  const [showH1, setShowH1] = useState<boolean>(true);
+  const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>('border');
 
   // 检测系统暗黑模式
   useEffect(() => {
@@ -82,7 +84,7 @@ const App: React.FC = () => {
 
     setIsCopying(true);
     try {
-      const result = await copyHtmlToWeChat(html, displayTheme, font);
+      const result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle);
       alert(result.message);
     } catch (error) {
       console.error('复制失败:', error);
@@ -90,7 +92,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, displayTheme, font]);
+  }, [html, displayTheme, font, showH1]);
 
   return (
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
@@ -133,16 +135,20 @@ const App: React.FC = () => {
 
       <main className={`main-container device-${device} ${!showEditor ? 'editor-hidden' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
         {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} />}
-        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} />
+        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} showH1={showH1} imageBorderStyle={imageBorderStyle} />
       </main>
 
       {!isFullscreen && (
         <footer className="app-footer">
-          <Toolbar 
-            markdown={markdown} 
+          <Toolbar
+            markdown={markdown}
             setMarkdown={setMarkdown}
             onCopyToWeChat={handleCopyToWeChat}
             isCopying={isCopying}
+            showH1={showH1}
+            onToggleH1={() => setShowH1(!showH1)}
+            imageBorderStyle={imageBorderStyle}
+            onToggleImageBorder={() => setImageBorderStyle(imageBorderStyle === 'border' ? 'shadow' : 'border')}
           />
         </footer>
       )}
