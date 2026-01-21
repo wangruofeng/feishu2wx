@@ -31,12 +31,14 @@ const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font
           {device === 'mobile' ? '📱 手机预览' : '💻 电脑预览'}
         </div>
       </div>
-      <div
-        ref={previewRef}
-        className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''}`}
-        style={fontStyle}
-        dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
-      />
+      <div className="preview-content-wrapper">
+        <div
+          ref={previewRef}
+          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''}`}
+          style={fontStyle}
+          dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
+        />
+      </div>
     </div>
   );
 };

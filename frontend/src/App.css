@@ -14,7 +14,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 50% 50%, rgba(139, 69, 19, 0.3) 0%, transparent 70%),
     radial-gradient(circle at 20% 30%, rgba(220, 20, 60, 0.2) 0%, transparent 50%),
     #0a0a0a;
@@ -24,12 +24,34 @@
 }
 
 .app-header {
-  background: #425487 !important;
+  background: linear-gradient(135deg,
+    rgba(66, 84, 135, 0.85) 0%,
+    rgba(52, 73, 134, 0.82) 50%,
+    rgba(44, 62, 120, 0.80) 100%) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: #ffffff;
-  padding: 12px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
   z-index: 100;
   flex-shrink: 0;
+}
+
+.app-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(0, 190, 202, 0.06) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .header-content {
@@ -40,27 +62,36 @@
 }
 
 .app-title {
-  font-size: 20px;
-  font-weight: 500;
-  margin: 8px 0;
+  font-size: 22px;
+  font-weight: 600;
+  margin: 10px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   white-space: nowrap;
   width: 100%;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.8px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+               0 0 20px rgba(255, 255, 255, 0.1);
+  position: relative;
 }
 
 .title-feishu {
   color: #00BECA;
-  font-weight: 600;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(0, 190, 202, 0.5),
+               0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .title-wechat {
   color: #07C160;
-  font-weight: 600;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(7, 193, 96, 0.5),
+               0 2px 8px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .header-controls {
@@ -140,26 +171,37 @@
 }
 
 .header-btn {
-  padding: 6px 12px;
-  background-color: rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  border: none;
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-size: 13px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   font-weight: 500;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  height: 32px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .header-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.header-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .header-btn-exit {

@@ -180,7 +180,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     imgEl.style.display = 'block';
     imgEl.style.margin = '16px auto';
     imgEl.style.borderRadius = '4px';
-    imgEl.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+    imgEl.style.border = '0.5px solid #e0e0e0';
     // 确保图片有完整的URL
     if (imgEl.src && !imgEl.src.startsWith('http') && !imgEl.src.startsWith('data:')) {
       if (imgEl.src.startsWith('/')) {
@@ -334,10 +334,18 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   const listItems = tempDiv.querySelectorAll('li');
   listItems.forEach((li) => {
     const liEl = li as HTMLElement;
-    liEl.style.marginBottom = '8px';
+    liEl.style.marginBottom = '4px';
     liEl.style.lineHeight = '1.8';
     liEl.style.color = '#333';
     liEl.style.fontFamily = fontFamily;
+  });
+
+  // 处理列表内的段落，移除额外间距
+  const listParagraphs = tempDiv.querySelectorAll('li p');
+  listParagraphs.forEach((p) => {
+    const pEl = p as HTMLElement;
+    pEl.style.marginBottom = '0';
+    pEl.style.marginTop = '0';
   });
 
   // 处理引用（使用主题颜色）
@@ -392,7 +400,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   tableCells.forEach((cell) => {
     const cellEl = cell as HTMLElement;
     cellEl.style.padding = '8px 12px';
-    cellEl.style.border = '1px solid #e8e8e8';
+    cellEl.style.border = '1px solid #f0f0f0';
     cellEl.style.color = '#333';
     cellEl.style.fontFamily = fontFamily;
   });
