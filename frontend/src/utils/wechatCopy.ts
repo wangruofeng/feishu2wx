@@ -7,6 +7,7 @@ function getThemeStyles(theme: string) {
     primaryColorDark: string;
     headingColor: string;
     headingColorH2: string;
+    headingColorH3H6: string;
     linkColor: string;
     blockquoteBorderColor: string;
     blockquoteBgColor: string;
@@ -18,6 +19,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#237804',
       headingColor: '#237804',
       headingColorH2: '#237804',
+      headingColorH3H6: '#389e0d',
       linkColor: '#52c41a',
       blockquoteBorderColor: '#52c41a',
       blockquoteBgColor: '#f6ffed',
@@ -29,6 +31,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#0050b3',
       headingColor: '#0050b3',
       headingColorH2: '#0050b3',
+      headingColorH3H6: '#096dd9',
       linkColor: '#1890ff',
       blockquoteBorderColor: '#1890ff',
       blockquoteBgColor: '#e6f7ff',
@@ -40,6 +43,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#52c41a',
       headingColor: '#52c41a',
       headingColorH2: '#52c41a',
+      headingColorH3H6: '#73d13d',
       linkColor: '#52c41a',
       blockquoteBorderColor: '#52c41a',
       blockquoteBgColor: '#1f3a0f',
@@ -51,6 +55,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#000',
       headingColor: '#000',
       headingColorH2: '#000',
+      headingColorH3H6: '#333',
       linkColor: '#1890ff',
       blockquoteBorderColor: '#333',
       blockquoteBgColor: '#f5f5f5',
@@ -62,6 +67,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#391085',
       headingColor: '#391085',
       headingColorH2: '#391085',
+      headingColorH3H6: '#531dab',
       linkColor: '#722ed1',
       blockquoteBorderColor: '#722ed1',
       blockquoteBgColor: '#f9f0ff',
@@ -73,6 +79,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#ad4e00',
       headingColor: '#ad4e00',
       headingColorH2: '#ad4e00',
+      headingColorH3H6: '#d46b08',
       linkColor: '#fa8c16',
       blockquoteBorderColor: '#fa8c16',
       blockquoteBgColor: '#fff7e6',
@@ -84,6 +91,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#9e1068',
       headingColor: '#9e1068',
       headingColorH2: '#9e1068',
+      headingColorH3H6: '#c41d7f',
       linkColor: '#eb2f96',
       blockquoteBorderColor: '#eb2f96',
       blockquoteBgColor: '#fff0f6',
@@ -95,6 +103,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#006d75',
       headingColor: '#006d75',
       headingColorH2: '#006d75',
+      headingColorH3H6: '#08979c',
       linkColor: '#13c2c2',
       blockquoteBorderColor: '#13c2c2',
       blockquoteBgColor: '#e6fffb',
@@ -106,6 +115,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#a8071a',
       headingColor: '#a8071a',
       headingColorH2: '#a8071a',
+      headingColorH3H6: '#cf1322',
       linkColor: '#ff4d4f',
       blockquoteBorderColor: '#ff4d4f',
       blockquoteBgColor: '#fff1f0',
@@ -117,6 +127,7 @@ function getThemeStyles(theme: string) {
       primaryColorDark: '#002329',
       headingColor: '#002329',
       headingColorH2: '#002329',
+      headingColorH3H6: '#00474f',
       linkColor: '#13c2c2',
       blockquoteBorderColor: '#13c2c2',
       blockquoteBgColor: '#e6fffb',
@@ -157,20 +168,39 @@ function getFontFamily(fontKey: string): string {
  * 将HTML内容转换为微信公众号编辑器可接受的格式
  * 微信公众号编辑器使用的是富文本格式，需要特殊处理
  * 所有样式都必须以内联样式的方式添加，确保完整复制
+ *
+ * 方案：直接使用主题配置应用样式，确保颜色值准确且为十六进制格式
  */
 export function formatForWeChat(html: string, theme: string = 'green', font: string = 'default', showH1: boolean = true, imageBorderStyle: 'border' | 'shadow' = 'border'): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
 
-  // 创建一个临时div来处理HTML
+  // 创建临时容器处理HTML
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
 
+  // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
+  applyThemeStyles(tempDiv, themeStyles, fontFamily, showH1, imageBorderStyle);
+
+  return tempDiv.innerHTML;
+}
+
+/**
+ * 应用主题特定的样式
+ * 直接使用主题配置应用所有样式，确保颜色值准确
+ */
+function applyThemeStyles(
+  container: HTMLElement,
+  themeStyles: ReturnType<typeof getThemeStyles>,
+  fontFamily: string,
+  showH1: boolean,
+  imageBorderStyle: 'border' | 'shadow'
+): void {
   // 首先设置容器的字体，作为默认字体
-  tempDiv.style.fontFamily = fontFamily;
+  container.style.fontFamily = fontFamily;
 
   // 处理图片：确保图片有完整的样式和URL
-  const images = tempDiv.querySelectorAll('img');
+  const images = container.querySelectorAll('img');
   images.forEach((img) => {
     const imgEl = img as HTMLImageElement;
     // 设置完整的图片样式
@@ -200,7 +230,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理行内代码
-  const inlineCodes = tempDiv.querySelectorAll('code:not(pre code)');
+  const inlineCodes = container.querySelectorAll('code:not(pre code)');
   inlineCodes.forEach((code) => {
     const codeEl = code as HTMLElement;
     codeEl.style.backgroundColor = '#f5f5f5';
@@ -213,7 +243,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理代码块：微信公众号不支持代码高亮，转换为纯文本样式
-  const codeBlocks = tempDiv.querySelectorAll('pre');
+  const codeBlocks = container.querySelectorAll('pre');
   codeBlocks.forEach((pre) => {
     const preEl = pre as HTMLElement;
     preEl.style.backgroundColor = '#f5f5f5';
@@ -240,7 +270,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理段落间距
-  const paragraphs = tempDiv.querySelectorAll('p');
+  const paragraphs = container.querySelectorAll('p');
   paragraphs.forEach((p) => {
     const pEl = p as HTMLElement;
     if (pEl.textContent?.trim()) {
@@ -254,7 +284,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理标题 - 完整样式（使用主题颜色，使用px单位确保兼容性）
-  const h1Elements = tempDiv.querySelectorAll('h1');
+  const h1Elements = container.querySelectorAll('h1');
   h1Elements.forEach((h1, index) => {
     const h1El = h1 as HTMLElement;
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
@@ -281,7 +311,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     h1El.style.fontFamily = fontFamily;
   });
 
-  const h2Elements = tempDiv.querySelectorAll('h2');
+  const h2Elements = container.querySelectorAll('h2');
   h2Elements.forEach((h2) => {
     const h2El = h2 as HTMLElement;
     h2El.style.fontSize = '18px';
@@ -304,7 +334,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     h2El.style.fontFamily = fontFamily;
   });
 
-  const h3Elements = tempDiv.querySelectorAll('h3');
+  const h3Elements = container.querySelectorAll('h3');
   h3Elements.forEach((h3) => {
     const h3El = h3 as HTMLElement;
     h3El.style.fontSize = '20px';
@@ -314,24 +344,24 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     h3El.style.marginRight = '0';
     h3El.style.fontWeight = 'bold';
     h3El.style.lineHeight = '1.25';
-    h3El.style.color = themeStyles.headingColor;
+    h3El.style.color = themeStyles.headingColorH3H6;
     h3El.style.display = 'block';
     h3El.style.fontFamily = fontFamily;
   });
 
-  const h4Elements = tempDiv.querySelectorAll('h4, h5, h6');
+  const h4Elements = container.querySelectorAll('h4, h5, h6');
   h4Elements.forEach((h) => {
     const hEl = h as HTMLElement;
     hEl.style.marginTop = '24px';
     hEl.style.marginBottom = '16px';
     hEl.style.fontWeight = '600';
     hEl.style.lineHeight = '1.25';
-    hEl.style.color = themeStyles.headingColor;
+    hEl.style.color = themeStyles.headingColorH3H6;
     hEl.style.fontFamily = fontFamily;
   });
 
   // 处理列表
-  const lists = tempDiv.querySelectorAll('ul, ol');
+  const lists = container.querySelectorAll('ul, ol');
   lists.forEach((list) => {
     const listEl = list as HTMLElement;
     listEl.style.marginBottom = '16px';
@@ -343,7 +373,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理列表项
-  const listItems = tempDiv.querySelectorAll('li');
+  const listItems = container.querySelectorAll('li');
   listItems.forEach((li) => {
     const liEl = li as HTMLElement;
     liEl.style.marginBottom = '4px';
@@ -353,15 +383,15 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理列表内的段落，移除额外间距
-  const listParagraphs = tempDiv.querySelectorAll('li p');
-  listParagraphs.forEach((p) => {
+  const listParagraphs = container.querySelectorAll('li p');
+  listParagraphs.forEach((p: Element) => {
     const pEl = p as HTMLElement;
     pEl.style.marginBottom = '0';
     pEl.style.marginTop = '0';
   });
 
   // 处理引用（使用主题颜色）
-  const blockquotes = tempDiv.querySelectorAll('blockquote');
+  const blockquotes = container.querySelectorAll('blockquote');
   blockquotes.forEach((blockquote) => {
     const bqEl = blockquote as HTMLElement;
     bqEl.style.margin = '16px 0';
@@ -384,7 +414,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理链接（使用主题颜色）
-  const links = tempDiv.querySelectorAll('a');
+  const links = container.querySelectorAll('a');
   links.forEach((link) => {
     const linkEl = link as HTMLAnchorElement;
     linkEl.style.color = themeStyles.linkColor;
@@ -398,7 +428,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理表格
-  const tables = tempDiv.querySelectorAll('table');
+  const tables = container.querySelectorAll('table');
   tables.forEach((table) => {
     const tableEl = table as HTMLElement;
     tableEl.style.width = '100%';
@@ -408,8 +438,8 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理表格单元格
-  const tableCells = tempDiv.querySelectorAll('td, th');
-  tableCells.forEach((cell) => {
+  const tableCells = container.querySelectorAll('td, th');
+  tableCells.forEach((cell: Element) => {
     const cellEl = cell as HTMLElement;
     cellEl.style.padding = '8px 12px';
     cellEl.style.border = '1px solid #f0f0f0';
@@ -418,8 +448,8 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   });
 
   // 处理表头（使用主题颜色）
-  const tableHeaders = tempDiv.querySelectorAll('th');
-  tableHeaders.forEach((th) => {
+  const tableHeaders = container.querySelectorAll('th');
+  tableHeaders.forEach((th: Element) => {
     const thEl = th as HTMLElement;
     thEl.style.backgroundColor = themeStyles.tableHeaderBgColor;
     thEl.style.fontWeight = '600';
@@ -430,7 +460,7 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
   // 处理分隔线（从两边往中间变粗，使用平滑渐变）
   // 注意：微信公众号编辑器不支持复杂的 HTML 结构（如绝对定位的 div），
   // 使用简单的渐变背景和 border 来实现效果
-  const horizontalRules = tempDiv.querySelectorAll('hr');
+  const horizontalRules = container.querySelectorAll('hr');
   horizontalRules.forEach((hr) => {
     const hrEl = hr as HTMLElement;
     const hrColor = themeStyles.primaryColor;
@@ -455,66 +485,23 @@ export function formatForWeChat(html: string, theme: string = 'green', font: str
     hrEl.style.opacity = '1';
   });
 
-  // 处理加粗文本（必须在最后处理，确保样式不被其他处理覆盖）
-  const strongElements = tempDiv.querySelectorAll('strong, b');
+  // 处理加粗文本
+  const strongElements = container.querySelectorAll('strong, b');
   strongElements.forEach((strong) => {
     const strongEl = strong as HTMLElement;
-    // 强制设置加粗样式
     strongEl.style.fontWeight = 'bold';
     strongEl.style.fontStyle = 'normal';
-    // 确保颜色
-    strongEl.style.color = strongEl.style.color || '#333';
-    // 确保显示方式
-    strongEl.style.display = 'inline';
+    strongEl.style.fontFamily = fontFamily;
   });
 
   // 处理斜体文本
-  const emElements = tempDiv.querySelectorAll('em, i');
+  const emElements = container.querySelectorAll('em, i');
   emElements.forEach((em) => {
     const emEl = em as HTMLElement;
     emEl.style.fontStyle = 'italic';
     emEl.style.fontWeight = 'normal';
-    // 确保颜色
-    emEl.style.color = emEl.style.color || '#333';
-    // 确保显示方式
-    emEl.style.display = 'inline';
-  });
-
-  // 最后确保所有文本都有颜色和字体（但要排除已经处理过的 strong、em 等）
-  const allTextElements = tempDiv.querySelectorAll('*');
-  allTextElements.forEach((el) => {
-    const elHtml = el as HTMLElement;
-    const tagName = elHtml.tagName;
-    // 如果元素没有设置颜色，且不是链接、代码、加粗、斜体等特殊元素，设置默认颜色
-    if (!elHtml.style.color && 
-        !['A', 'CODE', 'PRE', 'STRONG', 'B', 'EM', 'I'].includes(tagName) &&
-        elHtml.textContent?.trim()) {
-      elHtml.style.color = '#333';
-    }
-    // 如果元素没有设置字体，且不是代码块，设置默认字体
-    if (!elHtml.style.fontFamily && 
-        !['CODE', 'PRE'].includes(tagName) &&
-        elHtml.textContent?.trim()) {
-      elHtml.style.fontFamily = fontFamily;
-    }
-  });
-
-  // 再次确保 strong 和 b 标签的加粗样式和字体（防止被覆盖）
-  const finalStrongElements = tempDiv.querySelectorAll('strong, b');
-  finalStrongElements.forEach((strong) => {
-    const strongEl = strong as HTMLElement;
-    strongEl.style.fontWeight = 'bold';
-    strongEl.style.fontFamily = fontFamily;
-  });
-
-  // 确保 em 和 i 标签也应用字体
-  const finalEmElements = tempDiv.querySelectorAll('em, i');
-  finalEmElements.forEach((em) => {
-    const emEl = em as HTMLElement;
     emEl.style.fontFamily = fontFamily;
   });
-
-  return tempDiv.innerHTML;
 }
 
 /**

@@ -90,5 +90,26 @@ md.renderer.rules.paragraph_open = function (tokens: any, idx: number, options: 
 };
 
 export function renderMarkdown(markdown: string): string {
-  return md.render(markdown);
+  let html = md.render(markdown);
+  
+  // 处理被误识别为链接的 .md 文件名
+  // 将指向 .md 文件的链接转换回普通文本
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // 查找所有链接
+  const links = tempDiv.querySelectorAll('a');
+  links.forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const text = link.textContent || '';
+    
+    // 如果链接指向 .md 文件，且链接文本就是文件名，则转换为普通文本
+    if (href.toLowerCase().endsWith('.md') && text.toLowerCase().endsWith('.md')) {
+      // 将链接替换为普通文本节点
+      const textNode = document.createTextNode(text);
+      link.parentNode?.replaceChild(textNode, link);
+    }
+  });
+  
+  return tempDiv.innerHTML;
 }
