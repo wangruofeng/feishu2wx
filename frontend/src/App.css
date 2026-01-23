@@ -228,6 +228,67 @@
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* 复制结果弹框 */
+.copy-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.copy-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 24px 16px;
+  min-width: 280px;
+  max-width: 420px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  text-align: center;
+  border: 1px solid #f0f0f0;
+}
+
+.copy-modal-success {
+  border-color: #b7eb8f;
+}
+
+.copy-modal-error {
+  border-color: #ffa39e;
+}
+
+.copy-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #262626;
+}
+
+.copy-modal-message {
+  font-size: 14px;
+  color: #595959;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.copy-modal-button {
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: none;
+  background-color: #07c160;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(7, 193, 96, 0.35);
+}
+
+.copy-modal-button:hover {
+  background-color: #05a650;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .header-content {
@@ -258,6 +319,25 @@
   .header-controls-row > * {
     flex: 1;
     min-width: 0;
+  }
+
+  /* 字体选择器和设备切换器保持足够的空间 */
+  .header-controls-row .font-selector {
+    flex: 1.5;
+    min-width: 140px;
+  }
+
+  .header-controls-row .device-toggle {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  /* 右边两个按钮使用更小的宽度 */
+  .header-controls-row .header-btn-compact {
+    flex: 0.8;
+    min-width: 70px;
+    padding: 6px 8px;
+    font-size: 11px;
   }
 
   .header-controls-row-theme {

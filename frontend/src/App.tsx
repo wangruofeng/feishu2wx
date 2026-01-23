@@ -24,6 +24,11 @@ const App: React.FC = () => {
   const [showH1, setShowH1] = useState<boolean>(true);
   const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>('border');
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>('modern');
+  const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
+    visible: false,
+    message: '',
+    isError: false,
+  });
 
   // 检测系统暗黑模式
   useEffect(() => {
@@ -116,17 +121,29 @@ const App: React.FC = () => {
       } else {
         // 复制全部内容
         if (!html.trim()) {
-          alert('请先输入或粘贴内容');
+          setCopyStatus({
+            visible: true,
+            message: '请先输入或粘贴内容',
+            isError: true,
+          });
           setIsCopying(false);
           return;
         }
         result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle);
       }
       
-      alert(result.message);
+      setCopyStatus({
+        visible: true,
+        message: result.message,
+        isError: !result.success,
+      });
     } catch (error) {
       console.error('复制失败:', error);
-      alert('❌ 复制失败。\n\n请尝试：\n1. 刷新页面后重试\n2. 或手动选择预览区域内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制');
+      setCopyStatus({
+        visible: true,
+        message: '❌ 复制失败。\n\n请尝试：\n1. 刷新页面后重试\n2. 或手动选择预览区域内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制',
+        isError: true,
+      });
     } finally {
       setIsCopying(false);
     }
@@ -146,7 +163,7 @@ const App: React.FC = () => {
                 <DevicePreviewToggle device={device} setDevice={setDevice} />
                 {!isFullscreen && (
                   <button
-                    className="header-btn"
+                    className="header-btn header-btn-compact"
                     onClick={() => setShowEditor(!showEditor)}
                     title={showEditor ? '隐藏源码' : '显示源码'}
                   >
@@ -154,7 +171,7 @@ const App: React.FC = () => {
                   </button>
                 )}
                 <button
-                  className="header-btn header-btn-exit"
+                  className="header-btn header-btn-exit header-btn-compact"
                   onClick={() => setIsFullscreen(!isFullscreen)}
                   title={isFullscreen ? '退出全屏' : '全屏预览'}
                 >
@@ -191,6 +208,24 @@ const App: React.FC = () => {
             onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
           />
         </footer>
+      )}
+
+      {copyStatus.visible && (
+        <div className="copy-modal-overlay" onClick={() => setCopyStatus({ ...copyStatus, visible: false })}>
+          <div
+            className={`copy-modal ${copyStatus.isError ? 'copy-modal-error' : 'copy-modal-success'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="copy-modal-title">{copyStatus.isError ? '提示' : '复制成功'}</div>
+            <div className="copy-modal-message">{copyStatus.message}</div>
+            <button
+              className="copy-modal-button"
+              onClick={() => setCopyStatus({ ...copyStatus, visible: false })}
+            >
+              确定
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
