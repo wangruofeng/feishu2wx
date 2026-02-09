@@ -59,6 +59,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `formatForWeChat()`: Converts preview HTML to WeChat-compatible format
   - Applies theme colors inline (WeChat doesn't support external CSS)
   - Handles all element types: headings, paragraphs, lists, quotes, tables, code blocks, images
+  - List items: unwraps `li > p` and wraps each `li`'s content in a single `span` so the WeChat editor does not split "first child" + "rest" into separate lines (avoids unwanted line break after bold label)
   - Uses `px` units (better compatibility than `em`)
   - Special gradient divider via `linear-gradient`
 - `copyHtmlToWeChat()`: Copies formatted HTML to clipboard

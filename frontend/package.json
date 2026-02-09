@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx-frontend",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "飞书文档转微信公众号排版工具 - 前端应用",
   "private": true,
   "homepage": "/feishu2wx",

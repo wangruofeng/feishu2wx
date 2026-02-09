@@ -711,6 +711,19 @@ function applyThemeStyles(
     listEl.style.textAlign = 'left';
   });
 
+  // 先展开 li > p，避免微信把 p 转成 section 后把「第一个子元素」提到 li 下、其余包进 section 导致换行
+  const listItemsWithP = container.querySelectorAll('li > p');
+  listItemsWithP.forEach((p) => {
+    const pEl = p as HTMLElement;
+    const li = pEl.parentElement;
+    if (li && li.tagName === 'LI') {
+      while (pEl.firstChild) {
+        li.insertBefore(pEl.firstChild, pEl);
+      }
+      pEl.remove();
+    }
+  });
+
   // 处理列表项
   const listItems = container.querySelectorAll('li');
   listItems.forEach((li) => {
@@ -719,14 +732,41 @@ function applyThemeStyles(
     liEl.style.lineHeight = '1.8';
     liEl.style.color = '#333';
     liEl.style.fontFamily = fontFamily;
+
+    // 处理列表项内的空白字符，确保 strong/b 标签后的文本不会换行
+    // 将所有文本节点中的换行符和多余空格替换为单个空格
+    const textNodes: Node[] = [];
+    const walker = document.createTreeWalker(
+      liEl,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    let node: Node | null;
+    while (node = walker.nextNode()) {
+      if (node.textContent && node.textContent.trim()) {
+        textNodes.push(node);
+      }
+    }
+
+    // 处理每个文本节点，将内部换行符替换为空格
+    textNodes.forEach(textNode => {
+      if (textNode.textContent) {
+        // 将连续的空白字符（包括换行符、制表符等）替换为单个空格
+        textNode.textContent = textNode.textContent.replace(/[\r\n\t]+/g, ' ');
+      }
+    });
   });
 
-  // 处理列表内的段落，移除额外间距
+  // 处理列表内的段落：移除间距并设为 inline，减少微信公众号编辑器误加换行的概率（不展开 DOM，避免必现换行）
   const listParagraphs = container.querySelectorAll('li p');
   listParagraphs.forEach((p: Element) => {
     const pEl = p as HTMLElement;
     pEl.style.marginBottom = '0';
     pEl.style.marginTop = '0';
+    pEl.style.paddingLeft = '0';
+    pEl.style.paddingRight = '0';
+    pEl.style.display = 'inline';
   });
 
   // 处理引用（使用主题颜色）
@@ -852,12 +892,49 @@ function applyThemeStyles(
   });
 
   // 处理加粗文本
+  // 注意：微信公众号编辑器可能对 strong/b 标签有特殊处理，导致布局问题
+  // 因此，我们将列表项内的 strong/b 标签替换为 span 标签，用内联样式实现加粗
   const strongElements = container.querySelectorAll('strong, b');
   strongElements.forEach((strong) => {
     const strongEl = strong as HTMLElement;
-    strongEl.style.fontWeight = 'bold';
-    strongEl.style.fontStyle = 'normal';
-    strongEl.style.fontFamily = fontFamily;
+
+    // 检查是否在列表项内
+    const parentLi = strongEl.closest('li');
+
+    if (parentLi) {
+      // 在列表项内：将 strong/b 替换为 span，避免微信公众号的特殊处理
+      const span = document.createElement('span');
+      span.style.fontWeight = 'bold';
+      span.style.fontStyle = 'normal';
+      span.style.fontFamily = fontFamily;
+      span.style.display = 'inline'; // 确保行内显示
+
+      // 复制所有子节点
+      while (strongEl.firstChild) {
+        span.appendChild(strongEl.firstChild);
+      }
+
+      // 替换原元素
+      strongEl.parentNode?.replaceChild(span, strongEl);
+    } else {
+      // 不在列表项内：保持原样，只添加样式
+      strongEl.style.fontWeight = 'bold';
+      strongEl.style.fontStyle = 'normal';
+      strongEl.style.fontFamily = fontFamily;
+    }
+  });
+
+  // 微信公众号会把 li 的「第一个子元素」提到 li 下、其余包进 section 导致换行。将每个 li 的全部内容包进一个 span，使 li 仅有一个直接子节点
+  const listItemsToWrap = container.querySelectorAll('ul li, ol li');
+  listItemsToWrap.forEach((li) => {
+    const liEl = li as HTMLElement;
+    if (liEl.childNodes.length === 0) return;
+    const wrapper = document.createElement('span');
+    wrapper.style.display = 'inline';
+    while (liEl.firstChild) {
+      wrapper.appendChild(liEl.firstChild);
+    }
+    liEl.appendChild(wrapper);
   });
 
   // 处理斜体文本
