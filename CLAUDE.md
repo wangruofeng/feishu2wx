@@ -67,6 +67,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
   - Primary: Clipboard API `write()` with ClipboardItem (text/html + text/plain)
   - Fallback: `document.execCommand('copy')` with contenteditable div
   - Returns detailed success/error messages for user
+  - Preserves line breaks in list item text nodes
 
 ### Theme System
 

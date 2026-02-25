@@ -743,7 +743,7 @@ function applyThemeStyles(
     );
 
     let node: Node | null;
-    while (node = walker.nextNode()) {
+    while ((node = walker.nextNode())) {
       if (node.textContent && node.textContent.trim()) {
         textNodes.push(node);
       }
