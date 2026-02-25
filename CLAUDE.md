@@ -54,6 +54,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - Custom code block wrapper with language label header
 - All links open in new tabs (`target="_blank"`)
 - Custom `<hr>` class for gradient divider styling
+- Automatically removes Front Matter (YAML block) from Markdown before rendering
 
 **`frontend/src/utils/wechatCopy.ts`**
 - `formatForWeChat()`: Converts preview HTML to WeChat-compatible format
@@ -102,7 +103,7 @@ Fonts are loaded via Google Fonts CDN in `public/index.html`.
 - `showEditor`: Toggle editor visibility
 - `devicePreview`: 'desktop' | 'mobile' - affects preview width
 - `isFullscreen`: Fullscreen preview mode
-- `showH1`: Toggle H1 bottom border display (default: true)
+- `showH1`: Toggle H1 bottom border display (default: false)
 - `imageBorderStyle`: Toggle between 'border' and 'shadow' mode for images (default: 'border')
 - `codeBlockStyle`: `'classic' | 'modern'` - code block visual style in preview (default: `'modern'`)
 - `htmlPasteDetected`: Shows modal when HTML paste is detected

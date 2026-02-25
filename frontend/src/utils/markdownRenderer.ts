@@ -199,9 +199,36 @@ mdModern.renderer.rules.bullet_list_close = defaultListCloseModern;
 mdModern.renderer.rules.ordered_list_open = defaultOrderedListOpenModern;
 mdModern.renderer.rules.ordered_list_close = defaultOrderedListCloseModern;
 
+// 移除 Markdown 源码顶部的 Front Matter（YAML 块）
+function removeFrontMatter(markdown: string): string {
+  // 检查是否以 --- 开头（Front Matter 开始）
+  if (!markdown.startsWith('---')) {
+    return markdown;
+  }
+
+  // 找到第二个 --- 的位置（Front Matter 结束）
+  const firstNewline = markdown.indexOf('\n');
+  if (firstNewline === -1) return markdown;
+
+  // 从第二行开始查找结束标记
+  let contentAfterFirst = markdown.slice(firstNewline + 1);
+  const endIndex = contentAfterFirst.indexOf('\n---');
+
+  if (endIndex === -1) {
+    // 没有找到结束标记，可能不是有效的 Front Matter
+    return markdown;
+  }
+
+  // 返回 Front Matter 后面的内容
+  return contentAfterFirst.slice(endIndex + 4).trim();
+}
+
 export function renderMarkdown(markdown: string): string {
+  // 移除 Front Matter
+  const markdownWithoutFrontMatter = removeFrontMatter(markdown);
+
   const selectedMd = currentCodeBlockStyle === 'modern' ? mdModern : md;
-  let html = selectedMd.render(markdown);
+  let html = selectedMd.render(markdownWithoutFrontMatter);
 
   // 处理被误识别为链接的 .md 文件名
   // 将指向 .md 文件的链接转换回普通文本

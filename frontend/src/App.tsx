@@ -21,7 +21,7 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>('default');
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
-  const [showH1, setShowH1] = useState<boolean>(true);
+  const [showH1, setShowH1] = useState<boolean>(false);
   const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>('border');
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>('modern');
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
