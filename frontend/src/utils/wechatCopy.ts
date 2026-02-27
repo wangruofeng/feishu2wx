@@ -851,6 +851,7 @@ function applyThemeStyles(
     cellEl.style.border = '1px solid #f0f0f0';
     cellEl.style.color = '#333';
     cellEl.style.fontFamily = fontFamily;
+    cellEl.style.fontSize = '14px';
   });
 
   // 处理表头（使用主题颜色）
@@ -861,6 +862,7 @@ function applyThemeStyles(
     thEl.style.fontWeight = '600';
     thEl.style.color = themeStyles.tableHeaderColor;
     thEl.style.fontFamily = fontFamily;
+    thEl.style.fontSize = '14px';
   });
 
   // 处理分隔线（从两边往中间变粗，使用平滑渐变）

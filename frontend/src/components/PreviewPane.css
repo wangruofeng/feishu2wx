@@ -319,6 +319,10 @@
   vertical-align: top;
 }
 
+.preview-content table td {
+  font-size: 14px;
+}
+
 .preview-content table th {
   background: linear-gradient(to bottom, #f8f9fa 0%, #f1f3f5 100%);
   font-weight: 600;
