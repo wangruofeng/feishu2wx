@@ -5,25 +5,35 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 import DevicePreviewToggle from './components/DevicePreviewToggle';
 import FontSelector from './components/FontSelector';
 import Toolbar from './components/Toolbar';
-import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle } from './utils/markdownRenderer';
+import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat } from './utils/wechatCopy';
 import './App.css';
 import './styles/themes.css';
 import 'highlight.js/styles/atom-one-dark.css';
 
 const App: React.FC = () => {
-  const [markdown, setMarkdown] = useState<string>('');
+  // 从 localStorage 恢复保存的内容
+  const savedMarkdown = localStorage.getItem('feishu2wx_markdown') || '';
+  const savedTheme = localStorage.getItem('feishu2wx_theme') || 'classic';
+  const savedFont = localStorage.getItem('feishu2wx_font') || 'default';
+  const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
+  const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' || 'border';
+  const savedShowH1 = localStorage.getItem('feishu2wx_showH1') === 'true';
+  const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false'; // 默认为 true
+
+  const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
-  const [theme, setTheme] = useState<string>('classic');
+  const [theme, setTheme] = useState<string>(savedTheme);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [font, setFont] = useState<string>('default');
+  const [font, setFont] = useState<string>(savedFont);
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
-  const [showH1, setShowH1] = useState<boolean>(false);
-  const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>('border');
-  const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>('modern');
+  const [showH1, setShowH1] = useState<boolean>(savedShowH1);
+  const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>(savedImageBorderStyle);
+  const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>(savedCodeBlockStyle);
+  const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
     visible: false,
     message: '',
@@ -62,7 +72,46 @@ const App: React.FC = () => {
     setHtml(rendered);
   }, [markdown]);
 
+  // 自动保存到 localStorage
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_markdown', markdown);
+  }, [markdown]);
+
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_font', font);
+  }, [font]);
+
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle);
+  }, [codeBlockStyle]);
+
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle);
+  }, [imageBorderStyle]);
+
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_showH1', String(showH1));
+  }, [showH1]);
+
+  useEffect(() => {
+    localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
+    setShowHorizontalRule(showHorizontalRule);
+    const rendered = renderMarkdown(markdown);
+    setHtml(rendered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showHorizontalRule]);
+
   // 当代码块样式改变时，重新渲染
+  useEffect(() => {
+    setCodeBlockStyle(codeBlockStyle);
+    const rendered = renderMarkdown(markdown);
+    setHtml(rendered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeBlockStyle]);
   useEffect(() => {
     setCodeBlockStyle(codeBlockStyle);
     const rendered = renderMarkdown(markdown);
@@ -206,6 +255,8 @@ const App: React.FC = () => {
             onToggleImageBorder={() => setImageBorderStyle(imageBorderStyle === 'border' ? 'shadow' : 'border')}
             codeBlockStyle={codeBlockStyle}
             onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
+            showHorizontalRule={showHorizontalRule}
+            onToggleHorizontalRule={() => setShowHorizontalRuleState(!showHorizontalRule)}
           />
         </footer>
       )}

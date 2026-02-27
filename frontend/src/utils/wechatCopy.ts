@@ -614,7 +614,12 @@ function applyThemeStyles(
     const pEl = p as HTMLElement;
     if (pEl.textContent?.trim()) {
       pEl.style.fontSize = '16px';
-      pEl.style.marginBottom = '16px';
+      // 检查 p 后面是否跟着列表，如果是则减少下间距
+      const nextSibling = pEl.nextElementSibling;
+      const isFollowedByList = nextSibling && (
+        nextSibling.tagName === 'UL' || nextSibling.tagName === 'OL'
+      );
+      pEl.style.marginBottom = isFollowedByList ? '4px' : '24px';
       pEl.style.marginTop = '0';
       pEl.style.lineHeight = '1.8';
       pEl.style.color = '#333';
@@ -624,12 +629,11 @@ function applyThemeStyles(
 
   // 处理标题 - 完整样式（使用主题颜色，使用px单位确保兼容性）
   const h1Elements = container.querySelectorAll('h1');
-  h1Elements.forEach((h1, index) => {
+  h1Elements.forEach((h1) => {
     const h1El = h1 as HTMLElement;
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
     h1El.style.fontSize = '24px';
-    // 第一个 h1 保持较小的 margin-top，其他 h1 使用较大的 margin-top
-    h1El.style.marginTop = index === 0 ? '24px' : '40px';
+    h1El.style.marginTop = '48px';
     h1El.style.marginBottom = '16px';
     h1El.style.marginLeft = '0';
     h1El.style.marginRight = '0';
@@ -654,7 +658,7 @@ function applyThemeStyles(
   h2Elements.forEach((h2) => {
     const h2El = h2 as HTMLElement;
     h2El.style.fontSize = '18px';
-    h2El.style.marginTop = '40px';
+    h2El.style.marginTop = '32px';
     h2El.style.marginBottom = '16px';
     h2El.style.marginLeft = '0';
     h2El.style.marginRight = '0';
@@ -703,8 +707,12 @@ function applyThemeStyles(
   const lists = container.querySelectorAll('ul, ol');
   lists.forEach((list) => {
     const listEl = list as HTMLElement;
-    listEl.style.marginBottom = '16px';
-    listEl.style.marginTop = '0';
+    // 检查是否是嵌套列表
+    const parentLi = listEl.parentElement;
+    const isNested = parentLi && parentLi.tagName === 'LI';
+
+    listEl.style.marginBottom = isNested ? '4px' : '16px';
+    listEl.style.marginTop = isNested ? '4px' : '0';
     listEl.style.paddingLeft = '30px';
     listEl.style.color = '#333';
     listEl.style.fontFamily = fontFamily;

@@ -20,6 +20,19 @@ export function getCodeBlockStyle(): CodeBlockStyle {
   return currentCodeBlockStyle;
 }
 
+// 分割线渲染开关（全局变量）
+let showHorizontalRule = true;
+
+// 设置分割线是否显示
+export function setShowHorizontalRule(show: boolean) {
+  showHorizontalRule = show;
+}
+
+// 获取分割线是否显示
+export function getShowHorizontalRule(): boolean {
+  return showHorizontalRule;
+}
+
 // 创建 highlight 函数（使用 highlight.js 进行语法高亮）
 function createHighlightFunction() {
   return function (str: string, lang: string): string {
@@ -101,6 +114,9 @@ md.renderer.rules.link_open = function (tokens: any, idx: number, options: any, 
 
 // 自定义分割线渲染（经典风格）
 md.renderer.rules.hr = function (tokens: any, idx: number, options: any, env: any, self: any) {
+  if (!showHorizontalRule) {
+    return ''; // 不渲染分割线
+  }
   return '<hr class="custom-hr">';
 };
 
@@ -121,6 +137,9 @@ mdModern.renderer.rules.link_open = function (tokens: any, idx: number, options:
 
 // 自定义分割线渲染（现代风格）
 mdModern.renderer.rules.hr = function (tokens: any, idx: number, options: any, env: any, self: any) {
+  if (!showHorizontalRule) {
+    return ''; // 不渲染分割线
+  }
   return '<hr class="custom-hr">';
 };
 

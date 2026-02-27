@@ -50,6 +50,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
 
     // 其他情况使用纯文本（包括从 Cursor/VS Code 等复制的 Markdown）
     if (textData) {
+      e.preventDefault();
       // 纯文本直接插入
       const textarea = textareaRef.current;
       if (textarea) {
@@ -57,6 +58,13 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
         const end = textarea.selectionEnd;
         const newMd = markdown.slice(0, start) + textData + markdown.slice(end);
         setMarkdown(newMd);
+
+        // 恢复光标位置
+        setTimeout(() => {
+          const newPos = start + textData.length;
+          textarea.setSelectionRange(newPos, newPos);
+          textarea.focus();
+        }, 0);
       }
     }
   }, [markdown, setMarkdown]);

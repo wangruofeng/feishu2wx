@@ -102,11 +102,7 @@
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
   text-align: center;
-  margin-top: 40px;
-}
-
-.preview-content h1:first-of-type {
-  margin-top: 24px;
+  margin-top: 48px;
 }
 
 .preview-content.hide-h1 h1 {
@@ -115,7 +111,7 @@
 
 .preview-content h2 {
   font-size: 18px;
-  margin-top: 40px;
+  margin-top: 32px;
   color: #333;
 }
 
@@ -126,8 +122,14 @@
 
 .preview-content p {
   font-size: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   line-height: 1.8;
+}
+
+/* p 标签后跟列表时，减少下间距 */
+.preview-content p + ul,
+.preview-content p + ol {
+  margin-top: -20px;
 }
 
 .preview-content li p {
@@ -148,6 +150,15 @@
   margin-bottom: 16px;
   padding-left: 30px;
   text-align: left;
+}
+
+/* 嵌套列表样式 */
+.preview-content ul ul,
+.preview-content ul ol,
+.preview-content ol ul,
+.preview-content ol ol {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 .preview-content li {

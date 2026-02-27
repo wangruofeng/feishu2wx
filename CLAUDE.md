@@ -105,9 +105,12 @@ Fonts are loaded via Google Fonts CDN in `public/index.html`.
 - `devicePreview`: 'desktop' | 'mobile' - affects preview width
 - `isFullscreen`: Fullscreen preview mode
 - `showH1`: Toggle H1 bottom border display (default: false)
+- `showHorizontalRule`: Toggle horizontal rule rendering (default: true)
 - `imageBorderStyle`: Toggle between 'border' and 'shadow' mode for images (default: 'border')
 - `codeBlockStyle`: `'classic' | 'modern'` - code block visual style in preview (default: `'modern'`)
 - `htmlPasteDetected`: Shows modal when HTML paste is detected
+
+All settings are automatically saved to localStorage and restored on page load.
 
 ### Component Structure
 
@@ -161,8 +164,16 @@ Two different treatments:
 Users can show/hide the bottom border on H1 headings:
 - **Preview**: Controlled via CSS class `.hide-h1` applied to preview container
 - **WeChat output**: Conditionally applied `borderBottom` style in `formatForWeChat()`
-- State: `showH1` (default: true)
+- State: `showH1` (default: false)
 - Button: "👁️ 隐藏 H1 底线" / "📝 显示 H1 底线"
+
+### Horizontal Rule Toggle
+
+Users can show/hide horizontal rules (---) in rendered output:
+- **Preview**: Controlled via `showHorizontalRule` flag in `markdownRenderer.ts`
+- **WeChat output**: Same rule applies
+- State: `showHorizontalRule` (default: true)
+- Button: "➖ 隐藏分割线" / "➕ 显示分割线"
 
 ### Image Style Toggle
 
@@ -173,6 +184,36 @@ Users can switch between border and shadow modes for images:
 - **WeChat output**: Conditionally applied inline styles in `formatForWeChat()`
 - State: `imageBorderStyle` (default: 'border')
 - Button: "🖼️ 边框模式" / "🌫️ 阴影模式"
+
+### Spacing & Typography
+
+**Heading Spacing** (creates visual hierarchy):
+- h1: top 48px, bottom 16px
+- h2: top 32px, bottom 16px
+- h3-h6: top 24px, bottom 16px
+
+**Paragraph Spacing**:
+- Standard paragraphs: bottom 24px
+- Paragraphs followed by lists: bottom 4px (for tighter grouping)
+
+**List Spacing**:
+- Top-level lists: bottom 16px
+- Nested lists: top 4px, bottom 4px
+- List items: bottom 4px
+
+**Table Typography**:
+- Table headers: 14px font size
+- Table cells: 14px font size
+
+### Bug Fixes
+
+**Nested List Overlap**:
+- Fixed overlapping issue when ul/ol elements are nested
+- Nested lists now have proper margin-top and margin-bottom
+
+**Duplicate Paste Issue**:
+- Fixed content being pasted twice when pasting plain text
+- Now properly calls `e.preventDefault()` for all paste types
 
 ## Testing Changes
 

@@ -13,9 +13,11 @@ interface Props {
   onToggleImageBorder: () => void;
   codeBlockStyle: CodeBlockStyle;
   onToggleCodeBlockStyle: () => void;
+  showHorizontalRule: boolean;
+  onToggleHorizontalRule: () => void;
 }
 
-const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle }) => {
+const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
   const handleClear = () => {
     if (window.confirm('确定要清空所有内容吗？')) {
       setMarkdown('');
@@ -98,6 +100,13 @@ function greet(name) {
           title={showH1 ? '隐藏 H1 底部横线' : '显示 H1 底部横线'}
         >
           {showH1 ? '👁️ 隐藏 H1 底线' : '📝 显示 H1 底线'}
+        </button>
+        <button
+          className="toolbar-btn"
+          onClick={onToggleHorizontalRule}
+          title={showHorizontalRule ? '隐藏分割线' : '显示分割线'}
+        >
+          {showHorizontalRule ? '➖ 隐藏分割线' : '➕ 显示分割线'}
         </button>
         <button
           className="toolbar-btn"
