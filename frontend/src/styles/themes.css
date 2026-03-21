@@ -253,24 +253,24 @@
 
 .theme-classic .preview-content {
   background-color: #ffffff;
-  color: #333;
+  color: #555;
 }
 
 .theme-classic .preview-content h1,
 .theme-classic .preview-content h2 {
-  border-bottom-color: #000;
-  color: #000;
+  border-bottom-color: #222;
+  color: #222;
 }
 
 .theme-classic .preview-content h3,
 .theme-classic .preview-content h4,
 .theme-classic .preview-content h5,
 .theme-classic .preview-content h6 {
-  color: #333;
+  color: #555;
 }
 
 .theme-classic .preview-content blockquote {
-  border-left-color: #333;
+  border-left-color: #555;
   background-color: #f5f5f5;
 }
 
@@ -284,28 +284,28 @@
 
 .theme-classic .preview-content table th {
   background-color: #f5f5f5;
-  color: #000;
+  color: #222;
 }
 
 .theme-classic .preview-content hr.custom-hr,
 .theme-classic .preview-content hr.custom-hr::before,
 .theme-classic .preview-content hr.custom-hr::after {
-  color: #333;
+  color: #555;
 }
 
 .theme-classic .toolbar-btn-primary {
-  background-color: #333;
-  border-color: #333;
+  background-color: #555;
+  border-color: #555;
   color: white;
 }
 
 .theme-classic .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #555;
-  border-color: #555;
+  background-color: #777;
+  border-color: #777;
 }
 
 .theme-classic .theme-option.active {
-  color: #333;
+  color: #555;
 }
 
 /* 紫色主题 */
