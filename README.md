@@ -344,7 +344,11 @@ npm run deploy
 
 前端默认运行在 `3000` 端口。
 
-如需修改端口，编辑 `frontend/package.json` 中的 `scripts.start` 字段，添加 `PORT=3001`。
+如需修改端口，编辑 `frontend/package.json` 中的 `scripts.start` 字段，例如：
+
+```bash
+HOST=127.0.0.1 PORT=3001 react-scripts start
+```
 
 ### GitHub Pages 配置
 
