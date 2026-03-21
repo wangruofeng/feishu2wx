@@ -190,7 +190,7 @@ export function formatForWeChat(
   tempDiv.innerHTML = html;
 
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
-  applyThemeStyles(tempDiv, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle, invertH1);
 
   return tempDiv.innerHTML;
 }
@@ -382,6 +382,7 @@ function convertHighlightClassesToInlineStyles(element: HTMLElement, isDark: boo
  */
 function applyThemeStyles(
   container: HTMLElement,
+  theme: string,
   themeStyles: ReturnType<typeof getThemeStyles>,
   fontFamily: string,
   showH1: boolean,
@@ -672,7 +673,9 @@ function applyThemeStyles(
     inlineWrapper.style.display = invertH1 ? 'table' : 'inline';
     inlineWrapper.style.margin = invertH1 ? '0 auto' : '0';
     inlineWrapper.style.padding = invertH1 ? '6px 14px' : '0';
-    inlineWrapper.style.backgroundColor = invertH1 ? themeStyles.primaryColor : 'transparent';
+    // 橙色主题的反显背景色使用 headingColor（与 H1 文本色一致），其他主题使用 primaryColor
+    const invertH1BgColor = theme === 'orange' ? themeStyles.headingColor : themeStyles.primaryColor;
+    inlineWrapper.style.backgroundColor = invertH1 ? invertH1BgColor : 'transparent';
     inlineWrapper.style.color = invertH1 ? '#ffffff' : themeStyles.headingColor;
     inlineWrapper.style.borderRadius = '0';
     inlineWrapper.style.lineHeight = '1.25';

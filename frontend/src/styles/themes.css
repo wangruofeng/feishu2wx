@@ -426,6 +426,10 @@
   color: #fa8c16;
 }
 
+.theme-orange .preview-content.invert-h1 h1 .h1-inline-block {
+  background-color: #ad4e00;
+}
+
 /* 粉色主题 */
 
 .theme-pink .preview-content {
