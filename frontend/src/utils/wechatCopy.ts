@@ -681,7 +681,7 @@ function applyThemeStyles(
   const h3Elements = container.querySelectorAll('h3');
   h3Elements.forEach((h3) => {
     const h3El = h3 as HTMLElement;
-    h3El.style.fontSize = '20px';
+    h3El.style.fontSize = '16px';
     h3El.style.marginTop = '24px';
     h3El.style.marginBottom = '16px';
     h3El.style.marginLeft = '0';
