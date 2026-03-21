@@ -718,6 +718,7 @@ function applyThemeStyles(
     listEl.style.color = '#333';
     listEl.style.fontFamily = fontFamily;
     listEl.style.textAlign = 'left';
+    listEl.style.fontSize = '16px';
   });
 
   // 先展开 li > p，避免微信把 p 转成 section 后把「第一个子元素」提到 li 下、其余包进 section 导致换行
@@ -741,6 +742,7 @@ function applyThemeStyles(
     liEl.style.lineHeight = '1.8';
     liEl.style.color = '#333';
     liEl.style.fontFamily = fontFamily;
+    liEl.style.fontSize = '16px';
 
     // 处理列表项内的空白字符，确保 strong/b 标签后的文本不会换行
     // 将所有文本节点中的换行符和多余空格替换为单个空格
