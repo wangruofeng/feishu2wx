@@ -105,12 +105,28 @@
   margin-top: 48px;
 }
 
+.preview-content h1 .h1-inline-block {
+  display: inline;
+}
+
 .preview-content h1:first-of-type {
   margin-top: 8px;
 }
 
 .preview-content.hide-h1 h1 {
   border-bottom: none;
+}
+
+.preview-content.invert-h1 h1 {
+  border-bottom: none;
+}
+
+.preview-content.invert-h1 h1 .h1-inline-block {
+  display: inline-block;
+  padding: 6px 14px;
+  background-color: var(--preview-primary-color, currentColor);
+  color: #fff;
+  border-radius: 0;
 }
 
 .preview-content h2 {

@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
   const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' || 'border';
   const savedShowH1 = localStorage.getItem('feishu2wx_showH1') === 'true';
+  const savedInvertH1 = localStorage.getItem('feishu2wx_invertH1') === 'true';
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false'; // 默认为 true
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
@@ -31,6 +32,7 @@ const App: React.FC = () => {
   const [font, setFont] = useState<string>(savedFont);
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
   const [showH1, setShowH1] = useState<boolean>(savedShowH1);
+  const [invertH1, setInvertH1] = useState<boolean>(savedInvertH1);
   const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>(savedImageBorderStyle);
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>(savedCodeBlockStyle);
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
@@ -98,6 +100,10 @@ const App: React.FC = () => {
   }, [showH1]);
 
   useEffect(() => {
+    localStorage.setItem('feishu2wx_invertH1', String(invertH1));
+  }, [invertH1]);
+
+  useEffect(() => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
     setShowHorizontalRule(showHorizontalRule);
     const rendered = renderMarkdown(markdown);
@@ -106,12 +112,6 @@ const App: React.FC = () => {
   }, [showHorizontalRule]);
 
   // 当代码块样式改变时，重新渲染
-  useEffect(() => {
-    setCodeBlockStyle(codeBlockStyle);
-    const rendered = renderMarkdown(markdown);
-    setHtml(rendered);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [codeBlockStyle]);
   useEffect(() => {
     setCodeBlockStyle(codeBlockStyle);
     const rendered = renderMarkdown(markdown);
@@ -166,7 +166,7 @@ const App: React.FC = () => {
       let result;
       if (hasValidSelection) {
         // 复制选中的内容
-        result = await copySelectedToWeChat(displayTheme, font, showH1, imageBorderStyle, codeBlockStyle);
+        result = await copySelectedToWeChat(displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
       } else {
         // 复制全部内容
         if (!html.trim()) {
@@ -178,7 +178,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle);
+        result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
       }
       
       setCopyStatus({
@@ -196,7 +196,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle]);
+  }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1]);
 
   return (
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
@@ -239,7 +239,7 @@ const App: React.FC = () => {
 
       <main className={`main-container device-${device} ${!showEditor ? 'editor-hidden' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
         {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} />}
-        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} showH1={showH1} imageBorderStyle={imageBorderStyle} />
+        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} showH1={showH1} invertH1={invertH1} imageBorderStyle={imageBorderStyle} />
       </main>
 
       {!isFullscreen && (
@@ -251,6 +251,8 @@ const App: React.FC = () => {
             isCopying={isCopying}
             showH1={showH1}
             onToggleH1={() => setShowH1(!showH1)}
+            invertH1={invertH1}
+            onToggleInvertH1={() => setInvertH1(!invertH1)}
             imageBorderStyle={imageBorderStyle}
             onToggleImageBorder={() => setImageBorderStyle(imageBorderStyle === 'border' ? 'shadow' : 'border')}
             codeBlockStyle={codeBlockStyle}

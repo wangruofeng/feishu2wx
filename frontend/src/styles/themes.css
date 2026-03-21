@@ -1,6 +1,7 @@
 /* 绿意主题 - 默认主题 */
 
 .theme-green .preview-content {
+  --preview-primary-color: #52c41a;
   background-color: #ffffff;
   color: #333;
 }
@@ -55,6 +56,7 @@
 /* 明亮主题 - 自动跟随系统浅色模式 */
 
 .theme-light .preview-content {
+  --preview-primary-color: #1890ff;
   background-color: #ffffff;
   color: #333;
 }
@@ -171,6 +173,7 @@
 }
 
 .theme-dark .preview-content {
+  --preview-primary-color: #52c41a;
   background-color: #2f2f2f;
   color: #e0e0e0;
 }
@@ -252,6 +255,7 @@
 /* 经典主题 */
 
 .theme-classic .preview-content {
+  --preview-primary-color: #555;
   background-color: #ffffff;
   color: #555;
 }
@@ -310,6 +314,10 @@
 
 /* 紫色主题 */
 
+.theme-purple .preview-content {
+  --preview-primary-color: #722ed1;
+}
+
 .theme-purple .preview-content h1,
 .theme-purple .preview-content h2 {
   border-bottom-color: #391085;
@@ -362,6 +370,10 @@
 }
 
 /* 橙色主题 */
+
+.theme-orange .preview-content {
+  --preview-primary-color: #fa8c16;
+}
 
 .theme-orange .preview-content h1,
 .theme-orange .preview-content h2 {
@@ -416,6 +428,10 @@
 
 /* 粉色主题 */
 
+.theme-pink .preview-content {
+  --preview-primary-color: #eb2f96;
+}
+
 .theme-pink .preview-content h1,
 .theme-pink .preview-content h2 {
   border-bottom-color: #9e1068;
@@ -468,6 +484,10 @@
 }
 
 /* 蓝色主题 */
+
+.theme-blue .preview-content {
+  --preview-primary-color: #0F4C81;
+}
 
 .theme-blue .preview-content h1,
 .theme-blue .preview-content h2 {
@@ -522,6 +542,10 @@
 
 
 /* 红色主题 */
+.theme-red .preview-content {
+  --preview-primary-color: #ff4d4f;
+}
+
 .theme-red .preview-content h1,
 .theme-red .preview-content h2 {
   border-bottom-color: #a8071a;
@@ -574,6 +598,10 @@
 }
 
 /* 青色主题 */
+.theme-cyan .preview-content {
+  --preview-primary-color: #13c2c2;
+}
+
 .theme-cyan .preview-content h1,
 .theme-cyan .preview-content h2 {
   border-bottom-color: #002329;
@@ -624,4 +652,3 @@
 .theme-cyan .theme-option.active {
   color: #13c2c2;
 }
-

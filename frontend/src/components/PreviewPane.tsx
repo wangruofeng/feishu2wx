@@ -8,10 +8,11 @@ interface Props {
   isFullscreen?: boolean;
   font?: string;
   showH1?: boolean;
+  invertH1?: boolean;
   imageBorderStyle?: 'border' | 'shadow';
 }
 
-const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font = 'default', showH1 = true, imageBorderStyle = 'border' }) => {
+const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font = 'default', showH1 = true, invertH1 = false, imageBorderStyle = 'border' }) => {
   const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +37,7 @@ const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font
       <div className="preview-content-wrapper">
         <div
           ref={previewRef}
-          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1 ? 'hide-h1' : ''} image-${imageBorderStyle}`}
+          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1 ? 'hide-h1' : ''} ${invertH1 ? 'invert-h1' : ''} image-${imageBorderStyle}`}
           style={fontStyle}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />

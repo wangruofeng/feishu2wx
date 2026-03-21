@@ -179,7 +179,8 @@ export function formatForWeChat(
   font: string = 'default',
   showH1: boolean = true,
   imageBorderStyle: 'border' | 'shadow' = 'border',
-  codeBlockStyle: CodeBlockStyle = 'classic'
+  codeBlockStyle: CodeBlockStyle = 'classic',
+  invertH1: boolean = false
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
@@ -189,7 +190,7 @@ export function formatForWeChat(
   tempDiv.innerHTML = html;
 
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
-  applyThemeStyles(tempDiv, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle);
+  applyThemeStyles(tempDiv, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle, invertH1);
 
   return tempDiv.innerHTML;
 }
@@ -385,7 +386,8 @@ function applyThemeStyles(
   fontFamily: string,
   showH1: boolean,
   imageBorderStyle: 'border' | 'shadow',
-  codeBlockStyle: CodeBlockStyle
+  codeBlockStyle: CodeBlockStyle,
+  invertH1: boolean
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -631,6 +633,19 @@ function applyThemeStyles(
   const h1Elements = container.querySelectorAll('h1');
   h1Elements.forEach((h1, index) => {
     const h1El = h1 as HTMLElement;
+    let inlineWrapper = h1El.querySelector(':scope > .h1-inline-block') as HTMLElement | null;
+
+    if (!inlineWrapper) {
+      inlineWrapper = document.createElement('span');
+      inlineWrapper.className = 'h1-inline-block';
+
+      while (h1El.firstChild) {
+        inlineWrapper.appendChild(h1El.firstChild);
+      }
+
+      h1El.appendChild(inlineWrapper);
+    }
+
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
     h1El.style.fontSize = '22px';
     // 第一个 h1 的 margin-top 为 8px，后续为 48px
@@ -640,8 +655,8 @@ function applyThemeStyles(
     h1El.style.marginRight = '0';
     h1El.style.fontWeight = 'bold';
     h1El.style.lineHeight = '1.25';
-    // 根据 showH1 决定是否显示底部横线
-    h1El.style.borderBottom = showH1 ? `1px solid ${themeStyles.headingColor}` : 'none';
+    // 根据 showH1 和 invertH1 决定是否显示底部横线
+    h1El.style.borderBottom = showH1 && !invertH1 ? `1px solid ${themeStyles.headingColor}` : 'none';
     h1El.style.borderTop = 'none';
     h1El.style.borderLeft = 'none';
     h1El.style.borderRight = 'none';
@@ -653,6 +668,16 @@ function applyThemeStyles(
     h1El.style.display = 'block';
     h1El.style.textAlign = 'center';
     h1El.style.fontFamily = fontFamily;
+
+    inlineWrapper.style.display = invertH1 ? 'table' : 'inline';
+    inlineWrapper.style.margin = invertH1 ? '0 auto' : '0';
+    inlineWrapper.style.padding = invertH1 ? '6px 14px' : '0';
+    inlineWrapper.style.backgroundColor = invertH1 ? themeStyles.primaryColor : 'transparent';
+    inlineWrapper.style.color = invertH1 ? '#ffffff' : themeStyles.headingColor;
+    inlineWrapper.style.borderRadius = '0';
+    inlineWrapper.style.lineHeight = '1.25';
+    inlineWrapper.style.setProperty('box-decoration-break', invertH1 ? 'clone' : 'slice');
+    inlineWrapper.style.setProperty('-webkit-box-decoration-break', invertH1 ? 'clone' : 'slice');
   });
 
   const h2Elements = container.querySelectorAll('h2');
@@ -990,7 +1015,8 @@ export async function copySelectedToWeChat(
   font: string = 'default',
   showH1: boolean = true,
   imageBorderStyle: 'border' | 'shadow' = 'border',
-  codeBlockStyle: CodeBlockStyle = 'classic'
+  codeBlockStyle: CodeBlockStyle = 'classic',
+  invertH1: boolean = false
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
   
@@ -1001,7 +1027,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1, imageBorderStyle, codeBlockStyle);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
 }
 
 /**
@@ -1014,13 +1040,14 @@ export async function copyHtmlToWeChat(
   font: string = 'default',
   showH1: boolean = true,
   imageBorderStyle: 'border' | 'shadow' = 'border',
-  codeBlockStyle: CodeBlockStyle = 'classic'
+  codeBlockStyle: CodeBlockStyle = 'classic',
+  invertH1: boolean = false
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
-  const formattedHtml = formatForWeChat(html, theme, font, showH1, imageBorderStyle, codeBlockStyle);
+  const formattedHtml = formatForWeChat(html, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

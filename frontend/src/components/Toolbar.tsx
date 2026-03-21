@@ -9,6 +9,8 @@ interface Props {
   isCopying: boolean;
   showH1: boolean;
   onToggleH1: () => void;
+  invertH1: boolean;
+  onToggleInvertH1: () => void;
   imageBorderStyle: 'border' | 'shadow';
   onToggleImageBorder: () => void;
   codeBlockStyle: CodeBlockStyle;
@@ -17,7 +19,7 @@ interface Props {
   onToggleHorizontalRule: () => void;
 }
 
-const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
+const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, invertH1, onToggleInvertH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
   const handleClear = () => {
     if (window.confirm('确定要清空所有内容吗？')) {
       setMarkdown('');
@@ -100,6 +102,13 @@ function greet(name) {
           title={showH1 ? '隐藏 H1 底部横线' : '显示 H1 底部横线'}
         >
           {showH1 ? '👁️ 隐藏 H1 底线' : '📝 显示 H1 底线'}
+        </button>
+        <button
+          className="toolbar-btn"
+          onClick={onToggleInvertH1}
+          title={invertH1 ? '关闭 H1 反显' : '开启 H1 反显'}
+        >
+          {invertH1 ? '🎛️ 关闭 H1 反显' : '🎨 开启 H1 反显'}
         </button>
         <button
           className="toolbar-btn"
