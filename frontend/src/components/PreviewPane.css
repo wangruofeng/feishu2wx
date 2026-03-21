@@ -365,77 +365,19 @@
   margin: 24px 0;
 }
 
-/* 自定义分割线：从两边往中间变粗，使用平滑渐变 */
+/* 自定义分割线：等高实线 */
 .preview-content hr.custom-hr {
   border: none;
   height: 1px;
   margin: 24px 0;
   position: relative;
-  background: none;
+  background: rgba(0, 0, 0, 0.1);
   overflow: visible;
 }
 
-/* 中间的 1px 线，使用平滑渐变从两边过渡 */
-.preview-content hr.custom-hr::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 1px;
-  /* 使用平滑的渐变，从两边淡入到中间 */
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    currentColor 4%,
-    currentColor 10%,
-    currentColor 18%,
-    currentColor 28%,
-    currentColor 38%,
-    currentColor 40%,
-    currentColor 50%,
-    currentColor 60%,
-    currentColor 62%,
-    currentColor 72%,
-    currentColor 82%,
-    currentColor 90%,
-    currentColor 96%,
-    transparent 100%
-  );
-}
-
-/* 使用伪元素叠加，创建两边的 0.5px 线，实现平滑过渡 */
+.preview-content hr.custom-hr::before,
 .preview-content hr.custom-hr::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0.25px;
-  height: 0.5px;
-  /* 创建两边的 0.5px 线，使用平滑的渐变过渡到中间 */
-  background: linear-gradient(
-    to right,
-    transparent 0%,
-    currentColor 3%,
-    currentColor 7%,
-    currentColor 12%,
-    currentColor 18%,
-    currentColor 25%,
-    currentColor 32%,
-    currentColor 38%,
-    transparent 40%,
-    transparent 60%,
-    currentColor 62%,
-    currentColor 68%,
-    currentColor 75%,
-    currentColor 82%,
-    currentColor 88%,
-    currentColor 93%,
-    currentColor 97%,
-    transparent 100%
-  );
-  /* 使用 opacity 实现更自然的过渡 */
-  opacity: 0.5;
+  display: none;
 }
 
 .preview-content strong,

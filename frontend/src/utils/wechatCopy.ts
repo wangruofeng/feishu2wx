@@ -876,14 +876,11 @@ function applyThemeStyles(
     thEl.style.fontSize = '14px';
   });
 
-  // 处理分隔线（从两边往中间变粗，使用平滑渐变）
-  // 注意：微信公众号编辑器不支持复杂的 HTML 结构（如绝对定位的 div），
-  // 使用简单的渐变背景和 border 来实现效果
+  // 处理分隔线（等高实线）
   const horizontalRules = container.querySelectorAll('hr');
   horizontalRules.forEach((hr) => {
     const hrEl = hr as HTMLElement;
-    const hrColor = themeStyles.primaryColor;
-    
+
     // 清除默认样式
     hrEl.style.border = 'none';
     hrEl.style.margin = '24px 0';
@@ -892,11 +889,9 @@ function applyThemeStyles(
     hrEl.style.width = '100%';
     hrEl.style.display = 'block';
     hrEl.style.boxSizing = 'border-box';
-    
-    // 使用渐变背景实现从两边往中间变粗的效果
-    // 微信公众号编辑器支持 linear-gradient，使用渐变透明度来模拟从细到粗
-    // 通过渐变点控制从两边淡入到中间的效果
-    hrEl.style.background = `linear-gradient(to right, transparent 0%, ${hrColor} 4%, ${hrColor} 10%, ${hrColor} 18%, ${hrColor} 28%, ${hrColor} 38%, ${hrColor} 40%, ${hrColor} 50%, ${hrColor} 60%, ${hrColor} 62%, ${hrColor} 72%, ${hrColor} 82%, ${hrColor} 90%, ${hrColor} 96%, transparent 100%)`;
+
+    // 使用纯黑色 10% 透明度作为分割线颜色
+    hrEl.style.background = 'rgba(0, 0, 0, 0.1)';
     hrEl.style.backgroundSize = '100% 1px';
     hrEl.style.backgroundRepeat = 'no-repeat';
     hrEl.style.backgroundPosition = 'center';
