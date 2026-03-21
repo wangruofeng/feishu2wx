@@ -98,11 +98,15 @@
 }
 
 .preview-content h1 {
-  font-size: 24px;
+  font-size: 22px;
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
   text-align: center;
   margin-top: 48px;
+}
+
+.preview-content h1:first-of-type {
+  margin-top: 8px;
 }
 
 .preview-content.hide-h1 h1 {

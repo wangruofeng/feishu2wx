@@ -629,11 +629,12 @@ function applyThemeStyles(
 
   // 处理标题 - 完整样式（使用主题颜色，使用px单位确保兼容性）
   const h1Elements = container.querySelectorAll('h1');
-  h1Elements.forEach((h1) => {
+  h1Elements.forEach((h1, index) => {
     const h1El = h1 as HTMLElement;
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
-    h1El.style.fontSize = '24px';
-    h1El.style.marginTop = '48px';
+    h1El.style.fontSize = '22px';
+    // 第一个 h1 的 margin-top 为 8px，后续为 48px
+    h1El.style.marginTop = index === 0 ? '8px' : '48px';
     h1El.style.marginBottom = '16px';
     h1El.style.marginLeft = '0';
     h1El.style.marginRight = '0';
