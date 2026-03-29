@@ -157,7 +157,7 @@ Two different treatments:
      - `modern` (default): dark "code window" with 3 colored dots header and sticky top bar, horizontally scrollable content
 2. **WeChat output**:
    - Uses the rendered HTML from the preview and converts highlight.js classes into inline styles via `convertHighlightClassesToInlineStyles`
-   - Attempts to preserve syntax highlighting colors and font styles while keeping layout simple and WeChat‑friendly
+   - All code block elements explicitly set `text-align: left` to prevent inherited centering
 
 ### H1 Bottom Border Toggle
 

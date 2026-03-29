@@ -538,6 +538,7 @@ function applyThemeStyles(
       preEl.style.flexDirection = 'column';
       preEl.style.overflow = 'hidden';
       preEl.style.whiteSpace = 'pre';
+      preEl.style.textAlign = 'left';
 
       // 创建一个可滚动的代码容器
       const codeContainer = document.createElement('div');
@@ -545,6 +546,7 @@ function applyThemeStyles(
       codeContainer.style.overflowY = 'visible';
       codeContainer.style.flex = '1';
       codeContainer.style.whiteSpace = 'pre';
+      codeContainer.style.textAlign = 'left';
 
       // code 元素样式
       newCodeEl.style.backgroundColor = 'transparent';
@@ -558,6 +560,7 @@ function applyThemeStyles(
       newCodeEl.style.whiteSpace = 'pre';
       newCodeEl.style.wordBreak = 'keep-all';
       newCodeEl.style.wordWrap = 'normal';
+      newCodeEl.style.textAlign = 'left';
 
       // 如果有语法高亮，将 highlight.js 的 CSS 类转换为内联样式
       // 如果没有语法高亮，直接使用原始 HTML，确保空白字符被保留
@@ -585,6 +588,7 @@ function applyThemeStyles(
       preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
       preEl.style.color = '#333';
       preEl.style.whiteSpace = 'pre';
+      preEl.style.textAlign = 'left';
 
       // code 元素样式
       newCodeEl.style.backgroundColor = 'transparent';
@@ -596,6 +600,7 @@ function applyThemeStyles(
       newCodeEl.style.whiteSpace = 'pre';
       newCodeEl.style.wordBreak = 'keep-all';
       newCodeEl.style.wordWrap = 'normal';
+      newCodeEl.style.textAlign = 'left';
 
       // 如果有语法高亮，将 highlight.js 的 CSS 类转换为内联样式
       // 如果没有语法高亮，直接使用原始 HTML，确保空白字符被保留
