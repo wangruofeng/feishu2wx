@@ -63,6 +63,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
   - List items: unwraps `li > p` and wraps each `li`'s content in a single `span` so the WeChat editor does not split "first child" + "rest" into separate lines (avoids unwanted line break after bold label)
   - Uses `px` units (better compatibility than `em`)
   - Special gradient divider via `linear-gradient`
+  - Modern code blocks preserve the 3-dot header and convert indentation to explicit `<br>` + `&nbsp;` so WeChat paste keeps alignment
 - `copyHtmlToWeChat()`: Copies formatted HTML to clipboard
   - Primary: Clipboard API `write()` with ClipboardItem (text/html + text/plain)
   - Fallback: `document.execCommand('copy')` with contenteditable div
@@ -155,9 +156,13 @@ Two different treatments:
    - Two styles:
      - `classic`: light background, simple `pre > code` blocks
      - `modern` (default): dark "code window" with 3 colored dots header and sticky top bar, horizontally scrollable content
+   - The modern code block visual tokens are centralized in `frontend/src/utils/codeBlockStyles.ts` and exposed to preview via CSS variables
 2. **WeChat output**:
    - Uses the rendered HTML from the preview and converts highlight.js classes into inline styles via `convertHighlightClassesToInlineStyles`
    - All code block elements explicitly set `text-align: left` to prevent inherited centering
+   - Modern code blocks keep the 3-dot header by using non-empty inline elements
+   - Code indentation is serialized as explicit `<br>` and `&nbsp;` so pasted output stays aligned in the WeChat editor
+   - ASCII art code blocks (marked with `language-ascii`) are converted to PNG images via Canvas for correct rendering in WeChat, with SVG fallback
 
 ### H1 Bottom Border Toggle
 

@@ -1,4 +1,5 @@
 import { CodeBlockStyle } from './markdownRenderer';
+import { modernCodeBlockStyles } from './codeBlockStyles';
 
 /**
  * 获取主题相关的样式配置
@@ -164,6 +165,123 @@ function getFontFamily(fontKey: string): string {
     'poppins': '"Poppins", -apple-system, BlinkMacSystemFont, sans-serif',
   };
   return fonts[fontKey] || fonts['default'];
+}
+
+function escapeSvgText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function shouldConvertCodeBlockToImage(codeEl: Element): boolean {
+  return codeEl.classList.contains('language-ascii');
+}
+
+function createAsciiArtDataUrl(text: string, isModern: boolean): string {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const renderScale = 2;
+  const fontSize = 14;
+  const lineHeight = 21;
+  const horizontalPadding = 16;
+  const verticalPadding = 16;
+  const estimatedCharWidth = 8.4;
+  const longestLineLength = lines.reduce((max, line) => Math.max(max, line.length), 0);
+  const width = Math.max(
+    160,
+    Math.ceil(longestLineLength * estimatedCharWidth + horizontalPadding * 2)
+  );
+  const height = Math.max(
+    60,
+    Math.ceil(lines.length * lineHeight + verticalPadding * 2)
+  );
+  const backgroundColor = isModern ? '#282c34' : '#f5f5f5';
+  const textColor = isModern ? '#e6e6e6' : '#333333';
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext && canvas.getContext('2d');
+  if (context) {
+    canvas.width = width * renderScale;
+    canvas.height = height * renderScale;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.scale(renderScale, renderScale);
+
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, width, height);
+    context.fillStyle = textColor;
+    context.font = `${fontSize}px Consolas, Monaco, "Courier New", monospace`;
+    context.textBaseline = 'top';
+
+    lines.forEach((line, index) => {
+      const y = verticalPadding + index * lineHeight;
+      context.fillText(line || ' ', horizontalPadding, y);
+    });
+
+    return canvas.toDataURL('image/png');
+  }
+
+  const tspans = lines
+    .map((line, index) => {
+      const y = verticalPadding + fontSize + index * lineHeight;
+      return `<tspan x="${horizontalPadding}" y="${y}">${escapeSvgText(line || ' ')}</tspan>`;
+    })
+    .join('');
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="100%" height="100%" rx="${isModern ? 8 : 6}" fill="${backgroundColor}" />
+      <text
+        xml:space="preserve"
+        font-family="Consolas, Monaco, 'Courier New', monospace"
+        font-size="${fontSize}"
+        fill="${textColor}"
+      >${tspans}</text>
+    </svg>
+  `.replace(/\n\s+/g, ' ').trim();
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function preserveCodeWhitespaceForWechat(codeEl: HTMLElement): void {
+  const textNodes: Text[] = [];
+  const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT);
+  let currentNode = walker.nextNode();
+
+  while (currentNode) {
+    if (currentNode.nodeType === Node.TEXT_NODE) {
+      textNodes.push(currentNode as Text);
+    }
+    currentNode = walker.nextNode();
+  }
+
+  textNodes.forEach((textNode) => {
+    const value = textNode.textContent ?? '';
+    if (!value.includes('\n') && !value.includes('\t') && !value.includes('  ')) {
+      return;
+    }
+
+    const lines = value.replace(/\r\n/g, '\n').split('\n');
+    const fragment = document.createDocumentFragment();
+
+    lines.forEach((line, index) => {
+      const normalizedLine = line
+        .replace(/\t/g, '    ')
+        .replace(/ /g, '\u00a0');
+
+      if (normalizedLine) {
+        fragment.appendChild(document.createTextNode(normalizedLine));
+      }
+
+      if (index < lines.length - 1) {
+        fragment.appendChild(document.createElement('br'));
+      }
+    });
+
+    textNode.parentNode?.replaceChild(fragment, textNode);
+  });
 }
 
 /**
@@ -473,39 +591,44 @@ function applyThemeStyles(
       const headerEl = headerClone;
       
       // 头部容器样式 - 固定在顶部，横向滚动时不动
-      headerEl.style.backgroundColor = '#21252b';
-      headerEl.style.padding = '10px 16px';
-      headerEl.style.borderBottom = '1px solid #3e4451';
+      headerEl.style.backgroundColor = modernCodeBlockStyles.headerBackgroundColor;
+      headerEl.style.padding = modernCodeBlockStyles.headerPadding;
       headerEl.style.display = 'flex';
       headerEl.style.alignItems = 'center';
-      headerEl.style.gap = '6px';
+      headerEl.style.gap = modernCodeBlockStyles.dotGap;
       headerEl.style.margin = '0';
-      headerEl.style.borderTopLeftRadius = '8px';
-      headerEl.style.borderTopRightRadius = '8px';
+      headerEl.style.borderTopLeftRadius = modernCodeBlockStyles.borderRadius;
+      headerEl.style.borderTopRightRadius = modernCodeBlockStyles.borderRadius;
       headerEl.style.position = 'sticky';
       headerEl.style.top = '0';
       headerEl.style.zIndex = '10';
       headerEl.style.flexShrink = '0';
+      headerEl.style.width = '100%';
+      headerEl.style.boxSizing = 'border-box';
       
       // 处理3个圆点
       const dots = headerEl.querySelectorAll('.code-block-dot');
       dots.forEach((dot, index) => {
         const dotEl = dot as HTMLElement;
-        dotEl.style.width = '12px';
-        dotEl.style.height = '12px';
+        dotEl.style.width = modernCodeBlockStyles.dotSize;
+        dotEl.style.height = modernCodeBlockStyles.dotSize;
         dotEl.style.borderRadius = '50%';
         dotEl.style.display = 'inline-block';
         dotEl.style.margin = '0';
         dotEl.style.padding = '0';
         dotEl.style.border = 'none';
+        dotEl.style.fontSize = '0';
+        dotEl.style.lineHeight = '0';
+        dotEl.style.overflow = 'hidden';
+        dotEl.innerHTML = '&nbsp;';
         
         // 根据类名设置颜色
         if (dotEl.classList.contains('red')) {
-          dotEl.style.backgroundColor = '#ff5f56';
+          dotEl.style.backgroundColor = modernCodeBlockStyles.redDotColor;
         } else if (dotEl.classList.contains('orange')) {
-          dotEl.style.backgroundColor = '#ffbd2e';
+          dotEl.style.backgroundColor = modernCodeBlockStyles.orangeDotColor;
         } else if (dotEl.classList.contains('green')) {
-          dotEl.style.backgroundColor = '#27c93f';
+          dotEl.style.backgroundColor = modernCodeBlockStyles.greenDotColor;
         }
         
         // 移除类名（因为已经转换为内联样式）
@@ -527,12 +650,12 @@ function applyThemeStyles(
 
     if (isModern) {
       // 现代样式：深色背景，类似 IDE（Atom One Dark 主题）
-      preEl.style.backgroundColor = '#282c34';
+      preEl.style.backgroundColor = modernCodeBlockStyles.preBackgroundColor;
       preEl.style.padding = '0';
-      preEl.style.borderRadius = '8px';
+      preEl.style.borderRadius = modernCodeBlockStyles.borderRadius;
       preEl.style.marginBottom = '16px';
-      preEl.style.fontSize = '14px';
-      preEl.style.lineHeight = '1.5';
+      preEl.style.fontSize = modernCodeBlockStyles.fontSize;
+      preEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
       preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
       preEl.style.display = 'flex';
       preEl.style.flexDirection = 'column';
@@ -550,11 +673,12 @@ function applyThemeStyles(
 
       // code 元素样式
       newCodeEl.style.backgroundColor = 'transparent';
-      newCodeEl.style.padding = '16px';
+      newCodeEl.style.padding = modernCodeBlockStyles.codePadding;
       newCodeEl.style.display = 'block';
-      newCodeEl.style.color = '#e6e6e6';
+      newCodeEl.style.color = modernCodeBlockStyles.codeTextColor;
       newCodeEl.style.borderRadius = '0';
-      newCodeEl.style.fontSize = '14px';
+      newCodeEl.style.fontSize = modernCodeBlockStyles.fontSize;
+      newCodeEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
       newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
       newCodeEl.style.minWidth = 'fit-content';
       newCodeEl.style.whiteSpace = 'pre';
@@ -570,6 +694,8 @@ function applyThemeStyles(
         // 对于没有语法高亮的代码块，确保 white-space 正确设置
         newCodeEl.style.whiteSpace = 'pre';
       }
+
+      preserveCodeWhitespaceForWechat(newCodeEl);
 
       // 将 code 元素添加到可滚动容器
       codeContainer.appendChild(newCodeEl);
@@ -610,6 +736,8 @@ function applyThemeStyles(
         // 对于没有语法高亮的代码块，确保 white-space 正确设置
         newCodeEl.style.whiteSpace = 'pre';
       }
+
+      preserveCodeWhitespaceForWechat(newCodeEl);
 
       // 将新的 code 元素添加到 pre（经典样式）
       preEl.appendChild(newCodeEl);
