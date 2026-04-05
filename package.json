@@ -6,7 +6,7 @@
     "install:frontend": "cd frontend && npm install",
     "start": "cd frontend && npm start",
     "pre-commit-check": "node scripts/pre-commit-check.js",
-    "prepare": "husky"
+    "prepare": "test -x ./node_modules/.bin/husky && ./node_modules/.bin/husky || true"
   },
   "keywords": [
     "feishu",
