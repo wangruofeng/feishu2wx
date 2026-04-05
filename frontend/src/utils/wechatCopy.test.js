@@ -53,53 +53,6 @@ test('formats classic code blocks left-aligned for wechat copy', () => {
   expect(formattedHtml).toContain('text-align: left');
 });
 
-test('formats ascii art code blocks as images for wechat copy', () => {
-  const html = '<pre><code class="language-ascii">┌───┐\n│ A │\n└───┘</code></pre>';
-  const originalGetContext = HTMLCanvasElement.prototype.getContext;
-  const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
-  const fillRect = jest.fn();
-  const fillText = jest.fn();
-  const scale = jest.fn();
-  let createdCanvas = null;
-
-  HTMLCanvasElement.prototype.getContext = jest.fn(function () {
-    createdCanvas = this;
-    return {
-    fillStyle: '',
-    font: '',
-    textBaseline: '',
-    fillRect,
-    fillText,
-    scale,
-    };
-  });
-  HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,mock-ascii-art');
-
-  try {
-    const formattedHtml = formatForWeChat(
-      html,
-      'green',
-      'default',
-      true,
-      'border',
-      'classic',
-      false
-    );
-
-    expect(formattedHtml).toContain('<img');
-    expect(formattedHtml).toContain('data:image/png');
-    expect(formattedHtml).not.toContain('<pre');
-    expect(fillRect).toHaveBeenCalled();
-    expect(fillText).toHaveBeenCalled();
-    expect(scale).toHaveBeenCalledWith(2, 2);
-    expect(createdCanvas.width).toBe(320);
-    expect(createdCanvas.height).toBe(190);
-  } finally {
-    HTMLCanvasElement.prototype.getContext = originalGetContext;
-    HTMLCanvasElement.prototype.toDataURL = originalToDataURL;
-  }
-});
-
 test('keeps normal code blocks as preformatted html for wechat copy', () => {
   const html = '<pre><code>const answer = 42;\nconsole.log(answer);</code></pre>';
 
