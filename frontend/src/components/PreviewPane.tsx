@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { fonts } from './FontSelector';
+import { getModernCodeBlockCssVars } from '../utils/codeBlockStyles';
 import './PreviewPane.css';
 
 interface Props {
@@ -24,7 +25,10 @@ const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font
 
   // 获取当前字体样式
   const currentFont = fonts.find(f => f.key === font) || fonts[0];
-  const fontStyle = { fontFamily: currentFont.value };
+  const fontStyle = {
+    fontFamily: currentFont.value,
+    ...getModernCodeBlockCssVars(),
+  } as React.CSSProperties;
 
   return (
     <div className={`preview-pane ${isFullscreen ? 'fullscreen' : ''}`}>
