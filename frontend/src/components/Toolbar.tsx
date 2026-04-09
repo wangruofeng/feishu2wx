@@ -6,7 +6,9 @@ interface Props {
   markdown: string;
   setMarkdown: (md: string) => void;
   onCopyToWeChat: () => void;
+  onCopyToToutiao: () => void;
   isCopying: boolean;
+  isCopyingToutiao: boolean;
   showH1: boolean;
   onToggleH1: () => void;
   invertH1: boolean;
@@ -19,7 +21,7 @@ interface Props {
   onToggleHorizontalRule: () => void;
 }
 
-const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, invertH1, onToggleInvertH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
+const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, onCopyToToutiao, isCopying, isCopyingToutiao, showH1, onToggleH1, invertH1, onToggleInvertH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
   const handleClear = () => {
     if (window.confirm('确定要清空所有内容吗？')) {
       setMarkdown('');
@@ -139,6 +141,13 @@ function greet(name) {
           disabled={isCopying || !markdown.trim()}
         >
           {isCopying ? '⏳ 复制中...' : '📋 一键复制到微信公众号'}
+        </button>
+        <button
+          className="toolbar-btn toolbar-btn-secondary"
+          onClick={onCopyToToutiao}
+          disabled={isCopyingToutiao || !markdown.trim()}
+        >
+          {isCopyingToutiao ? '⏳ 复制中...' : '📰 一键复制到头条号'}
         </button>
       </div>
     </div>

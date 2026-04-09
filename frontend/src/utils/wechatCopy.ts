@@ -1307,3 +1307,757 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * 将HTML内容转换为头条号编辑器可接受的格式
+ */
+export function formatForToutiao(
+  html: string,
+  theme: string = 'green',
+  font: string = 'default',
+  showH1: boolean = true,
+  imageBorderStyle: 'border' | 'shadow' = 'border',
+  codeBlockStyle: CodeBlockStyle = 'classic',
+  invertH1: boolean = false
+): string {
+  const themeStyles = getThemeStyles(theme);
+  const fontFamily = getFontFamily(font);
+
+  // 创建临时容器处理HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  // 直接应用主题样式
+  applyToutiaoStyles(tempDiv, theme, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+
+  return tempDiv.innerHTML;
+}
+
+/**
+ * 应用头条号特定的样式
+ */
+function applyToutiaoStyles(
+  container: HTMLElement,
+  theme: string,
+  themeStyles: ReturnType<typeof getThemeStyles>,
+  fontFamily: string,
+  showH1: boolean,
+  imageBorderStyle: 'border' | 'shadow',
+  codeBlockStyle: CodeBlockStyle,
+  invertH1: boolean
+): void {
+  // 首先设置容器的字体，作为默认字体
+  container.style.fontFamily = fontFamily;
+
+  // 处理图片：确保图片有完整的样式和URL
+  const images = container.querySelectorAll('img');
+  images.forEach((img) => {
+    const imgEl = img as HTMLImageElement;
+    imgEl.style.maxWidth = '100%';
+    imgEl.style.width = 'auto';
+    imgEl.style.height = 'auto';
+    imgEl.style.display = 'block';
+    imgEl.style.margin = '20px auto';
+    imgEl.style.borderRadius = '4px';
+
+    if (imageBorderStyle === 'border') {
+      imgEl.style.border = '1px solid #e0e0e0';
+      imgEl.style.boxShadow = 'none';
+    } else {
+      imgEl.style.border = 'none';
+      imgEl.style.boxShadow = '0 2px 12px rgba(0, 0, 0, 0.08)';
+    }
+
+    if (imgEl.src && !imgEl.src.startsWith('http') && !imgEl.src.startsWith('data:')) {
+      if (imgEl.src.startsWith('/')) {
+        imgEl.src = window.location.origin + imgEl.src;
+      }
+    }
+  });
+
+  // 处理行内代码
+  const inlineCodes = container.querySelectorAll('code:not(pre code)');
+  inlineCodes.forEach((code) => {
+    const codeEl = code as HTMLElement;
+    codeEl.style.backgroundColor = '#f5f5f5';
+    codeEl.style.padding = '2px 8px';
+    codeEl.style.borderRadius = '4px';
+    codeEl.style.fontSize = '0.92em';
+    codeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+    codeEl.style.color = '#d63384';
+  });
+
+  // 处理代码块
+  const codeBlocks = container.querySelectorAll('pre');
+  codeBlocks.forEach((pre) => {
+    const preEl = pre as HTMLElement;
+    const isModern = codeBlockStyle === 'modern' && preEl.classList.contains('modern-code-block');
+
+    const header = preEl.querySelector('.code-block-header');
+    const codeContainer = preEl.querySelector('.code-block-content');
+    const codeEl = codeContainer ? codeContainer.querySelector('code') : preEl.querySelector('code');
+    if (!codeEl) return;
+
+    let headerClone: HTMLElement | null = null;
+    if (isModern && header) {
+      headerClone = header.cloneNode(true) as HTMLElement;
+    }
+
+    const codeClone = codeEl.cloneNode(true) as HTMLElement;
+    const codeHtml = codeClone.innerHTML;
+    const hasHighlighting = codeEl.querySelector('[class*="hljs-"]') !== null || 
+                            codeEl.querySelector('.hljs span') !== null ||
+                            codeEl.querySelector('span[class*="hljs"]') !== null;
+
+    preEl.innerHTML = '';
+
+    if (isModern && headerClone) {
+      const headerEl = headerClone;
+      headerEl.style.backgroundColor = modernCodeBlockStyles.headerBackgroundColor;
+      headerEl.style.padding = modernCodeBlockStyles.headerPadding;
+      headerEl.style.display = 'flex';
+      headerEl.style.alignItems = 'center';
+      headerEl.style.gap = modernCodeBlockStyles.dotGap;
+      headerEl.style.margin = '0';
+      headerEl.style.borderTopLeftRadius = modernCodeBlockStyles.borderRadius;
+      headerEl.style.borderTopRightRadius = modernCodeBlockStyles.borderRadius;
+      headerEl.style.position = 'sticky';
+      headerEl.style.top = '0';
+      headerEl.style.zIndex = '10';
+      headerEl.style.flexShrink = '0';
+      headerEl.style.width = '100%';
+      headerEl.style.boxSizing = 'border-box';
+
+      const dots = headerEl.querySelectorAll('.code-block-dot');
+      dots.forEach((dot, index) => {
+        const dotEl = dot as HTMLElement;
+        dotEl.style.width = modernCodeBlockStyles.dotSize;
+        dotEl.style.height = modernCodeBlockStyles.dotSize;
+        dotEl.style.borderRadius = '50%';
+        dotEl.style.display = 'inline-block';
+        dotEl.style.margin = '0';
+        dotEl.style.padding = '0';
+        dotEl.style.border = 'none';
+        dotEl.style.fontSize = '0';
+        dotEl.style.lineHeight = '0';
+        dotEl.style.overflow = 'hidden';
+        dotEl.innerHTML = '&nbsp;';
+
+        if (dotEl.classList.contains('red')) {
+          dotEl.style.backgroundColor = modernCodeBlockStyles.redDotColor;
+        } else if (dotEl.classList.contains('orange')) {
+          dotEl.style.backgroundColor = modernCodeBlockStyles.orangeDotColor;
+        } else if (dotEl.classList.contains('green')) {
+          dotEl.style.backgroundColor = modernCodeBlockStyles.greenDotColor;
+        }
+
+        dotEl.className = '';
+      });
+
+      headerEl.className = '';
+      preEl.appendChild(headerEl);
+    }
+
+    const newCodeEl = document.createElement('code');
+    newCodeEl.innerHTML = codeHtml;
+    newCodeEl.setAttribute('data-preserve-whitespace', 'true');
+
+    if (isModern) {
+      preEl.style.backgroundColor = modernCodeBlockStyles.preBackgroundColor;
+      preEl.style.padding = '0';
+      preEl.style.borderRadius = modernCodeBlockStyles.borderRadius;
+      preEl.style.marginBottom = '24px';
+      preEl.style.fontSize = modernCodeBlockStyles.fontSize;
+      preEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
+      preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      preEl.style.display = 'flex';
+      preEl.style.flexDirection = 'column';
+      preEl.style.overflow = 'hidden';
+      preEl.style.whiteSpace = 'pre';
+      preEl.style.textAlign = 'left';
+
+      const codeContainer = document.createElement('div');
+      codeContainer.style.overflowX = 'auto';
+      codeContainer.style.overflowY = 'visible';
+      codeContainer.style.flex = '1';
+      codeContainer.style.whiteSpace = 'pre';
+      codeContainer.style.textAlign = 'left';
+
+      newCodeEl.style.backgroundColor = 'transparent';
+      newCodeEl.style.padding = modernCodeBlockStyles.codePadding;
+      newCodeEl.style.display = 'block';
+      newCodeEl.style.color = modernCodeBlockStyles.codeTextColor;
+      newCodeEl.style.borderRadius = '0';
+      newCodeEl.style.fontSize = modernCodeBlockStyles.fontSize;
+      newCodeEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
+      newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      newCodeEl.style.minWidth = 'fit-content';
+      newCodeEl.style.whiteSpace = 'pre';
+      newCodeEl.style.wordBreak = 'keep-all';
+      newCodeEl.style.wordWrap = 'normal';
+      newCodeEl.style.textAlign = 'left';
+
+      if (hasHighlighting) {
+        convertHighlightClassesToInlineStyles(newCodeEl, true);
+      } else {
+        newCodeEl.style.whiteSpace = 'pre';
+      }
+
+      preserveCodeWhitespaceForWechat(newCodeEl);
+      codeContainer.appendChild(newCodeEl);
+      preEl.appendChild(codeContainer);
+    } else {
+      preEl.style.backgroundColor = '#f5f5f5';
+      preEl.style.padding = '16px';
+      preEl.style.borderRadius = '8px';
+      preEl.style.overflowX = 'auto';
+      preEl.style.marginBottom = '24px';
+      preEl.style.fontSize = '14px';
+      preEl.style.lineHeight = '1.6';
+      preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      preEl.style.color = '#333';
+      preEl.style.whiteSpace = 'pre';
+      preEl.style.textAlign = 'left';
+
+      newCodeEl.style.backgroundColor = 'transparent';
+      newCodeEl.style.padding = '0';
+      newCodeEl.style.color = '#333';
+      newCodeEl.style.borderRadius = '0';
+      newCodeEl.style.fontSize = '14px';
+      newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      newCodeEl.style.whiteSpace = 'pre';
+      newCodeEl.style.wordBreak = 'keep-all';
+      newCodeEl.style.wordWrap = 'normal';
+      newCodeEl.style.textAlign = 'left';
+
+      if (hasHighlighting) {
+        convertHighlightClassesToInlineStyles(newCodeEl, false);
+      } else {
+        newCodeEl.style.whiteSpace = 'pre';
+      }
+
+      preserveCodeWhitespaceForWechat(newCodeEl);
+      preEl.appendChild(newCodeEl);
+    }
+  });
+
+  // 处理段落间距
+  const paragraphs = container.querySelectorAll('p');
+  paragraphs.forEach((p) => {
+    const pEl = p as HTMLElement;
+    if (pEl.textContent?.trim()) {
+      pEl.style.fontSize = '16px';
+      const nextSibling = pEl.nextElementSibling;
+      const isFollowedByList = nextSibling && (
+        nextSibling.tagName === 'UL' || nextSibling.tagName === 'OL'
+      );
+      pEl.style.marginBottom = isFollowedByList ? '8px' : '24px';
+      pEl.style.marginTop = '0';
+      pEl.style.lineHeight = '1.8';
+      pEl.style.color = '#333';
+      pEl.style.fontFamily = fontFamily;
+    }
+  });
+
+  // 处理标题
+  const h1Elements = container.querySelectorAll('h1');
+  h1Elements.forEach((h1, index) => {
+    const h1El = h1 as HTMLElement;
+    let inlineWrapper = h1El.querySelector(':scope > .h1-inline-block') as HTMLElement | null;
+
+    if (!inlineWrapper) {
+      inlineWrapper = document.createElement('span');
+      inlineWrapper.className = 'h1-inline-block';
+
+      while (h1El.firstChild) {
+        inlineWrapper.appendChild(h1El.firstChild);
+      }
+
+      h1El.appendChild(inlineWrapper);
+    }
+
+    h1El.style.fontSize = '24px';
+    h1El.style.marginTop = index === 0 ? '12px' : '52px';
+    h1El.style.marginBottom = '20px';
+    h1El.style.marginLeft = '0';
+    h1El.style.marginRight = '0';
+    h1El.style.fontWeight = 'bold';
+    h1El.style.lineHeight = '1.3';
+    h1El.style.borderBottom = showH1 && !invertH1 ? `2px solid ${themeStyles.headingColor}` : 'none';
+    h1El.style.borderTop = 'none';
+    h1El.style.borderLeft = 'none';
+    h1El.style.borderRight = 'none';
+    h1El.style.paddingBottom = '12px';
+    h1El.style.paddingTop = '0';
+    h1El.style.paddingLeft = '0';
+    h1El.style.paddingRight = '0';
+    h1El.style.color = themeStyles.headingColor;
+    h1El.style.display = 'block';
+    h1El.style.textAlign = 'left';
+    h1El.style.fontFamily = fontFamily;
+
+    inlineWrapper.style.display = invertH1 ? 'inline-block' : 'inline';
+    inlineWrapper.style.margin = invertH1 ? '0' : '0';
+    inlineWrapper.style.padding = invertH1 ? '8px 16px' : '0';
+    const invertH1BgColor = theme === 'orange' ? themeStyles.headingColor : themeStyles.primaryColor;
+    inlineWrapper.style.backgroundColor = invertH1 ? invertH1BgColor : 'transparent';
+    inlineWrapper.style.color = invertH1 ? '#ffffff' : themeStyles.headingColor;
+    inlineWrapper.style.borderRadius = invertH1 ? '4px' : '0';
+    inlineWrapper.style.lineHeight = '1.3';
+    inlineWrapper.style.setProperty('box-decoration-break', invertH1 ? 'clone' : 'slice');
+    inlineWrapper.style.setProperty('-webkit-box-decoration-break', invertH1 ? 'clone' : 'slice');
+  });
+
+  const h2Elements = container.querySelectorAll('h2');
+  h2Elements.forEach((h2) => {
+    const h2El = h2 as HTMLElement;
+    h2El.style.fontSize = '20px';
+    h2El.style.marginTop = '36px';
+    h2El.style.marginBottom = '18px';
+    h2El.style.marginLeft = '0';
+    h2El.style.marginRight = '0';
+    h2El.style.fontWeight = 'bold';
+    h2El.style.lineHeight = '1.35';
+    h2El.style.borderBottom = 'none';
+    h2El.style.borderTop = 'none';
+    h2El.style.borderLeft = 'none';
+    h2El.style.borderRight = 'none';
+    h2El.style.paddingBottom = '0';
+    h2El.style.paddingTop = '0';
+    h2El.style.paddingLeft = '0';
+    h2El.style.paddingRight = '0';
+    h2El.style.color = themeStyles.headingColorH2;
+    h2El.style.display = 'block';
+    h2El.style.fontFamily = fontFamily;
+  });
+
+  const h3Elements = container.querySelectorAll('h3');
+  h3Elements.forEach((h3) => {
+    const h3El = h3 as HTMLElement;
+    h3El.style.fontSize = '18px';
+    h3El.style.marginTop = '28px';
+    h3El.style.marginBottom = '16px';
+    h3El.style.marginLeft = '0';
+    h3El.style.marginRight = '0';
+    h3El.style.fontWeight = 'bold';
+    h3El.style.lineHeight = '1.4';
+    h3El.style.color = themeStyles.headingColorH3H6;
+    h3El.style.display = 'block';
+    h3El.style.fontFamily = fontFamily;
+  });
+
+  const h4Elements = container.querySelectorAll('h4, h5, h6');
+  h4Elements.forEach((h) => {
+    const hEl = h as HTMLElement;
+    hEl.style.marginTop = '24px';
+    hEl.style.marginBottom = '14px';
+    hEl.style.fontWeight = '600';
+    hEl.style.lineHeight = '1.45';
+    hEl.style.color = themeStyles.headingColorH3H6;
+    hEl.style.fontFamily = fontFamily;
+  });
+
+  // 处理列表
+  const lists = container.querySelectorAll('ul, ol');
+  lists.forEach((list) => {
+    const listEl = list as HTMLElement;
+    const parentLi = listEl.parentElement;
+    const isNested = parentLi && parentLi.tagName === 'LI';
+
+    listEl.style.marginBottom = isNested ? '8px' : '20px';
+    listEl.style.marginTop = isNested ? '8px' : '0';
+    listEl.style.paddingLeft = '32px';
+    listEl.style.color = '#333';
+    listEl.style.fontFamily = fontFamily;
+    listEl.style.textAlign = 'left';
+    listEl.style.fontSize = '16px';
+  });
+
+  const listItemsWithP = container.querySelectorAll('li > p');
+  listItemsWithP.forEach((p) => {
+    const pEl = p as HTMLElement;
+    const li = pEl.parentElement;
+    if (li && li.tagName === 'LI') {
+      while (pEl.firstChild) {
+        li.insertBefore(pEl.firstChild, pEl);
+      }
+      pEl.remove();
+    }
+  });
+
+  const listItems = container.querySelectorAll('li');
+  listItems.forEach((li) => {
+    const liEl = li as HTMLElement;
+    liEl.style.marginBottom = '6px';
+    liEl.style.lineHeight = '1.8';
+    liEl.style.color = '#333';
+    liEl.style.fontFamily = fontFamily;
+    liEl.style.fontSize = '16px';
+
+    const textNodes: Node[] = [];
+    const walker = document.createTreeWalker(
+      liEl,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      if (node.textContent && node.textContent.trim()) {
+        textNodes.push(node);
+      }
+    }
+
+    textNodes.forEach(textNode => {
+      if (textNode.textContent) {
+        textNode.textContent = textNode.textContent.replace(/[\r\n\t]+/g, ' ');
+      }
+    });
+  });
+
+  const listParagraphs = container.querySelectorAll('li p');
+  listParagraphs.forEach((p: Element) => {
+    const pEl = p as HTMLElement;
+    pEl.style.marginBottom = '0';
+    pEl.style.marginTop = '0';
+    pEl.style.paddingLeft = '0';
+    pEl.style.paddingRight = '0';
+    pEl.style.display = 'inline';
+  });
+
+  // 处理引用
+  const blockquotes = container.querySelectorAll('blockquote');
+  blockquotes.forEach((blockquote) => {
+    const bqEl = blockquote as HTMLElement;
+    bqEl.style.margin = '20px 0';
+    bqEl.style.padding = '16px 20px';
+    bqEl.style.borderLeft = `4px solid ${themeStyles.blockquoteBorderColor}`;
+    bqEl.style.backgroundColor = themeStyles.blockquoteBgColor;
+    bqEl.style.color = '#333';
+    bqEl.style.borderRadius = '0 6px 6px 0';
+    bqEl.style.fontFamily = fontFamily;
+
+    const firstChild = bqEl.firstElementChild as HTMLElement;
+    const lastChild = bqEl.lastElementChild as HTMLElement;
+    if (firstChild) {
+      firstChild.style.marginTop = '0';
+    }
+    if (lastChild) {
+      lastChild.style.marginBottom = '0';
+    }
+  });
+
+  // 处理链接
+  const links = container.querySelectorAll('a');
+  links.forEach((link) => {
+    const linkEl = link as HTMLAnchorElement;
+    linkEl.style.color = themeStyles.linkColor;
+    linkEl.style.textDecoration = 'underline';
+    linkEl.style.fontFamily = fontFamily;
+
+    const childElements = linkEl.querySelectorAll('*');
+    childElements.forEach((child) => {
+      const childEl = child as HTMLElement;
+      childEl.style.color = themeStyles.linkColor;
+    });
+
+    if (linkEl.children.length === 0 && linkEl.textContent?.trim()) {
+      const span = document.createElement('span');
+      span.style.color = themeStyles.linkColor;
+      span.textContent = linkEl.textContent;
+      linkEl.innerHTML = '';
+      linkEl.appendChild(span);
+    }
+
+    Array.from(linkEl.children).forEach((child) => {
+      const childEl = child as HTMLElement;
+      if (['STRONG', 'B', 'EM', 'I', 'SPAN', 'CODE'].includes(childEl.tagName)) {
+        childEl.style.color = themeStyles.linkColor;
+      }
+    });
+
+    if (!linkEl.target) {
+      linkEl.target = '_blank';
+    }
+  });
+
+  // 处理表格
+  const tables = container.querySelectorAll('table');
+  tables.forEach((table) => {
+    const tableEl = table as HTMLElement;
+    tableEl.style.width = '100%';
+    tableEl.style.borderCollapse = 'collapse';
+    tableEl.style.marginBottom = '20px';
+    tableEl.style.marginTop = '0';
+  });
+
+  const tableCells = container.querySelectorAll('td, th');
+  tableCells.forEach((cell: Element) => {
+    const cellEl = cell as HTMLElement;
+    cellEl.style.padding = '12px 16px';
+    cellEl.style.border = '1px solid #e0e0e0';
+    cellEl.style.color = '#333';
+    cellEl.style.fontFamily = fontFamily;
+    cellEl.style.fontSize = '15px';
+  });
+
+  const tableHeaders = container.querySelectorAll('th');
+  tableHeaders.forEach((th: Element) => {
+    const thEl = th as HTMLElement;
+    thEl.style.backgroundColor = themeStyles.tableHeaderBgColor;
+    thEl.style.fontWeight = '600';
+    thEl.style.color = themeStyles.tableHeaderColor;
+    thEl.style.fontFamily = fontFamily;
+    thEl.style.fontSize = '15px';
+  });
+
+  // 处理分隔线
+  const horizontalRules = container.querySelectorAll('hr');
+  horizontalRules.forEach((hr) => {
+    const hrEl = hr as HTMLElement;
+    hrEl.style.border = 'none';
+    hrEl.style.margin = '32px 0';
+    hrEl.style.height = '1px';
+    hrEl.style.padding = '0';
+    hrEl.style.width = '100%';
+    hrEl.style.display = 'block';
+    hrEl.style.boxSizing = 'border-box';
+    hrEl.style.background = 'rgba(0, 0, 0, 0.15)';
+    hrEl.style.backgroundSize = '100% 1px';
+    hrEl.style.backgroundRepeat = 'no-repeat';
+    hrEl.style.backgroundPosition = 'center';
+    hrEl.style.opacity = '1';
+  });
+
+  // 处理加粗文本
+  const strongElements = container.querySelectorAll('strong, b');
+  strongElements.forEach((strong) => {
+    const strongEl = strong as HTMLElement;
+    const parentLi = strongEl.closest('li');
+
+    if (parentLi) {
+      const span = document.createElement('span');
+      span.style.fontWeight = 'bold';
+      span.style.fontStyle = 'normal';
+      span.style.fontFamily = fontFamily;
+      span.style.display = 'inline';
+
+      while (strongEl.firstChild) {
+        span.appendChild(strongEl.firstChild);
+      }
+
+      strongEl.parentNode?.replaceChild(span, strongEl);
+    } else {
+      strongEl.style.fontWeight = 'bold';
+      strongEl.style.fontStyle = 'normal';
+      strongEl.style.fontFamily = fontFamily;
+    }
+  });
+
+  // 处理列表项包裹
+  const listItemsToWrap = container.querySelectorAll('ul li, ol li');
+  listItemsToWrap.forEach((li) => {
+    const liEl = li as HTMLElement;
+    if (liEl.childNodes.length === 0) return;
+    const wrapper = document.createElement('span');
+    wrapper.style.display = 'inline';
+    while (liEl.firstChild) {
+      wrapper.appendChild(liEl.firstChild);
+    }
+    liEl.appendChild(wrapper);
+  });
+
+  // 处理斜体文本
+  const emElements = container.querySelectorAll('em, i');
+  emElements.forEach((em) => {
+    const emEl = em as HTMLElement;
+    emEl.style.fontStyle = 'italic';
+    emEl.style.fontWeight = 'normal';
+    emEl.style.fontFamily = fontFamily;
+  });
+}
+
+/**
+ * 复制选中的内容到头条号编辑器
+ */
+export async function copySelectedToToutiao(
+  theme: string = 'green',
+  font: string = 'default',
+  showH1: boolean = true,
+  imageBorderStyle: 'border' | 'shadow' = 'border',
+  codeBlockStyle: CodeBlockStyle = 'classic',
+  invertH1: boolean = false
+): Promise<{ success: boolean; message: string }> {
+  const selectedHtml = getSelectedHtmlFromPreview();
+  
+  if (!selectedHtml || !selectedHtml.trim()) {
+    return { 
+      success: false, 
+      message: '请先在预览区域选择要复制的内容' 
+    };
+  }
+
+  return copyHtmlToToutiao(selectedHtml, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+}
+
+/**
+ * 复制HTML内容到头条号编辑器
+ */
+export async function copyHtmlToToutiao(
+  html: string,
+  theme: string = 'green',
+  font: string = 'default',
+  showH1: boolean = true,
+  imageBorderStyle: 'border' | 'shadow' = 'border',
+  codeBlockStyle: CodeBlockStyle = 'classic',
+  invertH1: boolean = false
+): Promise<{ success: boolean; message: string }> {
+  if (!html || !html.trim()) {
+    return { success: false, message: '没有内容可复制' };
+  }
+
+  const formattedHtml = formatForToutiao(html, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+  
+  if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
+    try {
+      const textContent = document.createElement('div');
+      textContent.innerHTML = formattedHtml;
+      const plainText = textContent.textContent || textContent.innerText || '';
+
+      const htmlBlob = new Blob([formattedHtml], { type: 'text/html' });
+      const textBlob = new Blob([plainText], { type: 'text/plain' });
+
+      let clipboardItem;
+      try {
+        clipboardItem = new ClipboardItem({
+          'text/html': Promise.resolve(htmlBlob),
+          'text/plain': Promise.resolve(textBlob),
+        });
+      } catch (e) {
+        clipboardItem = new ClipboardItem({
+          'text/html': htmlBlob,
+          'text/plain': textBlob,
+        });
+      }
+
+      await navigator.clipboard.write([clipboardItem]);
+      return { 
+        success: true, 
+        message: '✅ 已成功复制到剪贴板！\n\n请打开头条号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
+      };
+    } catch (clipboardError) {
+      console.warn('Clipboard API write 失败，尝试降级方案:', clipboardError);
+    }
+  }
+
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  container.contentEditable = 'true';
+  container.style.position = 'fixed';
+  container.style.left = '0';
+  container.style.top = '0';
+  container.style.width = '1px';
+  container.style.height = '1px';
+  container.style.opacity = '0.01';
+  container.style.pointerEvents = 'none';
+  container.style.overflow = 'hidden';
+  container.style.zIndex = '999999';
+  container.style.backgroundColor = 'transparent';
+  
+  document.body.appendChild(container);
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 20));
+    container.focus();
+    await new Promise(resolve => setTimeout(resolve, 20));
+
+    let copySuccess = false;
+    try {
+      const selectAllSuccess = document.execCommand('selectAll', false, undefined);
+      if (selectAllSuccess) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        copySuccess = document.execCommand('copy');
+      }
+    } catch (e) {
+    }
+
+    if (!copySuccess) {
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      const selection = window.getSelection();
+      
+      if (selection) {
+        selection.removeAllRanges();
+        try {
+          selection.addRange(range);
+          await new Promise(resolve => setTimeout(resolve, 100));
+          copySuccess = document.execCommand('copy');
+        } catch (e) {
+          try {
+            const fullRange = document.createRange();
+            fullRange.selectNode(container);
+            selection.removeAllRanges();
+            selection.addRange(fullRange);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            copySuccess = document.execCommand('copy');
+          } catch (e2) {
+          }
+        }
+        
+        selection.removeAllRanges();
+      }
+    }
+    
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
+    
+    if (copySuccess) {
+      return { 
+        success: true, 
+        message: '✅ 已成功复制到剪贴板！\n\n请打开头条号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
+      };
+    }
+  } catch (err) {
+    console.error('execCommand 复制失败:', err);
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = formattedHtml;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '0';
+    textarea.style.top = '0';
+    textarea.style.width = '2px';
+    textarea.style.height = '2px';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+    document.body.appendChild(textarea);
+    
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    const copySuccess = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    
+    if (copySuccess) {
+      return { 
+        success: true, 
+        message: '✅ 已成功复制到剪贴板！\n\n请打开头条号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。\n\n注意：由于浏览器限制，部分样式可能丢失。' 
+      };
+    }
+  } catch (err) {
+    console.error('textarea 复制失败:', err);
+  }
+
+  return { 
+    success: false, 
+    message: '❌ 复制失败。\n\n请手动选择右侧预览区域的内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制，然后粘贴到头条号编辑器。' 
+  };
+}

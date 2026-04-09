@@ -46,6 +46,18 @@
   border-color: #73d13d;
 }
 
+.toolbar-btn-secondary {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+  font-weight: 600;
+}
+
+.toolbar-btn-secondary:hover:not(:disabled) {
+  background-color: #40a9ff;
+  border-color: #40a9ff;
+}
+
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;

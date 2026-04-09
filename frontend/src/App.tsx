@@ -6,7 +6,7 @@ import DevicePreviewToggle from './components/DevicePreviewToggle';
 import FontSelector from './components/FontSelector';
 import Toolbar from './components/Toolbar';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
-import { copyHtmlToWeChat, copySelectedToWeChat } from './utils/wechatCopy';
+import { copyHtmlToWeChat, copySelectedToWeChat, copyHtmlToToutiao, copySelectedToToutiao } from './utils/wechatCopy';
 import './App.css';
 import './styles/themes.css';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -27,6 +27,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<string>(savedTheme);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
+  const [isCopyingToutiao, setIsCopyingToutiao] = useState<boolean>(false);
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>(savedFont);
@@ -198,12 +199,71 @@ const App: React.FC = () => {
     }
   }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1]);
 
+  // 一键复制到头条号（智能判断：如果有选中内容则复制选中内容，否则复制全部）
+  const handleCopyToToutiao = useCallback(async () => {
+    setIsCopyingToutiao(true);
+    try {
+      // 检查是否有选中的内容
+      const selection = window.getSelection();
+      let hasValidSelection = false;
+      
+      if (selection && selection.rangeCount > 0) {
+        try {
+          const range = selection.getRangeAt(0);
+          const previewElement = document.querySelector('.preview-content');
+          const selectedText = selection.toString().trim();
+          
+          // 检查：1. 有选中文本 2. 选中内容在预览区域内
+          if (selectedText.length > 0 && previewElement && previewElement.contains(range.commonAncestorContainer)) {
+            hasValidSelection = true;
+          }
+        } catch (e) {
+          // 如果获取选择范围失败，说明没有有效选择
+          hasValidSelection = false;
+        }
+      }
+
+      let result;
+      if (hasValidSelection) {
+        // 复制选中的内容
+        result = await copySelectedToToutiao(displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+      } else {
+        // 复制全部内容
+        if (!html.trim()) {
+          setCopyStatus({
+            visible: true,
+            message: '请先输入或粘贴内容',
+            isError: true,
+          });
+          setIsCopyingToutiao(false);
+          return;
+        }
+        result = await copyHtmlToToutiao(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+      }
+      
+      setCopyStatus({
+        visible: true,
+        message: result.message,
+        isError: !result.success,
+      });
+    } catch (error) {
+      console.error('复制失败:', error);
+      setCopyStatus({
+        visible: true,
+        message: '❌ 复制失败。\n\n请尝试：\n1. 刷新页面后重试\n2. 或手动选择预览区域内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制',
+        isError: true,
+      });
+    } finally {
+      setIsCopyingToutiao(false);
+    }
+  }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1]);
+
   return (
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
       <header className={`app-header ${isFullscreen ? 'fullscreen-header' : ''}`}>
         <div className="header-content">
           <h1 className="app-title">
-            <span className="title-feishu shimmer-text">飞书文档</span> → <span className="title-wechat shimmer-text">微信公众号</span>排版神器
+            <span className="title-feishu shimmer-text">飞书文档</span> → <span className="title-wechat shimmer-text">微信公众号/头条号</span>排版神器
           </h1>
           <div className="header-controls">
             <div className="header-controls-wrapper">
@@ -248,7 +308,9 @@ const App: React.FC = () => {
             markdown={markdown}
             setMarkdown={setMarkdown}
             onCopyToWeChat={handleCopyToWeChat}
+            onCopyToToutiao={handleCopyToToutiao}
             isCopying={isCopying}
+            isCopyingToutiao={isCopyingToutiao}
             showH1={showH1}
             onToggleH1={() => setShowH1(!showH1)}
             invertH1={invertH1}
