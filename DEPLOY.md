@@ -45,7 +45,7 @@ git push origin main
 https://wangruofeng.github.io/feishu2wx
 ```
 
-> **注意**：如果您的 GitHub 用户名或仓库名不同，请修改 `frontend/package.json` 中的 `homepage` 字段。
+> **注意**：如果您的 GitHub 用户名或仓库名不同，请修改 `package.json` 中的 `homepage` 字段。
 
 ### 方式二：使用 gh-pages 手动部署
 
@@ -54,7 +54,6 @@ https://wangruofeng.github.io/feishu2wx
 #### 步骤 1：安装依赖（如果尚未安装）
 
 ```bash
-cd frontend
 npm install
 ```
 
@@ -89,7 +88,7 @@ https://wangruofeng.github.io/feishu2wx
 
 ### 修改部署地址
 
-如果您的 GitHub 用户名或仓库名不同，需要修改 `frontend/package.json`：
+如果您的 GitHub 用户名或仓库名不同，需要修改 `package.json`：
 
 ```json
 {
@@ -115,7 +114,7 @@ https://wangruofeng.github.io/feishu2wx
 
 2. 在您的域名 DNS 设置中添加 CNAME 记录，指向 `你的用户名.github.io`
 
-3. 修改 `frontend/package.json` 中的 `homepage` 字段为您的域名
+3. 修改 `package.json` 中的 `homepage` 字段为您的域名
 
 ## 🔍 故障排查
 
@@ -130,7 +129,6 @@ https://wangruofeng.github.io/feishu2wx
 2. **检查构建是否成功**
 
    ```bash
-   cd frontend
    npm run build
    ```
 
@@ -189,7 +187,6 @@ git push origin main
 如果需要手动触发部署：
 
 ```bash
-cd frontend
 npm run deploy
 ```
 

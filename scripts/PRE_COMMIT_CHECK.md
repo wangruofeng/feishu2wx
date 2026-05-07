@@ -8,13 +8,13 @@
 
 ### 1. 版本号更新检查
 
-- 检查 `frontend/package.json` 中的版本号
+- 检查 `package.json` 中的版本号
 - 比较当前版本和上次提交的版本
 - 检测版本号是否回退
 
 ### 2. 文档更新检查
 
-- 检测是否有源代码变更（`frontend/src/` 目录下的 `.tsx`, `.ts`, `.css` 文件）
+- 检测是否有源代码变更（`src/` 目录下的 `.tsx`, `.ts`, `.css` 文件）
 - 如果有源代码变更，提示是否需要更新相关文档：
   - `README.md` - 项目说明
   - `CLAUDE.md` - Claude Code 项目指南
@@ -95,7 +95,7 @@ npx husky add .husky/pre-commit "npm run pre-commit-check"
   • 文档需要更新
 
 💡 建议：
-  1. 更新版本号：frontend/package.json
+  1. 更新版本号：package.json
   2. 更新相关文档以反映代码变更
 
 ❌ 提交检查失败，请修复上述问题后再提交
@@ -107,7 +107,7 @@ npx husky add .husky/pre-commit "npm run pre-commit-check"
 
 1. **开发功能** - 修改代码
 2. **更新文档** - 如需要，更新相关文档
-3. **更新版本号** - 在 `frontend/package.json` 中更新版本号
+3. **更新版本号** - 在 `package.json` 中更新版本号
    - 遵循语义化版本规范：`MAJOR.MINOR.PATCH`
    - `MAJOR`: 不兼容的 API 变更
    - `MINOR`: 向后兼容的功能新增
@@ -150,7 +150,7 @@ function main() {
 
 **解决方案**：
 - 确保你已经提交过至少一次代码
-- 检查 `frontend/package.json` 中的版本号是否正确
+- 检查 `package.json` 中的版本号是否正确
 
 ### 问题：误报文档需要更新
 

@@ -18,19 +18,19 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 关键职责：
 
-- `frontend/src/utils/htmlToMarkdown.ts`：飞书 HTML 转 Markdown
-- `frontend/src/utils/markdownRenderer.ts`：Markdown 转预览 HTML
-- `frontend/src/utils/wechatCopy.ts`：将预览 HTML 转为微信公众号兼容的内联样式 HTML 并复制
+- `src/utils/htmlToMarkdown.ts`：飞书 HTML 转 Markdown
+- `src/utils/markdownRenderer.ts`：Markdown 转预览 HTML
+- `src/utils/wechatCopy.ts`：将预览 HTML 转为微信公众号兼容的内联样式 HTML 并复制
 
 ## 必须知道的约束
 
-- 这是纯前端项目，主要改动集中在 `frontend/src/`
+- 这是纯前端项目，主要改动集中在 `src/`
 - 微信公众号输出必须依赖内联样式，不能假设外部 CSS 生效
 - 代码块、列表、图片、表格是高风险区域，改动后要重点验证
-- `modern` 代码块样式的共享参数在 `frontend/src/utils/codeBlockStyles.ts`
+- `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
 - 配置与显示状态保存在 localStorage 中
 - 提交前会运行 Husky 检查：
-  - `frontend/package.json` 版本号必须更新
+  - `package.json` 版本号必须更新
   - 源码变更通常需要同步更新文档
 
 ## 详细文档

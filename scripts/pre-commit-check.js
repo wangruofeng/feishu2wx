@@ -80,11 +80,11 @@ function compareVersions(version1, version2) {
 function checkVersionUpdate() {
   logInfo('\n检查 1: 版本号更新检查');
 
-  const frontendPackagePath = path.join(getGitRoot(), 'frontend', 'package.json');
-  const currentPackage = JSON.parse(fs.readFileSync(frontendPackagePath, 'utf-8'));
+  const packagePath = path.join(getGitRoot(), 'package.json');
+  const currentPackage = JSON.parse(fs.readFileSync(packagePath, 'utf-8'));
   const currentVersion = currentPackage.version;
 
-  const lastCommittedPackage = getLastCommittedFile('frontend/package.json');
+  const lastCommittedPackage = getLastCommittedFile('package.json');
   let lastVersion = '0.0.0';
 
   if (lastCommittedPackage) {
@@ -137,7 +137,7 @@ function checkDocumentationUpdates() {
 
   // 检查是否有源代码变更
   const sourceCodeChanged = uniqueFiles.some(file =>
-    file.startsWith('frontend/src/') &&
+    file.startsWith('src/') &&
     (file.endsWith('.tsx') || file.endsWith('.ts') || file.endsWith('.css'))
   );
 
@@ -200,7 +200,7 @@ function main() {
 
     log('\n💡 建议：', 'yellow');
     if (!versionCheck.updated) {
-      log('  1. 更新版本号：frontend/package.json', 'yellow');
+      log('  1. 更新版本号：package.json', 'yellow');
     }
     if (docsCheck.needsUpdate) {
       log('  2. 更新相关文档以反映代码变更', 'yellow');

@@ -21,13 +21,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 核心工具模块
 
-### `frontend/src/utils/htmlToMarkdown.ts`
+### `src/utils/htmlToMarkdown.ts`
 
 - 使用 Turndown + GFM 插件将 HTML 转为 Markdown。
 - 处理飞书特有的代码块与高亮标记。
 - 移除 `<script>`、`<style>` 和 HTML 注释。
 
-### `frontend/src/utils/markdownRenderer.ts`
+### `src/utils/markdownRenderer.ts`
 
 - 使用 markdown-it 将 Markdown 渲染为 HTML。
 - 使用 highlight.js 和 Atom One Dark 主题做语法高亮。
@@ -35,33 +35,33 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 在渲染前移除 YAML front matter。
 - 渲染选项通过显式参数传入，不再依赖模块级全局状态。
 
-### `frontend/src/utils/wechatCopy.ts`
+### `src/utils/wechatCopy.ts`
 
 - 将预览 HTML 转为微信公众号兼容的内联样式 HTML。
 - 通过内置的 highlight.js 类名到内联样式的映射保留代码块语法高亮。
 - 保留 modern 代码块左上角的圆点头部，并用 `<br>` + `&nbsp;` 序列化缩进，保证粘贴到微信后样式尽量一致。
 - 优先使用 Clipboard API，失败时回退到 `document.execCommand('copy')`。
 
-### `frontend/src/config/editorConfig.ts`
+### `src/config/editorConfig.ts`
 
 - 统一维护主题和字体配置。
 - 预览区、主题切换器、字体切换器和微信导出共用同一份配置，避免配置漂移。
 
 ## 主题系统
 
-- 主题定义集中在 `frontend/src/config/editorConfig.ts`。
-- 预览区通过 `frontend/src/styles/themes.css` 中的 CSS 类应用主题。
+- 主题定义集中在 `src/config/editorConfig.ts`。
+- 预览区通过 `src/styles/themes.css` 中的 CSS 类应用主题。
 - 微信输出通过 `formatForWeChat()` 注入内联样式。
 - 暗黑模式通过 `window.matchMedia('(prefers-color-scheme: dark)')` 检测。
 
 ## 字体系统
 
-- 字体定义集中在 `frontend/src/config/editorConfig.ts`。
-- 字体通过 `frontend/public/index.html` 中的 Google Fonts CDN 加载。
+- 字体定义集中在 `src/config/editorConfig.ts`。
+- 字体通过 `public/index.html` 中的 Google Fonts CDN 加载。
 
 ## 状态管理
 
-主界面状态集中在 `frontend/src/App.tsx`，包括：
+主界面状态集中在 `src/App.tsx`，包括：
 
 - `markdown`、`html`
 - `theme`、`font`
@@ -98,7 +98,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 - `classic`：浅色背景，简洁的 `pre > code`。
 - `modern`：深色代码窗口样式，带 3 个圆点头部和横向滚动。
-- `modern` 代码块共享样式参数定义在 `frontend/src/utils/codeBlockStyles.ts`。
+- `modern` 代码块共享样式参数定义在 `src/utils/codeBlockStyles.ts`。
 - 微信输出会显式保留代码块左对齐与缩进，且不再依赖当前页面上的预览 DOM。
 
 ### 其他渲染开关

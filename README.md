@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="public/favicon.svg" width="120" alt="feishu2wx logo" />
+
 # 飞书文档 → 微信公众号排版神器
 
 **一个现代化的工具，帮助您快速将飞书文档转换为微信公众号文章格式。**
@@ -47,22 +49,19 @@
 cd feishu2wx
 ```
 
-2. **安装前端依赖**
+2. **安装依赖**
 
 ```bash
-cd frontend
 npm install
 ```
 
-3. **启动前端应用**
-
-在 `frontend` 目录下运行：
+3. **启动应用**
 
 ```bash
 npm start
 ```
 
-前端应用将在 `http://localhost:3000` 启动，并自动在浏览器中打开
+应用将在 `http://localhost:3000` 启动，并自动在浏览器中打开
 
 > 💡 **提示**：本项目为纯前端应用，无需启动后端服务。
 
@@ -231,28 +230,27 @@ npm start
 
 ```
 feishu2wx/
-├── frontend/               # 前端应用
-│   ├── public/             # 静态资源
-│   │   ├── index.html      # HTML 模板（包含 Google Fonts）
-│   │   └── 404.html        # GitHub Pages 路由重定向
-│   ├── src/
-│   │   ├── components/     # React 组件
-│   │   │   ├── EditorPane.tsx      # 编辑器面板
-│   │   │   ├── PreviewPane.tsx     # 预览面板
-│   │   │   ├── ThemeSwitcher.tsx   # 主题切换器
-│   │   │   ├── FontSelector.tsx    # 字体选择器
-│   │   │   ├── DevicePreviewToggle.tsx  # 设备预览切换
-│   │   │   └── Toolbar.tsx         # 工具栏
-│   │   ├── utils/          # 工具函数
-│   │   │   ├── htmlToMarkdown.ts   # HTML 转 Markdown
-│   │   │   ├── markdownRenderer.ts # Markdown 渲染
-│   │   │   └── wechatCopy.ts       # 微信公众号复制
-│   │   ├── styles/         # 样式文件
-│   │   │   └── themes.css  # 主题样式
-│   │   ├── App.tsx         # 主应用组件
-│   │   ├── App.css         # 主应用样式
-│   │   └── index.tsx       # 入口文件
-│   └── package.json        # 前端依赖
+├── public/                 # 静态资源
+│   ├── index.html          # HTML 模板（包含 Google Fonts）
+│   └── 404.html            # GitHub Pages 路由重定向
+├── src/
+│   ├── components/         # React 组件
+│   │   ├── EditorPane.tsx         # 编辑器面板
+│   │   ├── PreviewPane.tsx        # 预览面板
+│   │   ├── ThemeSwitcher.tsx      # 主题切换器
+│   │   ├── FontSelector.tsx       # 字体选择器
+│   │   ├── DevicePreviewToggle.tsx # 设备预览切换
+│   │   └── Toolbar.tsx            # 工具栏
+│   ├── utils/              # 工具函数
+│   │   ├── htmlToMarkdown.ts      # HTML 转 Markdown
+│   │   ├── markdownRenderer.ts    # Markdown 渲染
+│   │   └── wechatCopy.ts          # 微信公众号复制
+│   ├── styles/             # 样式文件
+│   │   └── themes.css      # 主题样式
+│   ├── App.tsx             # 主应用组件
+│   ├── App.css             # 主应用样式
+│   └── index.tsx           # 入口文件
+├── package.json            # 项目依赖
 ├── README.md               # 项目说明
 ├── QUICKSTART.md           # 快速启动指南
 └── DEPLOY.md               # 部署指南
@@ -264,6 +262,8 @@ feishu2wx/
 
 - React 18
 - TypeScript
+- Create React App
+- TypeScript
 - Markdown-it (Markdown 渲染)
 - Turndown (HTML 转 Markdown)
 - Highlight.js (代码语法高亮，Atom One Dark 主题)
@@ -273,23 +273,19 @@ feishu2wx/
 
 ### 开发模式
 
-前端开发模式（热重载）：
+开发模式（热重载）：
 
 ```bash
-cd frontend
 npm start
 ```
 
 ### 构建生产版本
 
-前端构建：
-
 ```bash
-cd frontend
 npm run build
 ```
 
-构建后的文件在 `frontend/build` 目录中。
+构建后的文件在 `build` 目录中。
 
 ## 🚀 部署到 GitHub Pages
 
@@ -326,7 +322,6 @@ npm run build
 如果需要手动部署，可以使用以下命令：
 
 ```bash
-cd frontend
 npm run deploy
 ```
 
@@ -335,7 +330,7 @@ npm run deploy
 **注意事项：**
 
 - 首次部署前，确保在 GitHub 仓库设置中启用 GitHub Pages
-- 如果使用自定义域名，需要修改 `frontend/package.json` 中的 `homepage` 字段
+- 如果使用自定义域名，需要修改 `package.json` 中的 `homepage` 字段
 - 部署后可能需要几分钟才能访问到最新版本
 
 ## ⚙️ 配置说明
@@ -344,7 +339,7 @@ npm run deploy
 
 前端默认运行在 `3000` 端口。
 
-如需修改端口，编辑 `frontend/package.json` 中的 `scripts.start` 字段，例如：
+如需修改端口，编辑 `package.json` 中的 `scripts.start` 字段，例如：
 
 ```bash
 PORT=3001 react-scripts start
@@ -352,7 +347,7 @@ PORT=3001 react-scripts start
 
 ### GitHub Pages 配置
 
-如果您的 GitHub 用户名或仓库名不同，需要修改 `frontend/package.json` 中的 `homepage` 字段：
+如果您的 GitHub 用户名或仓库名不同，需要修改 `package.json` 中的 `homepage` 字段：
 
 ```json
 "homepage": "https://你的用户名.github.io/你的仓库名"
@@ -360,7 +355,7 @@ PORT=3001 react-scripts start
 
 ### 字体配置
 
-字体通过 Google Fonts 加载，在 `frontend/public/index.html` 中配置。如需添加或修改字体，请编辑该文件中的 Google Fonts 链接。
+字体通过 Google Fonts 加载，在 `public/index.html` 中配置。如需添加或修改字体，请编辑该文件中的 Google Fonts 链接。
 
 ## 🐛 常见问题
 
