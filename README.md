@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/logo.svg" width="120" alt="feishu2wx logo" />
+<img src="public/logo.svg" width="480" alt="feishu2wx logo" />
 
 # 飞书文档 → 微信公众号排版神器
 
