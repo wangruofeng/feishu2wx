@@ -28,7 +28,9 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 微信公众号输出必须依赖内联样式，不能假设外部 CSS 生效
 - 代码块、列表、图片、表格是高风险区域，改动后要重点验证
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
-- 配置与显示状态保存在 localStorage 中
+- 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），改主题时三处都要同步
+- 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
+- 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 提交前会运行 Husky 检查：
   - `package.json` 版本号必须更新
   - 源码变更通常需要同步更新文档

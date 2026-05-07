@@ -6,13 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendPackagePath = path.join(__dirname, '..', 'frontend', 'package.json');
-const frontendPackage = JSON.parse(fs.readFileSync(frontendPackagePath, 'utf8'));
+const packagePath = path.join(__dirname, '..', 'package.json');
+const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
-test('frontend start script does not hardcode HOST binding', () => {
-  assert.equal(typeof frontendPackage.scripts?.start, 'string');
+test('start script does not hardcode HOST binding', () => {
+  assert.equal(typeof pkg.scripts?.start, 'string');
   assert.doesNotMatch(
-    frontendPackage.scripts.start,
+    pkg.scripts.start,
     /\bHOST=/,
     'start script should not force a specific host; let the environment override it when needed'
   );

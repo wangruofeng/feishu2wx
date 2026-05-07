@@ -28,9 +28,10 @@ npm run pre-commit-check
 
 1. 使用多种 Markdown 输入测试标题、列表、代码块、表格和引用。
 2. 测试从飞书文档粘贴 HTML。
-3. 验证预览区的主题切换。
-4. 验证复制到微信公众号后是否保留内联样式。
+3. 验证预览区的主题切换（8 种命名主题 + 系统暗黑模式自适应）。
+4. 验证复制到微信公众号后是否保留内联样式（classic 和 modern 代码块都要测）。
 5. 验证桌面端和移动端预览宽度。
+6. 测试选中部分内容复制 vs 全文复制。
 
 ## 部署
 
@@ -48,6 +49,12 @@ npm run pre-commit-check
 - 飞书/Lark 的 HTML 会按自定义规则转换为 Markdown。
 - 编辑器中的纯 Markdown 会直接使用。
 - 其他来源会回退为纯文本处理。
+
+## 配置注意事项
+
+- 主题配置分散在三处：`ThemeSwitcher.tsx`（UI 定义）、`wechatCopy.ts`（导出内联样式映射）、`styles/themes.css`（预览样式）。新增或修改主题时三处都要同步。
+- 字体配置分散在两处：`FontSelector.tsx`（UI 下拉）和 `wechatCopy.ts`（导出字体映射）。新增字体时两处都要同步。
+- Google Fonts 链接在 `public/index.html` 中预加载，新增 Google Font 需在此添加 `<link>`。
 
 ## 提交前检查
 

@@ -1,6 +1,6 @@
 <svg width="1180" height="324" viewBox="0 0 1180 324" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">feishu2wx logo clean</title>
-  <desc id="desc">Clean vector logo for feishu2wx with extra translucent decorative lines removed.</desc>
+  <title id="title">feishu2wx logo vertically centered</title>
+  <desc id="desc">Clean vector logo for feishu2wx with left icon group and right wordmark group vertically centered.</desc>
   <defs>
     <linearGradient id="docGrad" x1="56" y1="68" x2="270" y2="271" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#55D5DF"/>
@@ -43,8 +43,8 @@
 
   <rect width="1180" height="324" fill="#FFFFFF"/>
 
-  <!-- icon group: slightly scaled down and kept left to avoid overlap -->
-  <g transform="translate(20,12) scale(0.92)" filter="url(#softShadow)">
+  <!-- icon group: vertically centered with the wordmark group -->
+  <g transform="translate(20,-20) scale(0.92)" filter="url(#softShadow)">
     <path d="M60 62H172L236 126V236C236 258.1 218.1 276 196 276H58C35.9 276 18 258.1 18 236V104C18 80.8 36.8 62 60 62Z" fill="white"/>
     <path d="M60 62H172L236 126V236C236 258.1 218.1 276 196 276H58C35.9 276 18 258.1 18 236V104C18 80.8 36.8 62 60 62Z" stroke="url(#docGrad)" stroke-width="10" stroke-linejoin="round"/>
     <path d="M172 62V112C172 119.7 178.3 126 186 126H236L172 62Z" fill="url(#foldGrad)"/>
@@ -70,8 +70,8 @@
     <circle cx="142" cy="286" r="4" fill="white" opacity="0.65"/>
   </g>
 
-  <!-- wordmark: shifted right for clear separation -->
-  <g>
+  <!-- wordmark: shifted right and vertically centered with the icon group -->
+  <g transform="translate(0,14)">
     <text x="520" y="145" font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" fill="#0E1A27">feishu</text>
     <text x="777" y="145" font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" fill="url(#blueTextGrad)">2</text>
     <text x="832" y="145" font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" fill="url(#greenTextGrad)">wx</text>

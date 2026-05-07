@@ -17,6 +17,7 @@
 ## ✨ 功能特性
 
 - 📋 **飞书文档直接粘贴** - 支持从飞书文档复制内容，自动转换为 Markdown 格式
+- 📂 **本地文件导入** - 支持导入本地 `.md` 文件
 - ✏️ **实时编辑预览** - 左侧编辑 Markdown 源码，右侧实时预览渲染效果
 - 🎨 **8 种精美主题** - 内置 8 种主题（经典、绿意、紫色、橙色、粉色、蓝色、红色、青色），自动跟随系统暗黑模式
 - 🎨 **品牌色高亮** - 标题中"飞书文档"使用飞书主题色（#00BECA），"微信公众号"使用微信主题色（#07C160），提升视觉识别度
@@ -151,7 +152,9 @@ npm start
 - **🗑️ 清空** - 清空编辑器内容
 - **👁️/📝 H1 底线** - 切换 H1 标题底部横线显示/隐藏
 - **🎨/🎛️ H1 反显** - 切换 H1 标题主色反显效果
+- **➖ 分割线** - 切换水平分割线显示/隐藏
 - **🖼️/🌫️ 图片样式** - 切换图片边框模式/阴影模式
+- **⬛/🔲 代码块样式** - 切换经典代码块/现代代码块
 - **📋 一键复制到微信公众号** - 复制格式化后的内容到微信公众号
 
 **Markdown 语法：**
@@ -168,20 +171,13 @@ npm start
 - **代码块语法高亮** - 支持多种编程语言的语法高亮，使用 Atom One Dark 主题
 - **代码块语言标签** - 自动显示代码块的语言类型
 - **行内代码加粗** - 行内代码（`` `code` ``）渲染后显示为加粗样式
+- **Front Matter 自动移除** - YAML front matter（`---...---`）在渲染前自动剥离
 - **优化的标题间距** - H1 和 H2 标题具有更大的上边距（第一个 H1 除外）
 - **字体大小优化** - H1: 24px, H2: 18px, P: 16px
 - **引用块优化** - 引用元素的上下 padding 保持一致
 - **表格支持** - 支持 Markdown 表格，在移动端可横向滚动查看
 
 ## 🎨 主题说明
-
-### 自动跟随系统暗黑模式 🌓
-
-应用会自动检测系统的暗黑模式设置：
-- **浅色模式**：自动应用明亮主题（简洁明亮的蓝色风格）
-- **暗黑模式**：自动应用暗黑主题（护眼暗色风格）
-
-您无需手动切换，应用会根据系统设置自动调整。
 
 ### 经典主题（默认）📄
 
@@ -232,6 +228,8 @@ npm start
 feishu2wx/
 ├── public/                 # 静态资源
 │   ├── index.html          # HTML 模板（包含 Google Fonts）
+│   ├── favicon.svg         # 浏览器标签图标
+│   ├── logo.svg            # 项目 Logo
 │   └── 404.html            # GitHub Pages 路由重定向
 ├── src/
 │   ├── components/         # React 组件
@@ -244,9 +242,11 @@ feishu2wx/
 │   ├── utils/              # 工具函数
 │   │   ├── htmlToMarkdown.ts      # HTML 转 Markdown
 │   │   ├── markdownRenderer.ts    # Markdown 渲染
-│   │   └── wechatCopy.ts          # 微信公众号复制
+│   │   ├── wechatCopy.ts          # 微信公众号复制
+│   │   └── codeBlockStyles.ts     # modern 代码块样式参数
 │   ├── styles/             # 样式文件
 │   │   └── themes.css      # 主题样式
+│   ├── types/              # 类型声明
 │   ├── App.tsx             # 主应用组件
 │   ├── App.css             # 主应用样式
 │   └── index.tsx           # 入口文件
@@ -263,7 +263,6 @@ feishu2wx/
 - React 18
 - TypeScript
 - Create React App
-- TypeScript
 - Markdown-it (Markdown 渲染)
 - Turndown (HTML 转 Markdown)
 - Highlight.js (代码语法高亮，Atom One Dark 主题)
