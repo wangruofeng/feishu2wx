@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="#ffffff"/>
+
+  <defs>
+    <linearGradient id="arrow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3370ff"/>
+      <stop offset="100%" stop-color="#07c160"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Blue square (left) -->
+  <rect x="76" y="186" width="120" height="140" rx="12" fill="#3370ff" opacity="0.9"/>
+
+  <!-- Arrow (center) -->
+  <path d="M196,256 L260,256" stroke="url(#arrow)" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M248,240 L272,256 L248,272" stroke="url(#arrow)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Green square (right) -->
+  <rect x="316" y="186" width="120" height="140" rx="12" fill="#07c160" opacity="0.9"/>
+</svg>

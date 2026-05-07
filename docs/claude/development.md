@@ -3,17 +3,23 @@
 ## 常用命令
 
 ```bash
-# 开发（在项目根目录运行）
-npm run install:frontend
-npm start
-npm run pre-commit-check
+# 安装依赖
+npm install
 
-# 开发（在 frontend/ 目录运行）
-cd frontend
+# 开发（热重载）
 npm start
+
+# 构建
 npm run build
+
+# 测试
 npm test
+
+# 部署到 GitHub Pages
 npm run deploy
+
+# 提交前检查
+npm run pre-commit-check
 ```
 
 ## 变更测试建议
@@ -28,9 +34,9 @@ npm run deploy
 
 ## 部署
 
-- 构建输出目录：`frontend/build/`
+- 构建输出目录：`build/`
 - 部署方式：通过 `gh-pages` 发布到 GitHub Pages
-- 部署命令：`cd frontend && npm run deploy`
+- 部署命令：`npm run deploy`
 
 ## 文件导入功能
 
@@ -49,7 +55,7 @@ Husky 会在每次提交前执行检查。
 
 检查内容：
 
-1. `frontend/package.json` 中的版本号必须更新。
+1. `package.json` 中的版本号必须更新。
 2. 源码变更时应同步更新文档。
 
 手动执行：
@@ -69,7 +75,7 @@ git commit --no-verify -m "message"
 ## 版本管理
 
 - 遵循语义化版本规范：`MAJOR.MINOR.PATCH`。
-- 版本定义在 `frontend/package.json`。
+- 版本定义在 `package.json`。
 - 常见流程：
   1. 修改代码。
   2. 更新版本号。

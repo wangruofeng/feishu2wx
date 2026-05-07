@@ -1,5 +1,7 @@
 /// <reference types="react-scripts" />
 
+declare module '*.css';
+
 // ClipboardItem 类型定义（用于复制富文本）
 interface ClipboardItem {
   readonly types: readonly string[];

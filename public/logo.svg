@@ -1,0 +1,86 @@
+<svg width="1180" height="324" viewBox="0 0 1180 324" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">feishu2wx logo clean</title>
+  <desc id="desc">Clean vector logo for feishu2wx with extra translucent decorative lines removed.</desc>
+  <defs>
+    <linearGradient id="docGrad" x1="56" y1="68" x2="270" y2="271" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#55D5DF"/>
+      <stop offset="0.52" stop-color="#10BCE2"/>
+      <stop offset="1" stop-color="#28A8F4"/>
+    </linearGradient>
+    <linearGradient id="foldGrad" x1="180" y1="61" x2="246" y2="122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1689F4"/>
+      <stop offset="1" stop-color="#64D6E8"/>
+    </linearGradient>
+    <linearGradient id="flowGrad" x1="94" y1="236" x2="405" y2="143" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2AABF2"/>
+      <stop offset="0.42" stop-color="#11C9D7"/>
+      <stop offset="0.78" stop-color="#27DDA8"/>
+      <stop offset="1" stop-color="#1DC869"/>
+    </linearGradient>
+    <linearGradient id="bubbleGrad" x1="278" y1="77" x2="422" y2="245" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4BD66F"/>
+      <stop offset="1" stop-color="#18B85A"/>
+    </linearGradient>
+    <linearGradient id="blueTextGrad" x1="760" y1="76" x2="812" y2="147" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#31B8FF"/>
+      <stop offset="1" stop-color="#128BEA"/>
+    </linearGradient>
+    <linearGradient id="greenTextGrad" x1="820" y1="92" x2="980" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#42CE73"/>
+      <stop offset="1" stop-color="#159A4E"/>
+    </linearGradient>
+    <linearGradient id="tagBlue" x1="520" y1="186" x2="710" y2="216" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#149CF4"/>
+      <stop offset="1" stop-color="#247FE9"/>
+    </linearGradient>
+    <filter id="softShadow" x="0" y="0" width="580" height="324" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#0B2B45" flood-opacity="0.10"/>
+    </filter>
+    <filter id="glow" x="0" y="0" width="580" height="324" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#20C7CF" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="1180" height="324" fill="#FFFFFF"/>
+
+  <!-- icon group: slightly scaled down and kept left to avoid overlap -->
+  <g transform="translate(20,12) scale(0.92)" filter="url(#softShadow)">
+    <path d="M60 62H172L236 126V236C236 258.1 218.1 276 196 276H58C35.9 276 18 258.1 18 236V104C18 80.8 36.8 62 60 62Z" fill="white"/>
+    <path d="M60 62H172L236 126V236C236 258.1 218.1 276 196 276H58C35.9 276 18 258.1 18 236V104C18 80.8 36.8 62 60 62Z" stroke="url(#docGrad)" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M172 62V112C172 119.7 178.3 126 186 126H236L172 62Z" fill="url(#foldGrad)"/>
+    <path d="M185 126H236L206 137C194 141.4 181.2 133.1 185 126Z" fill="#9FE6F0" opacity="0.55"/>
+
+    <rect x="62" y="111" width="65" height="45" rx="9" fill="#31C4E5"/>
+    <rect x="62" y="177" width="143" height="13" rx="6.5" fill="#12AEE4"/>
+    <rect x="62" y="208" width="112" height="12" rx="6" fill="#18AEE1"/>
+    <rect x="62" y="237" width="73" height="11" rx="5.5" fill="#23AEE7"/>
+
+    <path d="M320 89H465C486 89 503 106 503 127V231C503 252 486 269 465 269H419L391 297V269H320C299 269 282 252 282 231V127C282 106 299 89 320 89Z" fill="white"/>
+    <path d="M320 89H465C486 89 503 106 503 127V231C503 252 486 269 465 269H419L391 297V269H320C299 269 282 252 282 231V127C282 106 299 89 320 89Z" stroke="url(#bubbleGrad)" stroke-width="10" stroke-linejoin="round"/>
+    <rect x="332" y="121" width="64" height="48" rx="9" fill="#69DFA0"/>
+    <rect x="424" y="123" width="47" height="12" rx="6" fill="#69DFA0"/>
+    <rect x="424" y="151" width="58" height="11" rx="5.5" fill="#69DFA0"/>
+    <rect x="424" y="179" width="58" height="11" rx="5.5" fill="#40CC76"/>
+    <rect x="424" y="207" width="58" height="11" rx="5.5" fill="#35C96D"/>
+
+    <path d="M74 268C120 270 158 257 203 225C245 195 265 179 316 178L316 157C338 178 361 199 383 220C361 241 338 262 316 283L316 259C274 262 240 278 201 302C150 333 93 326 44 294C36 289 37 277 47 274C55 271 64 269 74 268Z" fill="url(#flowGrad)" opacity="0.95" filter="url(#glow)"/>
+    <path d="M274 199L318 199L318 182L357 220L318 258L318 240H274C262 240 252 231 252 219C252 208 262 199 274 199Z" fill="white"/>
+    <circle cx="167" cy="275" r="5" fill="white" opacity="0.85"/>
+    <circle cx="189" cy="266" r="4" fill="white" opacity="0.8"/>
+    <circle cx="142" cy="286" r="4" fill="white" opacity="0.65"/>
+  </g>
+
+  <!-- wordmark: shifted right for clear separation -->
+  <g>
+    <text x="520" y="145" font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" fill="#0E1A27">feishu</text>
+    <text x="777" y="145" font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" fill="url(#blueTextGrad)">2</text>
+    <text x="832" y="145" font-family="Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="88" font-weight="800" letter-spacing="-3" fill="url(#greenTextGrad)">wx</text>
+
+    <text x="522" y="218" font-family="'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', Arial, sans-serif" font-size="39" font-weight="600" letter-spacing="4" fill="url(#tagBlue)" textLength="176" lengthAdjust="spacingAndGlyphs">飞书文档</text>
+    <g transform="translate(727 190)" stroke="#6D8D96" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-label="arrow">
+      <line x1="0" y1="14" x2="46" y2="14"/>
+      <path d="M36 6L50 14L36 22"/>
+    </g>
+    <text x="808" y="218" font-family="'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', Arial, sans-serif" font-size="39" font-weight="600" letter-spacing="4" fill="#17B35A" textLength="132" lengthAdjust="spacingAndGlyphs">公众号</text>
+  </g>
+</svg>
