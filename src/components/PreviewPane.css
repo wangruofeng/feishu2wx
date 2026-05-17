@@ -310,7 +310,8 @@
   font-weight: normal;
 }
 
-.preview-content img {
+.preview-content img,
+.preview-content video {
   max-width: 100%;
   height: auto;
   display: block;
