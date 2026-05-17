@@ -218,6 +218,23 @@ mdModern.renderer.rules.bullet_list_close = defaultListCloseModern;
 mdModern.renderer.rules.ordered_list_open = defaultOrderedListOpenModern;
 mdModern.renderer.rules.ordered_list_close = defaultOrderedListCloseModern;
 
+// 自定义图片渲染：如果有 alt 文本则显示在图片下方
+function renderImage(tokens: any, idx: number): string {
+  const token = tokens[idx];
+  const src = token.attrGet('src') || '';
+  const alt = token.content || '';
+  const escapedSrc = tempMd.utils.escapeHtml(src);
+  const escapedAlt = tempMd.utils.escapeHtml(alt);
+
+  if (alt) {
+    return `<figure class="img-figure"><img src="${escapedSrc}" alt="${escapedAlt}"><figcaption class="img-caption">${escapedAlt}</figcaption></figure>`;
+  }
+  return `<img src="${escapedSrc}" alt="">`;
+}
+
+md.renderer.rules.image = renderImage;
+mdModern.renderer.rules.image = renderImage;
+
 // 移除 Markdown 源码顶部的 Front Matter（YAML 块）
 function removeFrontMatter(markdown: string): string {
   // 检查是否以 --- 开头（Front Matter 开始）

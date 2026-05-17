@@ -35,7 +35,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 在渲染前移除 YAML front matter（`---...---`）。
 - `.md` 文件名链接会被还原为纯文本，避免被 linkify 错误处理。
 - 链接自动添加 `target="_blank"`。
-- 渲染选项通过显式参数传入，不再依赖模块级全局状态。
+- 图片带 alt 文本时渲染为 `<figure class="img-figure">` + `<figcaption>`，无 alt 时渲染为裸 `<img>`。
 
 ### `src/utils/wechatCopy.ts`
 
@@ -100,7 +100,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 优先使用 `px`，不要依赖 `em` 或 `rem`。
 - 避免复杂布局结构。
 - 表格需要 `border-collapse: collapse`。
-- 图片需要 `display: block` 和 `max-width: 100%`。
+- 图片需要 `max-width: 100%`，上下间距由外层块（`figure` 或 `section.wechat-image-wrapper`）统一控制，避免与 `<p>` 的默认 margin 叠加产生额外空行。
 
 ### 代码块样式
 

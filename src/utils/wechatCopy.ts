@@ -206,6 +206,93 @@ function preserveCodeWhitespaceForWechat(codeEl: HTMLElement): void {
   });
 }
 
+function isWhitespaceTextNode(node: Node): boolean {
+  return node.nodeType === Node.TEXT_NODE && !(node.textContent?.trim());
+}
+
+function isEmptyParagraph(node: Node | null): node is HTMLElement {
+  if (!(node instanceof HTMLElement) || node.tagName !== 'P') {
+    return false;
+  }
+
+  const meaningfulNodes = Array.from(node.childNodes).filter((child) => {
+    if (isWhitespaceTextNode(child)) {
+      return false;
+    }
+    return !(child instanceof HTMLBRElement);
+  });
+
+  return meaningfulNodes.length === 0;
+}
+
+function isImageBlock(node: Node | null): boolean {
+  if (!(node instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (node.tagName === 'IMG') {
+    return true;
+  }
+
+  return node.classList.contains('img-figure') || node.classList.contains('wechat-image-wrapper');
+}
+
+function removeSpacingSiblingsAround(node: Node): void {
+  let previous = node.previousSibling;
+  while (previous && (isWhitespaceTextNode(previous) || previous instanceof HTMLBRElement || isEmptyParagraph(previous))) {
+    const current = previous;
+    previous = previous.previousSibling;
+    current.parentNode?.removeChild(current);
+  }
+
+  let next = node.nextSibling;
+  while (next && (isWhitespaceTextNode(next) || next instanceof HTMLBRElement || isEmptyParagraph(next))) {
+    const current = next;
+    next = next.nextSibling;
+    current.parentNode?.removeChild(current);
+  }
+}
+
+function removeEmptyParagraphsAdjacentToImages(container: HTMLElement): void {
+  const emptyParagraphs = Array.from(container.querySelectorAll('p')).filter(isEmptyParagraph);
+
+  emptyParagraphs.forEach((paragraph) => {
+    const previous = paragraph.previousSibling;
+    const next = paragraph.nextSibling;
+
+    if (isImageBlock(previous) || isImageBlock(next)) {
+      paragraph.remove();
+    }
+  });
+}
+
+function applyCompactImageWrapperStyles(wrapper: HTMLElement): void {
+  wrapper.className = 'wechat-image-wrapper';
+  wrapper.style.margin = '16px 0';
+  wrapper.style.padding = '0';
+  wrapper.style.fontSize = '0';
+  wrapper.style.lineHeight = '0';
+  wrapper.style.textAlign = 'center';
+  wrapper.style.clear = 'both';
+}
+
+function wrapStandaloneImages(container: HTMLElement): void {
+  const images = Array.from(container.querySelectorAll('img'));
+
+  images.forEach((img) => {
+    const imgEl = img as HTMLImageElement;
+    const parent = imgEl.parentElement;
+    if (!parent || parent.classList.contains('img-figure') || parent.classList.contains('wechat-image-wrapper')) {
+      return;
+    }
+
+    const wrapper = document.createElement('section');
+    applyCompactImageWrapperStyles(wrapper);
+    parent.insertBefore(wrapper, imgEl);
+    wrapper.appendChild(imgEl);
+  });
+}
+
 /**
  * 将HTML内容转换为微信公众号编辑器可接受的格式
  * 微信公众号编辑器使用的是富文本格式，需要特殊处理
@@ -441,8 +528,10 @@ function applyThemeStyles(
     imgEl.style.maxWidth = '100%';
     imgEl.style.width = 'auto';
     imgEl.style.height = 'auto';
-    imgEl.style.display = 'block';
-    imgEl.style.margin = '16px auto';
+    imgEl.style.display = 'inline-block';
+    imgEl.style.verticalAlign = 'top';
+    // 上下间距由图片外层块统一控制，避免图片自身和 figure/wrapper 叠加。
+    imgEl.style.margin = '0 auto';
     imgEl.style.borderRadius = '4px';
 
     // 根据图片边框模式设置样式
@@ -461,6 +550,28 @@ function applyThemeStyles(
         imgEl.src = window.location.origin + imgEl.src;
       }
     }
+  });
+
+  // 处理图片说明文字
+  const captions = container.querySelectorAll('.img-caption');
+  captions.forEach((caption) => {
+    const captionEl = caption as HTMLElement;
+    captionEl.style.fontSize = '12px';
+    captionEl.style.color = 'rgb(167, 167, 167)';
+    captionEl.style.textAlign = 'center';
+    captionEl.style.marginTop = '6px';
+    captionEl.style.lineHeight = '1.5';
+  });
+
+  // 处理图片容器
+  const figures = container.querySelectorAll('.img-figure');
+  figures.forEach((figure) => {
+    const figureEl = figure as HTMLElement;
+    figureEl.style.margin = '16px 0';
+    figureEl.style.padding = '0';
+    figureEl.style.textAlign = 'center';
+    figureEl.style.fontSize = '0';
+    figureEl.style.lineHeight = '0';
   });
 
   // 处理行内代码
@@ -665,6 +776,38 @@ function applyThemeStyles(
       preEl.appendChild(newCodeEl);
     }
   });
+
+  // 将只包含图片的 <p> 替换为其内容本身，避免微信给 <p> 添加默认间距产生额外空行
+  const allParagraphs = container.querySelectorAll('p');
+  const imageParagraphs: HTMLElement[] = [];
+  allParagraphs.forEach((p) => {
+    const pEl = p as HTMLElement;
+    const containsImage = pEl.querySelector('img');
+    const hasDirectText = Array.from(pEl.childNodes).some(node =>
+      node.nodeType === Node.TEXT_NODE && (node.textContent?.trim().length ?? 0) > 0
+    );
+    if (containsImage && !hasDirectText) {
+      imageParagraphs.push(pEl);
+    }
+  });
+  imageParagraphs.forEach((pEl) => {
+    const parent = pEl.parentNode;
+    if (!parent) return;
+    while (pEl.firstChild) {
+      const child = pEl.firstChild;
+      if (child.nodeType === Node.TEXT_NODE && !(child.textContent?.trim())) {
+        pEl.removeChild(child);
+        continue;
+      }
+      parent.insertBefore(child, pEl);
+    }
+    parent.removeChild(pEl);
+  });
+
+  wrapStandaloneImages(container);
+  const compactImageBlocks = container.querySelectorAll('img, .img-figure, .wechat-image-wrapper');
+  compactImageBlocks.forEach((block) => removeSpacingSiblingsAround(block));
+  removeEmptyParagraphsAdjacentToImages(container);
 
   // 处理段落间距
   const paragraphs = container.querySelectorAll('p');

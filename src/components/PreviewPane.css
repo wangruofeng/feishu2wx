@@ -319,6 +319,23 @@
   border: 0.5px solid #e0e0e0;
 }
 
+.preview-content .img-figure {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.preview-content .img-figure img {
+  margin: 0 auto;
+}
+
+.preview-content .img-caption {
+  font-size: 12px;
+  color: rgb(167, 167, 167);
+  text-align: center;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
 /* 阴影模式：原始阴影效果 */
 .preview-content.image-shadow img {
   border: none;

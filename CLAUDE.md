@@ -27,6 +27,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 这是纯前端项目，主要改动集中在 `src/`
 - 微信公众号输出必须依赖内联样式，不能假设外部 CSS 生效
 - 代码块、列表、图片、表格是高风险区域，改动后要重点验证
+- 图片有 alt 时渲染为 `<figure>`（含 `<figcaption>`），无 alt 时为裸 `<img>`；微信输出的图片上下间距由外层块统一控制，不应在 `<img>` 上设置上下 margin
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
 - 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），改主题时三处都要同步
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步

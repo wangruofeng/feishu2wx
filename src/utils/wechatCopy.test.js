@@ -88,6 +88,70 @@ test('keeps unmarked ascii-looking code blocks as preformatted html for wechat c
   expect(formattedHtml).not.toContain('data:image/png');
 });
 
+test('removes extra vertical spacing around copied images', () => {
+  const html = '<p>前文</p><p><br></p><p>\n  <img src="https://example.com/a.png" alt="">\n</p><p><br></p><p>后文</p>';
+
+  const formattedHtml = formatForWeChat(
+    html,
+    'green',
+    'default',
+    true,
+    'border',
+    'classic',
+    false
+  );
+
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  const wrapper = container.querySelector('.wechat-image-wrapper');
+  const img = container.querySelector('img');
+
+  expect(container.querySelector('p img')).toBeNull();
+  expect(container.querySelector('p:empty')).toBeNull();
+  expect(wrapper).not.toBeNull();
+  expect(wrapper.tagName).toBe('SECTION');
+  expect(wrapper.style.margin).toBe('16px 0px');
+  expect(wrapper.style.padding).toBe('0px');
+  expect(wrapper.style.fontSize).toBe('0px');
+  expect(wrapper.style.lineHeight).toBe('0');
+  expect(img).not.toBeNull();
+  expect(img.parentElement).toBe(wrapper);
+  expect(img.style.display).toBe('inline-block');
+  expect(img.style.verticalAlign).toBe('top');
+  expect(img.style.margin).toBe('0px auto');
+  expect(formattedHtml).not.toContain('>\n  <img');
+  expect(formattedHtml).not.toContain('<img src="https://example.com/a.png" alt="" style="max-width: 100%; width: auto; height: auto; display: block; margin: 16px auto');
+});
+
+test('removes extra vertical spacing around copied image figures', () => {
+  const html = '<figure class="img-figure"><img src="https://example.com/a.png" alt="说明"><figcaption class="img-caption">说明</figcaption></figure>';
+
+  const formattedHtml = formatForWeChat(
+    html,
+    'green',
+    'default',
+    true,
+    'border',
+    'classic',
+    false
+  );
+
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  const figure = container.querySelector('figure');
+  const img = container.querySelector('img');
+
+  expect(figure).not.toBeNull();
+  expect(img).not.toBeNull();
+  expect(figure.style.margin).toBe('16px 0px');
+  expect(figure.style.padding).toBe('0px');
+  expect(figure.style.fontSize).toBe('0px');
+  expect(figure.style.lineHeight).toBe('0');
+  expect(img.style.display).toBe('inline-block');
+  expect(img.style.verticalAlign).toBe('top');
+  expect(img.style.margin).toBe('0px auto');
+});
+
 test('formats modern code blocks with the same key visual styles as preview', () => {
   const html = '<pre class="modern-code-block"><div class="code-block-header"><span class="code-block-dot red"></span><span class="code-block-dot orange"></span><span class="code-block-dot green"></span></div><div class="code-block-content"><code class="hljs language-js"><span class="hljs-keyword">const</span> answer = 42;</code></div></pre>';
 
