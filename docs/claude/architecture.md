@@ -36,6 +36,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `.md` 文件名链接会被还原为纯文本，避免被 linkify 错误处理。
 - 链接自动添加 `target="_blank"`。
 - 图片带 alt 文本时渲染为 `<figure class="img-figure">` + `<figcaption>`，无 alt 时渲染为裸 `<img>`。
+- 水平分割线渲染受 `showHorizontalRule` 控制：关闭时 `<hr>` 渲染为空字符串，开启时渲染为 `<hr class="custom-hr">`。通过导出的 `setShowHorizontalRule()` / `getShowHorizontalRule()` 控制。
 
 ### `src/utils/wechatCopy.ts`
 
@@ -54,9 +55,10 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ## 主题系统
 
 - 8 种命名主题：经典、绿意、紫色、橙色、粉色、蓝色、红色、青色，定义在 `src/styles/themes.css`。
+- `wechatCopy.ts` 内部额外定义了 `light` 和 `dark` 两种主题样式映射，供系统暗黑模式检测使用，但未暴露在 ThemeSwitcher UI 中。
 - 预览区通过 CSS 类（`theme-{name}`）应用主题。
 - 微信输出通过 `wechatCopy.ts` 中的内联样式映射注入。
-- 暗黑模式通过 `window.matchMedia('(prefers-color-scheme: dark)')` 实时检测。
+- 暗黑模式通过 `window.matchMedia('(prefers-color-scheme: dark)')` 实时检测（当前仅影响 CSS 类名 `system-dark` / `system-light`，不影响主题选择）。
 - 主题配置分散在 `ThemeSwitcher.tsx`（UI）、`wechatCopy.ts`（导出样式）、`styles/themes.css`（预览样式）三处。
 
 ## 字体系统
@@ -72,7 +74,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `theme`、`font`
 - `showEditor`、`isFullscreen`、`device`
 - `showH1`、`invertH1`、`showHorizontalRule`
-- `imageBorderStyle`、`codeBlockStyle`
+- `imageBorderStyle`（`'border' | 'shadow'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
 - `isSystemDark`
 - `copyStatus`（复制结果弹窗）
 
@@ -83,7 +85,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `App.tsx`：主容器与状态中心，含顶部控制栏（字体、设备切换、全屏、主题）。
 - `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
-- `Toolbar.tsx`：底部工具栏（加载示例、清空、H1 底线、H1 反显、分割线、图片样式、代码块样式、一键复制）。
+- `Toolbar.tsx`：底部工具栏（加载示例、清空、H1 底线、H1 反显、水平分割线、图片样式、代码块样式、一键复制）。
 - `ThemeSwitcher.tsx`：横向主题按钮组。
 - `FontSelector.tsx`：字体下拉选择器。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换。
