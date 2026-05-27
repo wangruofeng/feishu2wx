@@ -5,9 +5,10 @@ import './EditorPane.css';
 interface Props {
   markdown: string;
   setMarkdown: (md: string) => void;
+  onScroll?: (e: React.UIEvent<HTMLTextAreaElement>) => void;
 }
 
-const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
+const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -151,6 +152,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
           value={markdown}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMarkdown(e.target.value)}
           onPaste={handlePaste}
+          onScroll={onScroll}
           placeholder="请粘贴飞书文档内容或直接编写 Markdown...&#10;&#10;提示：&#10;• 从飞书文档复制内容后直接粘贴即可自动转换&#10;• 支持常见 Markdown 语法&#10;• 图片请使用 Markdown 格式：![描述](图片URL)"
           spellCheck={false}
         />

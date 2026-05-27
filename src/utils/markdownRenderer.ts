@@ -266,11 +266,11 @@ export function renderMarkdown(markdown: string): string {
   const selectedMd = currentCodeBlockStyle === 'modern' ? mdModern : md;
   let html = selectedMd.render(markdownWithoutFrontMatter);
 
-  // 处理被误识别为链接的 .md 文件名
-  // 将指向 .md 文件的链接转换回普通文本
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
 
+  // 处理被误识别为链接的 .md 文件名
+  // 将指向 .md 文件的链接转换回普通文本
   // 查找所有链接
   const links = tempDiv.querySelectorAll('a');
   links.forEach((link) => {

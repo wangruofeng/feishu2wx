@@ -42,6 +42,52 @@ const App: React.FC = () => {
     isError: false,
   });
   const copyStatusTimerRef = useRef<number | null>(null);
+  const previewScrollRef = useRef<HTMLDivElement | null>(null);
+  const editorScrollFrameRef = useRef<number | null>(null);
+  const pendingEditorScrollRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const syncPreviewScrollFromEditor = useCallback(() => {
+    const editor = pendingEditorScrollRef.current;
+    const preview = previewScrollRef.current;
+
+    editorScrollFrameRef.current = null;
+
+    if (!editor || !preview || !showEditor || isFullscreen) {
+      return;
+    }
+
+    const editorRect = editor.getBoundingClientRect();
+    const previewRect = preview.getBoundingClientRect();
+    const isSideBySide = editorRect.right <= previewRect.left + 1;
+    if (!isSideBySide) {
+      return;
+    }
+
+    const editorMax = editor.scrollHeight - editor.clientHeight;
+    const previewMax = preview.scrollHeight - preview.clientHeight;
+    if (previewMax <= 0) {
+      preview.scrollTop = 0;
+      return;
+    }
+
+    const ratio = editorMax <= 0 ? 0 : editor.scrollTop / editorMax;
+    const targetScrollTop = Math.max(0, Math.min(previewMax, ratio * previewMax));
+
+    if (Math.abs(preview.scrollTop - targetScrollTop) > 1) {
+      preview.scrollTop = targetScrollTop;
+    }
+  }, [isFullscreen, showEditor]);
+
+  // 编辑器滚动 → 预览联动。用 rAF 合并高频滚动事件，避免 smooth 动画积压。
+  const handleEditorScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
+    pendingEditorScrollRef.current = e.currentTarget;
+
+    if (editorScrollFrameRef.current !== null) {
+      return;
+    }
+
+    editorScrollFrameRef.current = window.requestAnimationFrame(syncPreviewScrollFromEditor);
+  }, [syncPreviewScrollFromEditor]);
 
   // 检测系统暗黑模式
   useEffect(() => {
@@ -131,6 +177,14 @@ const App: React.FC = () => {
       }
     };
   }, [copyStatus.visible, copyStatus.isError]);
+
+  useEffect(() => {
+    return () => {
+      if (editorScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(editorScrollFrameRef.current);
+      }
+    };
+  }, []);
 
   // 当代码块样式改变时，重新渲染
   useEffect(() => {
@@ -259,8 +313,8 @@ const App: React.FC = () => {
       </header>
 
       <main className={`main-container device-${device} ${!showEditor ? 'editor-hidden' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
-        {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} />}
-        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} showH1={showH1} invertH1={invertH1} imageBorderStyle={imageBorderStyle} />
+        {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} onScroll={handleEditorScroll} />}
+        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} showH1={showH1} invertH1={invertH1} imageBorderStyle={imageBorderStyle} scrollRef={previewScrollRef} />
       </main>
 
       {!isFullscreen && (
