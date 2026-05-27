@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import EditorPane from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -41,6 +41,7 @@ const App: React.FC = () => {
     message: '',
     isError: false,
   });
+  const copyStatusTimerRef = useRef<number | null>(null);
 
   // 检测系统暗黑模式
   useEffect(() => {
@@ -110,6 +111,26 @@ const App: React.FC = () => {
     setHtml(rendered);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHorizontalRule]);
+
+  useEffect(() => {
+    if (copyStatusTimerRef.current) {
+      window.clearTimeout(copyStatusTimerRef.current);
+      copyStatusTimerRef.current = null;
+    }
+
+    if (copyStatus.visible) {
+      copyStatusTimerRef.current = window.setTimeout(() => {
+        setCopyStatus((status) => ({ ...status, visible: false }));
+      }, copyStatus.isError ? 6000 : 3200);
+    }
+
+    return () => {
+      if (copyStatusTimerRef.current) {
+        window.clearTimeout(copyStatusTimerRef.current);
+        copyStatusTimerRef.current = null;
+      }
+    };
+  }, [copyStatus.visible, copyStatus.isError]);
 
   // 当代码块样式改变时，重新渲染
   useEffect(() => {
@@ -264,20 +285,13 @@ const App: React.FC = () => {
       )}
 
       {copyStatus.visible && (
-        <div className="copy-modal-overlay" onClick={() => setCopyStatus({ ...copyStatus, visible: false })}>
-          <div
-            className={`copy-modal ${copyStatus.isError ? 'copy-modal-error' : 'copy-modal-success'}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="copy-modal-title">{copyStatus.isError ? '提示' : '复制成功'}</div>
-            <div className="copy-modal-message">{copyStatus.message}</div>
-            <button
-              className="copy-modal-button"
-              onClick={() => setCopyStatus({ ...copyStatus, visible: false })}
-            >
-              确定
-            </button>
-          </div>
+        <div
+          className={`copy-toast ${copyStatus.isError ? 'copy-toast-error' : 'copy-toast-success'}`}
+          role={copyStatus.isError ? 'alert' : 'status'}
+          onClick={() => setCopyStatus({ ...copyStatus, visible: false })}
+        >
+          <div className="copy-toast-title">{copyStatus.isError ? '提示' : '复制成功'}</div>
+          <div className="copy-toast-message">{copyStatus.message}</div>
         </div>
       )}
     </div>

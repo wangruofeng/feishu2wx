@@ -50,8 +50,8 @@
   font-size: 12px;
   transition: all 0.2s;
   white-space: nowrap;
-  flex: 0 0 auto;
-  min-width: fit-content;
+  flex: 1;
+  min-width: 0;
   box-sizing: border-box;
   justify-content: center;
 }

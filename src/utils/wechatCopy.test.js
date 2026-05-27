@@ -1,4 +1,59 @@
-import { formatForWeChat } from './wechatCopy';
+import { convertSvgImagesToPng, formatForWeChat } from './wechatCopy';
+
+function mockSvgRasterizer() {
+  const originalImage = global.Image;
+  const originalCreateObjectUrl = URL.createObjectURL;
+  const originalRevokeObjectUrl = URL.revokeObjectURL;
+  const originalGetContext = HTMLCanvasElement.prototype.getContext;
+  const originalToDataUrl = HTMLCanvasElement.prototype.toDataURL;
+
+  global.Image = class {
+    set src(_value) {
+      setTimeout(() => this.onload && this.onload());
+    }
+  };
+  URL.createObjectURL = jest.fn(() => 'blob:mock-svg');
+  URL.revokeObjectURL = jest.fn();
+  HTMLCanvasElement.prototype.getContext = jest.fn(() => ({ drawImage: jest.fn() }));
+  HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,mock-png');
+
+  return () => {
+    global.Image = originalImage;
+    URL.createObjectURL = originalCreateObjectUrl;
+    URL.revokeObjectURL = originalRevokeObjectUrl;
+    HTMLCanvasElement.prototype.getContext = originalGetContext;
+    HTMLCanvasElement.prototype.toDataURL = originalToDataUrl;
+  };
+}
+
+test('converts svg image sources to png data urls before wechat copy', async () => {
+  const restore = mockSvgRasterizer();
+  const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40"/></svg>');
+
+  try {
+    const html = await convertSvgImagesToPng(`<p><img src="data:image/svg+xml,${svg}" alt="图"></p>`);
+
+    expect(html).toContain('src="data:image/png;base64,mock-png"');
+    expect(html).not.toContain('data:image/svg+xml');
+  } finally {
+    restore();
+  }
+});
+
+test('converts inline svg elements to png images before wechat copy', async () => {
+  const restore = mockSvgRasterizer();
+
+  try {
+    const html = await convertSvgImagesToPng('<svg width="80" height="40" aria-label="图标"><rect width="80" height="40"/></svg>');
+
+    expect(html).toContain('<img');
+    expect(html).toContain('src="data:image/png;base64,mock-png"');
+    expect(html).toContain('alt="图标"');
+    expect(html).not.toContain('<svg');
+  } finally {
+    restore();
+  }
+});
 
 test('formats h1 with inverted text and background styles when enabled', () => {
   const html = '<h1>测试标题</h1>';

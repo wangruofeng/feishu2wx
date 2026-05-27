@@ -15,6 +15,70 @@ const turndownService = new TurndownService({
 // 使用 GitHub Flavored Markdown 插件
 turndownService.use(gfm);
 
+function normalizeTableCellContent(content: string): string {
+  return content
+    .replace(/\|/g, '\\|')
+    .replace(/\n+/g, '<br>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getTableCellMarkdown(cell: Element): string {
+  return normalizeTableCellContent(turndownService.turndown(cell.innerHTML));
+}
+
+function getColumnCount(rows: Element[]): number {
+  return rows.reduce((max, row) => {
+    const count = Array.from(row.querySelectorAll(':scope > th, :scope > td'))
+      .reduce((total, cell) => total + Number(cell.getAttribute('colspan') || 1), 0);
+    return Math.max(max, count);
+  }, 0);
+}
+
+function getRowCells(row: Element, columnCount: number): string[] {
+  const cells = Array.from(row.querySelectorAll(':scope > th, :scope > td'))
+    .flatMap((cell) => {
+      const content = getTableCellMarkdown(cell);
+      const colspan = Number(cell.getAttribute('colspan') || 1);
+      return [content, ...Array(Math.max(colspan - 1, 0)).fill('')];
+    });
+
+  while (cells.length < columnCount) {
+    cells.push('');
+  }
+
+  return cells.slice(0, columnCount);
+}
+
+function markdownTableRow(cells: string[]): string {
+  return `| ${cells.join(' | ')} |`;
+}
+
+// 自定义规则：处理飞书粘贴过来的普通表格
+turndownService.addRule('feishuTable', {
+  filter: 'table',
+  replacement: function (_content, node) {
+    const table = node as HTMLTableElement;
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const columnCount = getColumnCount(rows);
+
+    if (!rows.length || !columnCount) {
+      return '';
+    }
+
+    const headerRow = getRowCells(rows[0], columnCount);
+    const bodyRows = rows.slice(1).map((row) => getRowCells(row, columnCount));
+    const separator = Array(columnCount).fill('---');
+    const markdownRows = [
+      markdownTableRow(headerRow),
+      markdownTableRow(separator),
+      ...bodyRows.map(markdownTableRow),
+    ];
+
+    return `\n\n${markdownRows.join('\n')}\n\n`;
+  },
+});
+
 // 自定义规则：处理飞书特有的代码块格式
 turndownService.addRule('feishuCodeBlock', {
   filter: function (node): boolean {

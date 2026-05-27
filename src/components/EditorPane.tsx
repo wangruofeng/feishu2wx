@@ -15,15 +15,17 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown }) => {
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const htmlData = e.clipboardData.getData('text/html');
     const textData = e.clipboardData.getData('text/plain');
+    const hasHtmlTable = /<table[\s>]/i.test(htmlData);
 
     // 判断是否应该使用 HTML 转换
     // 1. 飞书/飞书文档的 HTML 包含特定标识
-    // 2. 如果 HTML 包含这些特征，说明是从富文本编辑器复制的，需要转换
+    // 2. 表格粘贴需要保留结构，不能退回纯文本
     const shouldConvertHtml = htmlData && htmlData.trim() && (
       htmlData.includes('feishu') ||
       htmlData.includes('larksuite') ||
       htmlData.includes('feishu.cn') ||
-      htmlData.includes('lark')
+      htmlData.includes('lark') ||
+      hasHtmlTable
     );
 
     // 如果有HTML数据且来自飞书等富文本编辑器，转换为Markdown

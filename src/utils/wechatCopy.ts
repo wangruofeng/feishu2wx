@@ -293,6 +293,189 @@ function wrapStandaloneImages(container: HTMLElement): void {
   });
 }
 
+function isSvgImageSource(src: string): boolean {
+  const cleanSrc = src.split(/[?#]/)[0].toLowerCase();
+  return cleanSrc.endsWith('.svg') || src.toLowerCase().startsWith('data:image/svg+xml');
+}
+
+function decodeSvgDataUrl(dataUrl: string): string | null {
+  const match = dataUrl.match(/^data:image\/svg\+xml(?:;charset=[^;,]+)?(;base64)?,(.*)$/i);
+  if (!match) {
+    return null;
+  }
+
+  try {
+    const data = match[2];
+    return match[1] ? atob(data) : decodeURIComponent(data);
+  } catch (error) {
+    console.warn('解析 SVG data URL 失败:', error);
+    return null;
+  }
+}
+
+function parseSvgLength(value: string | null): number | null {
+  if (!value || value.trim().endsWith('%')) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getSvgSize(svgText: string): { width: number; height: number } {
+  const fallbackSize = { width: 800, height: 450 };
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  const svg = doc.documentElement;
+
+  if (!svg || svg.nodeName.toLowerCase() !== 'svg') {
+    return fallbackSize;
+  }
+
+  const width = parseSvgLength(svg.getAttribute('width'));
+  const height = parseSvgLength(svg.getAttribute('height'));
+  if (width && height) {
+    return { width, height };
+  }
+
+  const viewBox = svg.getAttribute('viewBox') || svg.getAttribute('viewbox');
+  if (viewBox) {
+    const values = viewBox.trim().split(/\s+/).map(Number);
+    if (values.length === 4 && values.every(Number.isFinite) && values[2] > 0 && values[3] > 0) {
+      return { width: values[2], height: values[3] };
+    }
+  }
+
+  if (width) {
+    return { width, height: Math.round(width * fallbackSize.height / fallbackSize.width) };
+  }
+
+  if (height) {
+    return { width: Math.round(height * fallbackSize.width / fallbackSize.height), height };
+  }
+
+  return fallbackSize;
+}
+
+function constrainSvgSize(size: { width: number; height: number }): { width: number; height: number } {
+  const maxSide = 1600;
+  const longestSide = Math.max(size.width, size.height);
+
+  if (longestSide <= maxSide) {
+    return size;
+  }
+
+  const ratio = maxSide / longestSide;
+  return {
+    width: Math.round(size.width * ratio),
+    height: Math.round(size.height * ratio),
+  };
+}
+
+function ensureSvgNamespace(svgText: string): string {
+  if (/^<svg[\s>]/i.test(svgText.trim()) && !/\sxmlns=/.test(svgText)) {
+    return svgText.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+
+  return svgText;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('SVG 图片加载失败'));
+    image.src = src;
+  });
+}
+
+async function rasterizeSvgTextToPng(svgText: string): Promise<string> {
+  const normalizedSvg = ensureSvgNamespace(svgText);
+  const { width, height } = constrainSvgSize(getSvgSize(normalizedSvg));
+  const blob = new Blob([normalizedSvg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+
+  try {
+    const image = await loadImage(url);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(width);
+    canvas.height = Math.ceil(height);
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('浏览器不支持 Canvas 渲染');
+    }
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/png');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function getSvgTextFromImageSource(src: string): Promise<string | null> {
+  if (src.toLowerCase().startsWith('data:image/svg+xml')) {
+    return decodeSvgDataUrl(src);
+  }
+
+  try {
+    const response = await fetch(src);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.text();
+  } catch (error) {
+    console.warn('读取 SVG 图片失败，保留原图:', error);
+    return null;
+  }
+}
+
+function getInlineSvgAlt(svg: SVGSVGElement): string {
+  return svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || '';
+}
+
+export async function convertSvgImagesToPng(html: string): Promise<string> {
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const inlineSvgs = Array.from(container.querySelectorAll('svg'));
+  for (const svg of inlineSvgs) {
+    if (svg.closest('pre, code')) {
+      continue;
+    }
+
+    try {
+      const pngDataUrl = await rasterizeSvgTextToPng(svg.outerHTML);
+      const img = document.createElement('img');
+      img.src = pngDataUrl;
+      img.alt = getInlineSvgAlt(svg as SVGSVGElement);
+      svg.replaceWith(img);
+    } catch (error) {
+      console.warn('内联 SVG 转 PNG 失败，保留原 SVG:', error);
+    }
+  }
+
+  const images = Array.from(container.querySelectorAll('img'));
+  for (const img of images) {
+    const src = img.getAttribute('src') || '';
+    if (!isSvgImageSource(src)) {
+      continue;
+    }
+
+    const svgText = await getSvgTextFromImageSource(src);
+    if (!svgText) {
+      continue;
+    }
+
+    try {
+      img.setAttribute('src', await rasterizeSvgTextToPng(svgText));
+    } catch (error) {
+      console.warn('SVG 图片转 PNG 失败，保留原图:', error);
+    }
+  }
+
+  return container.innerHTML;
+}
+
 /**
  * 将HTML内容转换为微信公众号编辑器可接受的格式
  * 微信公众号编辑器使用的是富文本格式，需要特殊处理
@@ -1248,7 +1431,8 @@ export async function copyHtmlToWeChat(
     return { success: false, message: '没有内容可复制' };
   }
 
-  const formattedHtml = formatForWeChat(html, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+  const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
