@@ -7,7 +7,7 @@ interface Props {
 }
 
 const themes = [
-  { key: 'classic', name: '经典', icon: '📄' },
+  { key: 'classic', name: '经典', icon: '🖤' },
   { key: 'orange', name: '橙色', icon: '🧡' },
   { key: 'blue', name: '蓝色', icon: '💙' },
   { key: 'green', name: '绿意', icon: '🌿' },

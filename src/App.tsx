@@ -5,6 +5,7 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 import SettingsPanel from './components/SettingsPanel';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat } from './utils/wechatCopy';
+import exampleMd from './data/example';
 import './App.css';
 import './styles/themes.css';
 import 'highlight.js/styles/atom-one-dark.css';
@@ -17,7 +18,9 @@ const App: React.FC = () => {
   const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' | 'default' || 'border';
   const savedShowH1 = localStorage.getItem('feishu2wx_showH1') === 'true';
   const savedInvertH1 = localStorage.getItem('feishu2wx_invertH1') === 'true';
+  const savedAlignH1Left = localStorage.getItem('feishu2wx_alignH1Left') === 'true';
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
+  const savedTableShadow = localStorage.getItem('feishu2wx_tableShadow') !== 'false';
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
@@ -30,9 +33,11 @@ const App: React.FC = () => {
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
   const [showH1, setShowH1] = useState<boolean>(savedShowH1);
   const [invertH1, setInvertH1] = useState<boolean>(savedInvertH1);
+  const [alignH1Left, setAlignH1Left] = useState<boolean>(savedAlignH1Left);
   const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow' | 'default'>(savedImageBorderStyle);
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>(savedCodeBlockStyle);
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
+  const [tableShadow, setTableShadow] = useState<boolean>(savedTableShadow);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
     visible: false,
     message: '',
@@ -124,6 +129,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle); }, [imageBorderStyle]);
   useEffect(() => { localStorage.setItem('feishu2wx_showH1', String(showH1)); }, [showH1]);
   useEffect(() => { localStorage.setItem('feishu2wx_invertH1', String(invertH1)); }, [invertH1]);
+  useEffect(() => { localStorage.setItem('feishu2wx_alignH1Left', String(alignH1Left)); }, [alignH1Left]);
 
   useEffect(() => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
@@ -132,6 +138,8 @@ const App: React.FC = () => {
     setHtml(rendered);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHorizontalRule]);
+
+  useEffect(() => { localStorage.setItem('feishu2wx_tableShadow', String(tableShadow)); }, [tableShadow]);
 
   useEffect(() => {
     if (copyStatusTimerRef.current) {
@@ -240,64 +248,7 @@ const App: React.FC = () => {
   }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1]);
 
   const handleLoadExample = useCallback(() => {
-    const example = `# 欢迎使用飞书文档转微信公众号排版神器
-
-这是一篇示例文章，展示了常见的 Markdown 语法。
-
-## 标题示例
-
-### 三级标题
-
-**粗体文本** 和 *斜体文本*
-
-## 列表示例
-
-### 无序列表
-- 项目 1
-- 项目 2
-  - 子项目 2.1
-  - 子项目 2.2
-- 项目 3
-
-### 有序列表
-1. 第一项
-2. 第二项
-3. 第三项
-
-## 引用示例
-
-> 这是一段引用文字
-> 可以包含多行内容
-
-## 代码示例
-
-行内代码：\`console.log('Hello World')\`
-
-代码块：
-
-\`\`\`javascript
-function greet(name) {
-  return \`Hello, \${name}!\`;
-}
-\`\`\`
-
-## 链接和图片
-
-[这是一个链接](https://example.com)
-
-![示例图片](https://img1.baidu.com/it/u=352739982,3234821554&fm=253&app=138&f=JPEG?w=500&h=857)
-
-## 表格示例
-
-| 列1 | 列2 | 列3 |
-|-----|-----|-----|
-| 数据1 | 数据2 | 数据3 |
-| 数据4 | 数据5 | 数据6 |
-
----
-
-感谢使用！`;
-    setMarkdown(example);
+    setMarkdown(exampleMd);
   }, []);
 
   // 响应式移动端检测
@@ -325,7 +276,18 @@ function greet(name) {
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
       {/* 顶栏 */}
       <div className={`top-bar ${isFullscreen ? 'fullscreen-bar' : ''}`}>
-        <span className="top-bar-brand">feishu2wx</span>
+        <span className="top-bar-brand" title="飞书文档转公众号排版一键排版工具，秒级完成排版，效率起飞还免费">feishu<span className="brand-accent">2wx</span></span>
+        <a
+          className="github-link"
+          href="https://github.com/wangruofeng/feishu2wx"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="GitHub"
+        >
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+        </a>
 
         <div className="top-bar-center">
           {!isFullscreen && <ThemeSwitcher theme={theme} setTheme={setTheme} />}
@@ -346,8 +308,12 @@ function greet(name) {
             onToggleH1={() => setShowH1(!showH1)}
             invertH1={invertH1}
             onToggleInvertH1={() => setInvertH1(!invertH1)}
+            alignH1Left={alignH1Left}
+            onToggleAlignH1Left={() => setAlignH1Left(!alignH1Left)}
             showHorizontalRule={showHorizontalRule}
             onToggleHorizontalRule={() => setShowHorizontalRuleState(!showHorizontalRule)}
+            tableShadow={tableShadow}
+            onToggleTableShadow={() => setTableShadow(!tableShadow)}
             imageBorderStyle={imageBorderStyle}
             onToggleImageBorder={() => {
               const next = imageBorderStyle === 'default' ? 'border' : imageBorderStyle === 'border' ? 'shadow' : 'default';
@@ -378,7 +344,7 @@ function greet(name) {
             onClick={handleCopyToWeChat}
             disabled={isCopying || !markdown.trim()}
           >
-            复制到微信
+            复制
           </button>
         </div>
       </div>
@@ -416,6 +382,8 @@ function greet(name) {
           font={font}
           showH1={showH1}
           invertH1={invertH1}
+          alignH1Left={alignH1Left}
+          tableShadow={tableShadow}
           imageBorderStyle={imageBorderStyle}
           scrollRef={previewScrollRef}
           onDeviceChange={setDevice}

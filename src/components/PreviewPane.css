@@ -38,8 +38,7 @@
 }
 
 .preview-header-btn:hover {
-  color: var(--color-brand);
-  background-color: var(--color-brand-subtle);
+  background-color: var(--color-bg-hover-transparent);
 }
 
 .preview-header-btn.active {
@@ -127,6 +126,10 @@
   border-bottom: none;
 }
 
+.preview-content.align-h1-left h1 {
+  text-align: left;
+}
+
 .preview-content.invert-h1 h1 .h1-inline-block {
   display: inline-block;
   padding: 6px 14px;
@@ -192,6 +195,53 @@
   line-height: 1.8;
 }
 
+.preview-content li.task-list-item {
+  list-style: none;
+  margin-left: -20px;
+}
+
+.preview-content .task-checkbox {
+  margin-right: 4px;
+  font-size: 1em;
+  vertical-align: middle;
+}
+
+.preview-content .task-checkbox.checked {
+  opacity: 0.85;
+}
+
+/* Footnotes */
+.preview-content hr.footnotes-sep {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 24px 0 8px;
+}
+
+.preview-content section.footnotes {
+  font-size: 0.85em;
+  color: #666;
+  line-height: 1.6;
+}
+
+.preview-content ol.footnotes-list {
+  padding-left: 24px;
+  margin: 0;
+}
+
+.preview-content .footnote-item {
+  margin-bottom: 4px;
+}
+
+.preview-content .footnote-ref a {
+  color: var(--color-primary, #4A7FE0);
+  text-decoration: none;
+}
+
+.preview-content .footnote-backref {
+  color: var(--color-primary, #4A7FE0);
+  text-decoration: none;
+}
+
 .preview-content blockquote {
   margin: 16px 0;
   padding: 12px 16px;
@@ -214,8 +264,7 @@
   border-radius: 3px;
   font-size: 0.9em;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-weight: bold;
-  color: #595959;
+  opacity: 0.85;
 }
 
 .preview-content pre {
@@ -369,7 +418,10 @@
   width: 100%;
   border-collapse: collapse;
   margin: 24px 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.preview-content:not(.hide-table-shadow) table {
+  box-shadow: var(--shadow-md);
 }
 
 .preview-content table th,
@@ -429,12 +481,12 @@
 .preview-content strong,
 .preview-content b {
   font-weight: bold;
-  color: #595959;
+  opacity: 0.85;
 }
 
 .preview-content s,
 .preview-content del {
-  text-decoration-color: #595959;
+  opacity: 0.7;
 }
 
 .preview-content em,

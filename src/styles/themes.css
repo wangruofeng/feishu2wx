@@ -1,56 +1,56 @@
 /* 绿意主题 - 默认主题 */
 
 .theme-green .preview-content {
-  --preview-primary-color: #4A7FE0;
+  --preview-primary-color: #52c41a;
   background-color: #ffffff;
   color: #333;
 }
 
 .theme-green .preview-content h1,
 .theme-green .preview-content h2 {
-  border-bottom-color: #2C5AAF;
-  color: #2C5AAF;
+  border-bottom-color: #237804;
+  color: #237804;
 }
 
 .theme-green .preview-content h3,
 .theme-green .preview-content h4,
 .theme-green .preview-content h5,
 .theme-green .preview-content h6 {
-  color: #5A82D4;
+  color: #389e0d;
 }
 
 .theme-green .preview-content blockquote {
-  border-left-color: #4A7FE0;
-  background-color: #EEF3FC;
+  border-left-color: #52c41a;
+  background-color: #f6ffed;
 }
 
 .theme-green .preview-content a {
-  color: #4A7FE0;
+  color: #52c41a;
 }
 
 .theme-green .preview-content a:hover {
-  color: #6B93E8;
+  color: #73d13d;
 }
 
 .theme-green .preview-content table th {
-  background-color: #EEF3FC;
-  color: #2C5AAF;
+  background-color: #f6ffed;
+  color: #237804;
 }
 
 .theme-green .preview-content hr.custom-hr,
 .theme-green .preview-content hr.custom-hr::before,
 .theme-green .preview-content hr.custom-hr::after {
-  color: #4A7FE0;
+  color: #52c41a;
 }
 
 .theme-green .toolbar-btn-primary {
-  background-color: #4A7FE0;
-  border-color: #4A7FE0;
+  background-color: #52c41a;
+  border-color: #52c41a;
 }
 
 .theme-green .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #6B93E8;
-  border-color: #6B93E8;
+  background-color: #73d13d;
+  border-color: #73d13d;
   color: #ccc;
 }
 

@@ -28,10 +28,12 @@ npm run pre-commit-check
 
 1. 使用多种 Markdown 输入测试标题、列表、代码块、表格和引用。
 2. 测试从飞书文档粘贴 HTML。
-3. 验证预览区的主题切换（8 种命名主题 + 系统暗黑模式自适应）。
-4. 验证复制到微信公众号后是否保留内联样式（classic 和 modern 代码块都要测）。
+3. 验证预览区的主题切换（4 种命名主题 + 系统暗黑模式自适应）。
+4. 验证复制公众号后是否保留内联样式（classic 和 modern 代码块都要测）。
 5. 验证桌面端和移动端预览宽度。
 6. 测试选中部分内容复制 vs 全文复制。
+7. 测试 Task List 渲染（`- [x]` 和 `- [ ]`），确认预览和微信输出中复选框正确显示。
+8. 测试脚注渲染（`[^1]` + `[^1]: 定义`），确认上标引用、脚注区块和返回链接正确显示。
 
 ## 现有测试
 
@@ -64,7 +66,7 @@ npm test
 
 ## 配置注意事项
 
-- 主题配置分散在三处：`ThemeSwitcher.tsx`（UI 定义，8 种命名主题）、`wechatCopy.ts`（导出内联样式映射，含额外 `light` / `dark` 两种内部主题）、`styles/themes.css`（预览样式，共 10 种）。新增或修改主题时三处都要同步。
+- 主题配置分散在三处：`ThemeSwitcher.tsx`（UI 定义，4 种命名主题：经典、橙色、蓝色、绿意）、`wechatCopy.ts`（导出内联样式映射，含额外 `light` / `dark` 两种内部主题）、`styles/themes.css`（预览样式）。新增或修改主题时三处都要同步。
 - 字体配置分散在两处：`FontSelector.tsx`（UI 下拉）和 `wechatCopy.ts`（导出字体映射）。新增字体时两处都要同步。
 - Google Fonts 链接在 `public/index.html` 中预加载，新增 Google Font 需在此添加 `<link>`。
 - `patch-package` 在 `postinstall` 时自动运行，用于修补第三方依赖。

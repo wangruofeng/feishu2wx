@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import './EditorPane.css';
 
@@ -9,9 +9,32 @@ interface Props {
   onLoadExample: () => void;
 }
 
+interface HistoryEntry {
+  content: string;
+  cursorStart: number;
+  cursorEnd: number;
+}
+
+const MAX_HISTORY = 50;
+
 const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadExample }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const historyRef = useRef<HistoryEntry[]>([]);
+  const isUndoRef = useRef(false);
+
+  // 保存当前状态到历史
+  const pushHistory = useCallback(() => {
+    const textarea = textareaRef.current;
+    historyRef.current.push({
+      content: markdown,
+      cursorStart: textarea?.selectionStart ?? 0,
+      cursorEnd: textarea?.selectionEnd ?? 0,
+    });
+    if (historyRef.current.length > MAX_HISTORY) {
+      historyRef.current.shift();
+    }
+  }, [markdown]);
 
   // 处理粘贴事件
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
@@ -29,6 +52,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
 
     if (shouldConvertHtml) {
       e.preventDefault();
+      pushHistory();
       const md = convertHtmlToMarkdown(htmlData);
 
       const textarea = textareaRef.current;
@@ -49,6 +73,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
 
     if (textData) {
       e.preventDefault();
+      pushHistory();
       const textarea = textareaRef.current;
       if (textarea) {
         const start = textarea.selectionStart;
@@ -70,6 +95,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
     const textarea = textareaRef.current;
     if (!textarea) return;
 
+    pushHistory();
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const selectedText = markdown.slice(start, end);
@@ -85,7 +111,119 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
     }, 0);
   }, [markdown, setMarkdown]);
 
-  // 处理文件导入
+  // 切换 Markdown 语法（包裹/取消包裹）
+  const toggleMarkdown = useCallback((before: string, after: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    pushHistory();
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = markdown.slice(start, end);
+
+    // 检查选中文本是否已被包裹
+    const beforeStart = start - before.length;
+    const afterEnd = end + after.length;
+    const isWrapped = beforeStart >= 0 && afterEnd <= markdown.length
+      && markdown.slice(beforeStart, start) === before
+      && markdown.slice(end, afterEnd) === after;
+
+    if (isWrapped) {
+      // 去掉包裹
+      const newMd = markdown.slice(0, beforeStart) + selectedText + markdown.slice(afterEnd);
+      setMarkdown(newMd);
+      setTimeout(() => {
+        textarea.setSelectionRange(beforeStart, beforeStart + selectedText.length);
+        textarea.focus();
+      }, 0);
+    } else {
+      // 添加包裹
+      const replacement = before + selectedText + after;
+      const newMd = markdown.slice(0, start) + replacement + markdown.slice(end);
+      setMarkdown(newMd);
+      setTimeout(() => {
+        textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+        textarea.focus();
+      }, 0);
+    }
+  }, [markdown, setMarkdown]);
+
+  // 键盘快捷键
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+      if (e.key === 'z') {
+        e.preventDefault();
+        const history = historyRef.current;
+        if (history.length === 0) return;
+        const entry = history.pop()!;
+        isUndoRef.current = true;
+        setMarkdown(entry.content);
+        setTimeout(() => {
+          const textarea = textareaRef.current;
+          if (textarea) {
+            textarea.setSelectionRange(entry.cursorStart, entry.cursorEnd);
+            textarea.focus();
+          }
+          isUndoRef.current = false;
+        }, 0);
+        return;
+      }
+      if (e.key === 'b') {
+        e.preventDefault();
+        toggleMarkdown('**', '**');
+      } else if (e.key === 'i') {
+        e.preventDefault();
+        toggleMarkdown('*', '*');
+      } else if (e.key === 'k') {
+        e.preventDefault();
+        pushHistory();
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = markdown.slice(start, end);
+
+        if (selectedText) {
+          // 选中文本作为链接文本，光标放在 URL 位置
+          const replacement = `[${selectedText}](url)`;
+          const newMd = markdown.slice(0, start) + replacement + markdown.slice(end);
+          setMarkdown(newMd);
+          setTimeout(() => {
+            const urlStart = start + selectedText.length + 3;
+            textarea.setSelectionRange(urlStart, urlStart + 3);
+            textarea.focus();
+          }, 0);
+        } else {
+          // 无选中文本，插入占位
+          const replacement = '[链接文本](url)';
+          const newMd = markdown.slice(0, start) + replacement + markdown.slice(end);
+          setMarkdown(newMd);
+          setTimeout(() => {
+            textarea.setSelectionRange(start + 1, start + 5);
+            textarea.focus();
+          }, 0);
+        }
+      }
+    }
+  }, [markdown, setMarkdown, toggleMarkdown, pushHistory]);
+
+  // 普通 onChange：编辑前保存快照（非撤销时）
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!isUndoRef.current) {
+      const textarea = textareaRef.current;
+      historyRef.current.push({
+        content: markdown,
+        cursorStart: textarea?.selectionStart ?? 0,
+        cursorEnd: textarea?.selectionEnd ?? 0,
+      });
+      if (historyRef.current.length > MAX_HISTORY) {
+        historyRef.current.shift();
+      }
+    }
+    setMarkdown(e.target.value);
+  }, [markdown, setMarkdown]);
+
   const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -130,7 +268,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
         <button onClick={() => insertMarkdown('### ', '')} title="标题3">H3</button>
         <div className="toolbar-divider" />
         <button onClick={() => insertMarkdown('**', '**')} title="粗体">B</button>
-        <button onClick={() => insertMarkdown('*', '*')} title="斜体">I</button>
+        <button onClick={() => insertMarkdown('*', '*')} title="斜体"><i>I</i></button>
         <button onClick={() => insertMarkdown('`', '`')} title="行内代码">Code</button>
         <div className="toolbar-divider" />
         <button onClick={() => insertMarkdown('- ', '')} title="无序列表">&#8226; List</button>
@@ -147,8 +285,9 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
           ref={textareaRef}
           className="markdown-editor"
           value={markdown}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setMarkdown(e.target.value)}
+          onChange={handleChange}
           onPaste={handlePaste}
+          onKeyDown={handleKeyDown}
           onScroll={onScroll}
           placeholder="请粘贴飞书文档内容或直接编写 Markdown..."
           spellCheck={false}
@@ -166,6 +305,9 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
         <button className="editor-footer-btn" onClick={handleClear}>
           清空
         </button>
+        <span className="editor-stats">
+          <strong>{markdown.split('\n').length.toLocaleString()}</strong> 行 · <strong>{markdown.length.toLocaleString()}</strong> 字符
+        </span>
       </div>
 
       <input

@@ -34,9 +34,8 @@
 }
 
 .editor-toolbar button:hover {
-  background-color: var(--color-bg-hover);
-  border-color: var(--color-border-secondary);
-  color: var(--color-brand);
+  background-color: var(--color-bg-hover-transparent);
+  border-color: transparent;
 }
 
 .toolbar-divider {
@@ -101,6 +100,14 @@
 .editor-footer-btn:hover {
   border-color: var(--color-brand);
   color: var(--color-brand);
+}
+
+.editor-stats {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  user-select: none;
 }
 
 @media (max-width: 768px) {

@@ -9,8 +9,12 @@ interface Props {
   onToggleH1: () => void;
   invertH1: boolean;
   onToggleInvertH1: () => void;
+  alignH1Left: boolean;
+  onToggleAlignH1Left: () => void;
   showHorizontalRule: boolean;
   onToggleHorizontalRule: () => void;
+  tableShadow: boolean;
+  onToggleTableShadow: () => void;
   imageBorderStyle: 'border' | 'shadow' | 'default';
   onToggleImageBorder: () => void;
   codeBlockStyle: CodeBlockStyle;
@@ -45,8 +49,12 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleH1,
   invertH1,
   onToggleInvertH1,
+  alignH1Left,
+  onToggleAlignH1Left,
   showHorizontalRule,
   onToggleHorizontalRule,
+  tableShadow,
+  onToggleTableShadow,
   imageBorderStyle,
   onToggleImageBorder,
   codeBlockStyle,
@@ -110,6 +118,12 @@ const SettingsPanel: React.FC<Props> = ({
           >
             H1 反色
           </button>
+          <button
+            className={`settings-toggle ${alignH1Left ? 'active' : ''}`}
+            onClick={onToggleAlignH1Left}
+          >
+            {alignH1Left ? 'H1 左对齐' : 'H1 居中'}
+          </button>
         </div>
       </div>
 
@@ -120,6 +134,16 @@ const SettingsPanel: React.FC<Props> = ({
           onClick={onToggleHorizontalRule}
         >
           {showHorizontalRule ? '显示' : '隐藏'}
+        </button>
+      </div>
+
+      <div className="settings-section">
+        <label className="settings-label">表格阴影</label>
+        <button
+          className={`settings-toggle ${tableShadow ? 'active' : ''}`}
+          onClick={onToggleTableShadow}
+        >
+          {tableShadow ? '显示' : '隐藏'}
         </button>
       </div>
 
@@ -154,7 +178,7 @@ const SettingsPanel: React.FC<Props> = ({
             className={`settings-toggle ${codeBlockStyle === 'classic' ? 'active' : ''}`}
             onClick={codeBlockStyle === 'modern' ? onToggleCodeBlockStyle : undefined}
           >
-            经典
+            极简
           </button>
           <button
             className={`settings-toggle ${codeBlockStyle === 'modern' ? 'active' : ''}`}

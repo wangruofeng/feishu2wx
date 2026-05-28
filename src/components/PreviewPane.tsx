@@ -10,7 +10,9 @@ interface Props {
   font?: string;
   showH1?: boolean;
   invertH1?: boolean;
+  alignH1Left?: boolean;
   imageBorderStyle?: 'border' | 'shadow' | 'default';
+  tableShadow?: boolean;
   scrollRef?: React.Ref<HTMLDivElement>;
   onDeviceChange?: (device: 'desktop' | 'mobile') => void;
   onToggleFullscreen?: () => void;
@@ -23,7 +25,9 @@ const PreviewPane: React.FC<Props> = ({
   font = 'default',
   showH1 = true,
   invertH1 = false,
+  alignH1Left = false,
   imageBorderStyle = 'border',
+  tableShadow = true,
   scrollRef,
   onDeviceChange,
   onToggleFullscreen,
@@ -85,7 +89,7 @@ const PreviewPane: React.FC<Props> = ({
       <div className="preview-content-wrapper">
         <div
           ref={setPreviewRef}
-          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1 ? 'hide-h1' : ''} ${invertH1 ? 'invert-h1' : ''} image-${imageBorderStyle}`}
+          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1 ? 'hide-h1' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} image-${imageBorderStyle}`}
           style={fontStyle}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />

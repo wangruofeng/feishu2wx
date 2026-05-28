@@ -18,16 +18,16 @@ function getThemeStyles(theme: string) {
     tableHeaderColor: string;
   }> = {
     green: {
-      primaryColor: '#4A7FE0',
-      primaryColorDark: '#2C5AAF',
-      headingColor: '#2C5AAF',
-      headingColorH2: '#2C5AAF',
-      headingColorH3H6: '#5A82D4',
-      linkColor: '#4A7FE0',
-      blockquoteBorderColor: '#4A7FE0',
-      blockquoteBgColor: '#EEF3FC',
-      tableHeaderBgColor: '#EEF3FC',
-      tableHeaderColor: '#2C5AAF',
+      primaryColor: '#52c41a',
+      primaryColorDark: '#237804',
+      headingColor: '#237804',
+      headingColorH2: '#237804',
+      headingColorH3H6: '#389e0d',
+      linkColor: '#52c41a',
+      blockquoteBorderColor: '#52c41a',
+      blockquoteBgColor: '#f6ffed',
+      tableHeaderBgColor: '#f6ffed',
+      tableHeaderColor: '#237804',
     },
     light: {
       primaryColor: '#1890ff',
@@ -1188,6 +1188,82 @@ function applyThemeStyles(
     pEl.style.paddingLeft = '0';
     pEl.style.paddingRight = '0';
     pEl.style.display = 'inline';
+  });
+
+  // 处理 task list checkbox：添加内联样式
+  const checkboxes = container.querySelectorAll('.task-checkbox');
+  checkboxes.forEach((cb: Element) => {
+    const cbEl = cb as HTMLElement;
+    cbEl.style.marginRight = '4px';
+    cbEl.style.fontSize = '1em';
+    cbEl.style.verticalAlign = 'middle';
+    if (cbEl.classList.contains('checked')) {
+      cbEl.style.opacity = '0.85';
+    }
+  });
+
+  // task list item: 移除列表样式标记
+  const taskItems = container.querySelectorAll('li.task-list-item');
+  taskItems.forEach((li: Element) => {
+    const liEl = li as HTMLElement;
+    liEl.style.listStyle = 'none';
+    liEl.style.marginLeft = '-20px';
+  });
+
+  // 处理脚注分隔线
+  const footnotesSep = container.querySelectorAll('hr.footnotes-sep');
+  footnotesSep.forEach((hr: Element) => {
+    const hrEl = hr as HTMLElement;
+    hrEl.style.border = 'none';
+    hrEl.style.borderTop = '1px solid #ddd';
+    hrEl.style.margin = '24px 0 8px';
+    hrEl.style.height = '0';
+    hrEl.style.background = 'none';
+  });
+
+  // 处理脚注区块
+  const footnotesSections = container.querySelectorAll('section.footnotes');
+  footnotesSections.forEach((section: Element) => {
+    const secEl = section as HTMLElement;
+    secEl.style.fontSize = '0.85em';
+    secEl.style.color = '#666';
+    secEl.style.lineHeight = '1.6';
+    secEl.style.fontFamily = fontFamily;
+  });
+
+  const footnotesLists = container.querySelectorAll('ol.footnotes-list');
+  footnotesLists.forEach((ol: Element) => {
+    const olEl = ol as HTMLElement;
+    olEl.style.paddingLeft = '24px';
+    olEl.style.margin = '0';
+  });
+
+  const footnoteItems = container.querySelectorAll('.footnote-item');
+  footnoteItems.forEach((li: Element) => {
+    const liEl = li as HTMLElement;
+    liEl.style.marginBottom = '4px';
+  });
+
+  // 脚注引用（正文中上标）
+  const footnoteRefs = container.querySelectorAll('.footnote-ref');
+  footnoteRefs.forEach((ref: Element) => {
+    const refEl = ref as HTMLElement;
+    refEl.style.fontSize = '0.75em';
+    refEl.style.verticalAlign = 'super';
+    const a = refEl.querySelector('a');
+    if (a) {
+      const aEl = a as HTMLElement;
+      aEl.style.color = themeStyles.linkColor;
+      aEl.style.textDecoration = 'none';
+    }
+  });
+
+  // 脚注返回链接
+  const footnoteBackrefs = container.querySelectorAll('.footnote-backref');
+  footnoteBackrefs.forEach((a: Element) => {
+    const aEl = a as HTMLElement;
+    aEl.style.color = themeStyles.linkColor;
+    aEl.style.textDecoration = 'none';
   });
 
   // 处理引用（使用主题颜色）

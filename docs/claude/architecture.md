@@ -2,7 +2,7 @@
 
 ## 项目概览
 
-`feishu2wx` 是一个纯前端 React 应用，用于将飞书（Lark）文档转换为微信公众号文章格式。用户可以粘贴飞书文档中的 HTML，或直接编写 Markdown，然后预览并将排版后的内容复制到微信公众号编辑器。
+`feishu2wx` 是一个纯前端 React 应用，用于将飞书（Lark）文档转换为微信公众号文章格式。用户可以粘贴飞书文档中的 HTML，或直接编写 Markdown，然后预览并将排版后的内容复制公众号编辑器。
 
 ## 数据流
 
@@ -29,7 +29,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ### `src/utils/markdownRenderer.ts`
 
-- 使用 markdown-it 将 Markdown 渲染为 HTML，维护两个实例（classic / modern 代码块样式）。
+- 使用 markdown-it 将 Markdown 渲染为 HTML，维护两个实例（classic / modern 代码块样式），均加载 `markdown-it-footnote` 脚注插件。
 - 使用 highlight.js 和 Atom One Dark 主题做语法高亮。
 - 自动检测语言，失败时回退到默认语言。
 - 在渲染前移除 YAML front matter（`---...---`）。
@@ -37,6 +37,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 链接自动添加 `target="_blank"`。
 - 图片带 alt 文本时渲染为 `<figure class="img-figure">` + `<figcaption>`，无 alt 时渲染为裸 `<img>`。
 - 水平分割线渲染受 `showHorizontalRule` 控制：关闭时 `<hr>` 渲染为空字符串，开启时渲染为 `<hr class="custom-hr">`。通过导出的 `setShowHorizontalRule()` / `getShowHorizontalRule()` 控制。
+- Task List 后处理：检测 `<li>` 中的 `[x]` / `[ ]` 前缀，替换为 `<span class="task-checkbox">`（☑/☐）和 `task-list-item` 类。支持 `<li>text` 和 `<li><p>text</p>` 两种 DOM 结构。
+- 脚注由 `markdown-it-footnote` 插件处理，生成 `sup.footnote-ref`（正文引用）、`hr.footnotes-sep`（分隔线）、`section.footnotes > ol.footnotes-list > li.footnote-item`（脚注区块）、`a.footnote-backref`（返回链接）。
 
 ### `src/utils/wechatCopy.ts`
 
@@ -46,6 +48,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 三级剪贴板回退策略：(1) Clipboard API + ClipboardItem → (2) execCommand + contenteditable div → (3) textarea 回退。
 - 智能复制：检测预览区是否有选中内容，有则仅复制选中部分，否则复制全文。
 - 多项微信编辑器反格式化对策：`<li>` 内容包裹 `<span>`、`<p>` 标签扁平化、列表内粗体标签转为 styled span。
+- Task List checkbox 内联样式处理：为 `.task-checkbox` 添加 `margin-right`、`font-size`、`vertical-align`；为 `li.task-list-item` 移除列表标记并左移。
+- 脚注内联样式处理：`hr.footnotes-sep`（细线分隔）、`section.footnotes`（小字号灰色）、`ol.footnotes-list`（缩进）、`.footnote-ref`（上标主题色）、`.footnote-backref`（主题色链接）。
 
 ### `src/utils/codeBlockStyles.ts`
 
@@ -74,7 +78,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `theme`、`font`
 - `showEditor`、`isFullscreen`、`device`
 - `showH1`、`invertH1`、`showHorizontalRule`
-- `imageBorderStyle`（`'border' | 'shadow'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
+- `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
 - `isSystemDark`
 - `copyStatus`（复制结果弹窗）
 
@@ -82,13 +86,14 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 组件结构
 
-- `App.tsx`：主容器与状态中心，含顶部控制栏（字体、设备切换、全屏、主题）。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏。
+- `App.tsx`：主容器与状态中心，含顶部控制栏（字体、设备切换、全屏、主题、设置面板）。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、快捷键（B/I/K/Z）、自定义撤销（50 步历史）。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
 - `Toolbar.tsx`：底部工具栏（加载示例、清空、H1 底线、H1 反显、水平分割线、图片样式、代码块样式、一键复制）。
-- `ThemeSwitcher.tsx`：横向主题按钮组。
-- `FontSelector.tsx`：字体下拉选择器。
+- `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、绿意）。
+- `FontSelector.tsx`：字体下拉选择器（16 种字体）。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换。
+- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、分割线、表格阴影、图片模式（默认/边框/阴影）、代码块样式的可视化配置。
 
 ## 关键行为
 
@@ -106,7 +111,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ### 代码块样式
 
-- `classic`：浅色背景，简洁的 `pre > code`。
+- `classic`（极简）：浅色背景，简洁的 `pre > code`。
 - `modern`：深色代码窗口样式，带 3 个圆点头部和横向滚动。
 - `modern` 代码块共享样式参数定义在 `src/utils/codeBlockStyles.ts`。
 - 微信输出会显式保留代码块左对齐与缩进，且不依赖当前页面上的预览 DOM。
@@ -115,9 +120,11 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 - H1 下划线显隐
 - H1 反显（主题色背景 + 白色文字，宽度自适应）
+- H1 左对齐 / 居中对齐切换
 - 水平分割线显隐
-- 图片边框 / 阴影模式切换
-- 代码块 classic / modern 切换
+- 表格阴影显隐
+- 图片默认 / 边框 / 阴影模式切换
+- 代码块 极简 / 现代 切换
 
 ### 布局与排版规则
 

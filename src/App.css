@@ -24,10 +24,26 @@
 .top-bar-brand {
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
   white-space: nowrap;
   flex-shrink: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.02em;
+  cursor: default;
+  background: linear-gradient(135deg, #3370FF 0%, #3370FF 55%, #07C160 60%, #07C160 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-tertiary);
+  transition: var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.github-link:hover {
+  color: var(--color-text-primary);
 }
 
 .top-bar-center {
@@ -74,7 +90,7 @@
   background-color: var(--color-brand-subtle);
 }
 
-/* 复制到微信按钮 */
+/* 复制按钮 */
 .copy-btn {
   padding: var(--space-2) var(--space-6);
   background-color: var(--color-brand);

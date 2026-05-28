@@ -1,5 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
+import footnote from 'markdown-it-footnote';
 
 // 创建一个临时的 MarkdownIt 实例用于 escapeHtml
 const tempMd = new MarkdownIt();
@@ -87,7 +88,7 @@ const md: MarkdownIt = new MarkdownIt({
   linkify: true,
   typographer: true,
   highlight: createHighlightFunction(),
-});
+}).use(footnote);
 
 // 创建现代风格的 MarkdownIt 实例
 const mdModern: MarkdownIt = new MarkdownIt({
@@ -95,7 +96,7 @@ const mdModern: MarkdownIt = new MarkdownIt({
   linkify: true,
   typographer: true,
   highlight: createModernHighlightFunction(),
-});
+}).use(footnote);
 
 // 配置链接在新窗口打开（经典风格）
 const defaultRender = md.renderer.rules.link_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
@@ -282,6 +283,47 @@ export function renderMarkdown(markdown: string): string {
       // 将链接替换为普通文本节点
       const textNode = document.createTextNode(text);
       link.parentNode?.replaceChild(textNode, link);
+    }
+  });
+
+  // 处理 task list: 将 li 中的 [x] / [ ] 替换为 checkbox
+  const listItems = tempDiv.querySelectorAll('li');
+  listItems.forEach((li) => {
+    const firstChild = li.firstChild;
+    if (firstChild?.nodeType === Node.TEXT_NODE) {
+      const text = firstChild.textContent || '';
+      const checkedMatch = text.match(/^\[x\]\s?/i);
+      const uncheckedMatch = text.match(/^\[\s?\]\s?/);
+      const match = checkedMatch || uncheckedMatch;
+      if (match) {
+        const isChecked = !!checkedMatch;
+        const checkbox = document.createElement('span');
+        checkbox.className = isChecked ? 'task-checkbox checked' : 'task-checkbox';
+        checkbox.textContent = isChecked ? '☑' : '☐';
+        firstChild.textContent = text.slice(match[0].length);
+        li.insertBefore(checkbox, firstChild);
+        li.classList.add('task-list-item');
+      }
+    }
+    // 处理 <li><p>[x] ...</p> 的情况
+    const p = li.querySelector(':scope > p');
+    if (p && !li.querySelector('.task-checkbox')) {
+      const pFirst = p.firstChild;
+      if (pFirst?.nodeType === Node.TEXT_NODE) {
+        const text = pFirst.textContent || '';
+        const checkedMatch = text.match(/^\[x\]\s?/i);
+        const uncheckedMatch = text.match(/^\[\s?\]\s?/);
+        const match = checkedMatch || uncheckedMatch;
+        if (match) {
+          const isChecked = !!checkedMatch;
+          const checkbox = document.createElement('span');
+          checkbox.className = isChecked ? 'task-checkbox checked' : 'task-checkbox';
+          checkbox.textContent = isChecked ? '☑' : '☐';
+          pFirst.textContent = text.slice(match[0].length);
+          p.insertBefore(checkbox, pFirst);
+          li.classList.add('task-list-item');
+        }
+      }
     }
   });
 
