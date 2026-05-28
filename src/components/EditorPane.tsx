@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import './EditorPane.css';
 
@@ -88,7 +88,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
         }, 0);
       }
     }
-  }, [markdown, setMarkdown]);
+  }, [markdown, setMarkdown, pushHistory]);
 
   // 插入Markdown语法
   const insertMarkdown = useCallback((before: string, after: string = '') => {
@@ -109,7 +109,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
       textarea.setSelectionRange(newStart, newEnd);
       textarea.focus();
     }, 0);
-  }, [markdown, setMarkdown]);
+  }, [markdown, setMarkdown, pushHistory]);
 
   // 切换 Markdown 语法（包裹/取消包裹）
   const toggleMarkdown = useCallback((before: string, after: string) => {
@@ -146,7 +146,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
         textarea.focus();
       }, 0);
     }
-  }, [markdown, setMarkdown]);
+  }, [markdown, setMarkdown, pushHistory]);
 
   // 键盘快捷键
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
