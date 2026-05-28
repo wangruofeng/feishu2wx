@@ -2,9 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import EditorPane from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
-import DevicePreviewToggle from './components/DevicePreviewToggle';
-import FontSelector from './components/FontSelector';
-import Toolbar from './components/Toolbar';
+import SettingsPanel from './components/SettingsPanel';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat } from './utils/wechatCopy';
 import './App.css';
@@ -12,15 +10,14 @@ import './styles/themes.css';
 import 'highlight.js/styles/atom-one-dark.css';
 
 const App: React.FC = () => {
-  // 从 localStorage 恢复保存的内容
   const savedMarkdown = localStorage.getItem('feishu2wx_markdown') || '';
   const savedTheme = localStorage.getItem('feishu2wx_theme') || 'classic';
   const savedFont = localStorage.getItem('feishu2wx_font') || 'default';
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
-  const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' || 'border';
+  const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' | 'default' || 'border';
   const savedShowH1 = localStorage.getItem('feishu2wx_showH1') === 'true';
   const savedInvertH1 = localStorage.getItem('feishu2wx_invertH1') === 'true';
-  const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false'; // 默认为 true
+  const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
@@ -33,7 +30,7 @@ const App: React.FC = () => {
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
   const [showH1, setShowH1] = useState<boolean>(savedShowH1);
   const [invertH1, setInvertH1] = useState<boolean>(savedInvertH1);
-  const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow'>(savedImageBorderStyle);
+  const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow' | 'default'>(savedImageBorderStyle);
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>(savedCodeBlockStyle);
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
@@ -41,6 +38,9 @@ const App: React.FC = () => {
     message: '',
     isError: false,
   });
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+
   const copyStatusTimerRef = useRef<number | null>(null);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
   const editorScrollFrameRef = useRef<number | null>(null);
@@ -78,7 +78,6 @@ const App: React.FC = () => {
     }
   }, [isFullscreen, showEditor]);
 
-  // 编辑器滚动 → 预览联动。用 rAF 合并高频滚动事件，避免 smooth 动画积压。
   const handleEditorScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
     pendingEditorScrollRef.current = e.currentTarget;
 
@@ -98,11 +97,9 @@ const App: React.FC = () => {
       setIsSystemDark(e.matches);
     };
 
-    // 监听系统暗黑模式变化
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
     } else {
-      // 兼容旧版浏览器
       mediaQuery.addListener(handleChange);
     }
 
@@ -115,40 +112,18 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // 实时渲染 markdown → html
   useEffect(() => {
     const rendered = renderMarkdown(markdown);
     setHtml(rendered);
   }, [markdown]);
 
-  // 自动保存到 localStorage
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_markdown', markdown);
-  }, [markdown]);
-
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_font', font);
-  }, [font]);
-
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle);
-  }, [codeBlockStyle]);
-
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle);
-  }, [imageBorderStyle]);
-
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_showH1', String(showH1));
-  }, [showH1]);
-
-  useEffect(() => {
-    localStorage.setItem('feishu2wx_invertH1', String(invertH1));
-  }, [invertH1]);
+  useEffect(() => { localStorage.setItem('feishu2wx_markdown', markdown); }, [markdown]);
+  useEffect(() => { localStorage.setItem('feishu2wx_theme', theme); }, [theme]);
+  useEffect(() => { localStorage.setItem('feishu2wx_font', font); }, [font]);
+  useEffect(() => { localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle); }, [codeBlockStyle]);
+  useEffect(() => { localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle); }, [imageBorderStyle]);
+  useEffect(() => { localStorage.setItem('feishu2wx_showH1', String(showH1)); }, [showH1]);
+  useEffect(() => { localStorage.setItem('feishu2wx_invertH1', String(invertH1)); }, [invertH1]);
 
   useEffect(() => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
@@ -186,7 +161,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // 当代码块样式改变时，重新渲染
   useEffect(() => {
     setCodeBlockStyle(codeBlockStyle);
     const rendered = renderMarkdown(markdown);
@@ -194,7 +168,6 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeBlockStyle]);
 
-  // 处理 ESC 键退出全屏
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
@@ -210,40 +183,33 @@ const App: React.FC = () => {
     }
   }, [isFullscreen]);
 
-  // 根据系统暗黑模式自动应用明亮或暗黑主题
   const effectiveTheme = isSystemDark ? 'dark' : 'light';
   const displayTheme = theme === 'light' || theme === 'dark' ? effectiveTheme : theme;
 
-  // 一键复制到微信公众号（智能判断：如果有选中内容则复制选中内容，否则复制全部）
   const handleCopyToWeChat = useCallback(async () => {
     setIsCopying(true);
     try {
-      // 检查是否有选中的内容
       const selection = window.getSelection();
       let hasValidSelection = false;
-      
+
       if (selection && selection.rangeCount > 0) {
         try {
           const range = selection.getRangeAt(0);
           const previewElement = document.querySelector('.preview-content');
           const selectedText = selection.toString().trim();
-          
-          // 检查：1. 有选中文本 2. 选中内容在预览区域内
+
           if (selectedText.length > 0 && previewElement && previewElement.contains(range.commonAncestorContainer)) {
             hasValidSelection = true;
           }
         } catch (e) {
-          // 如果获取选择范围失败，说明没有有效选择
           hasValidSelection = false;
         }
       }
 
       let result;
       if (hasValidSelection) {
-        // 复制选中的内容
         result = await copySelectedToWeChat(displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
       } else {
-        // 复制全部内容
         if (!html.trim()) {
           setCopyStatus({
             visible: true,
@@ -255,7 +221,7 @@ const App: React.FC = () => {
         }
         result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
       }
-      
+
       setCopyStatus({
         visible: true,
         message: result.message,
@@ -265,7 +231,7 @@ const App: React.FC = () => {
       console.error('复制失败:', error);
       setCopyStatus({
         visible: true,
-        message: '❌ 复制失败。\n\n请尝试：\n1. 刷新页面后重试\n2. 或手动选择预览区域内容，按 Ctrl+C (Windows) 或 Cmd+C (Mac) 复制',
+        message: '复制失败，请刷新页面后重试',
         isError: true,
       });
     } finally {
@@ -273,71 +239,191 @@ const App: React.FC = () => {
     }
   }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1]);
 
+  const handleLoadExample = useCallback(() => {
+    const example = `# 欢迎使用飞书文档转微信公众号排版神器
+
+这是一篇示例文章，展示了常见的 Markdown 语法。
+
+## 标题示例
+
+### 三级标题
+
+**粗体文本** 和 *斜体文本*
+
+## 列表示例
+
+### 无序列表
+- 项目 1
+- 项目 2
+  - 子项目 2.1
+  - 子项目 2.2
+- 项目 3
+
+### 有序列表
+1. 第一项
+2. 第二项
+3. 第三项
+
+## 引用示例
+
+> 这是一段引用文字
+> 可以包含多行内容
+
+## 代码示例
+
+行内代码：\`console.log('Hello World')\`
+
+代码块：
+
+\`\`\`javascript
+function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+\`\`\`
+
+## 链接和图片
+
+[这是一个链接](https://example.com)
+
+![示例图片](https://img1.baidu.com/it/u=352739982,3234821554&fm=253&app=138&f=JPEG?w=500&h=857)
+
+## 表格示例
+
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| 数据1 | 数据2 | 数据3 |
+| 数据4 | 数据5 | 数据6 |
+
+---
+
+感谢使用！`;
+    setMarkdown(example);
+  }, []);
+
+  // 响应式移动端检测
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // 主内容区的类名
+  const mainClasses = [
+    'main-container',
+    `device-${device}`,
+    isFullscreen ? 'fullscreen' : '',
+    // 桌面端：由 showEditor 控制
+    !isMobile && !showEditor ? 'editor-hidden' : '',
+    // 移动端：由 mobileTab 控制
+    isMobile && mobileTab === 'edit' ? 'preview-hidden' : '',
+    isMobile && mobileTab === 'preview' ? 'editor-hidden' : '',
+  ].filter(Boolean).join(' ');
+
   return (
     <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
-      <header className={`app-header ${isFullscreen ? 'fullscreen-header' : ''}`}>
-        <div className="header-content">
-          <h1 className="app-title">
-            <span className="title-feishu shimmer-text">飞书文档</span> → <span className="title-wechat shimmer-text">微信公众号</span>排版神器
-          </h1>
-          <div className="header-controls">
-            <div className="header-controls-wrapper">
-              <div className="header-controls-row">
-                <FontSelector font={font} setFont={setFont} />
-                <DevicePreviewToggle device={device} setDevice={setDevice} />
-                {!isFullscreen && (
-                  <button
-                    className="header-btn header-btn-compact"
-                    onClick={() => setShowEditor(!showEditor)}
-                    title={showEditor ? '隐藏源码' : '显示源码'}
-                  >
-                    {showEditor ? '👁️ 隐藏源码' : '👁️‍🗨️ 显示源码'}
-                  </button>
-                )}
-                <button
-                  className="header-btn header-btn-exit header-btn-compact"
-                  onClick={() => setIsFullscreen(!isFullscreen)}
-                  title={isFullscreen ? '退出全屏' : '全屏预览'}
-                >
-                  {isFullscreen ? '⤓ 退出全屏 (ESC)' : '⛶ 全屏预览'}
-                </button>
-              </div>
-              {!isFullscreen && (
-                <div className="header-controls-row header-controls-row-theme">
-                  <ThemeSwitcher theme={theme} setTheme={setTheme} />
-                </div>
-              )}
-            </div>
-          </div>
+      {/* 顶栏 */}
+      <div className={`top-bar ${isFullscreen ? 'fullscreen-bar' : ''}`}>
+        <span className="top-bar-brand">feishu2wx</span>
+
+        <div className="top-bar-center">
+          {!isFullscreen && <ThemeSwitcher theme={theme} setTheme={setTheme} />}
         </div>
-      </header>
 
-      <main className={`main-container device-${device} ${!showEditor ? 'editor-hidden' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
-        {showEditor && <EditorPane markdown={markdown} setMarkdown={setMarkdown} onScroll={handleEditorScroll} />}
-        <PreviewPane html={html} device={device} isFullscreen={isFullscreen} font={font} showH1={showH1} invertH1={invertH1} imageBorderStyle={imageBorderStyle} scrollRef={previewScrollRef} />
-      </main>
-
-      {!isFullscreen && (
-        <footer className="app-footer">
-          <Toolbar
-            markdown={markdown}
-            setMarkdown={setMarkdown}
-            onCopyToWeChat={handleCopyToWeChat}
-            isCopying={isCopying}
+        <div className="top-bar-right">
+          <button
+            className={`settings-trigger ${settingsOpen ? 'active' : ''}`}
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            title="设置"
+          >
+            ⚙
+          </button>
+          <SettingsPanel
+            font={font}
+            setFont={setFont}
             showH1={showH1}
             onToggleH1={() => setShowH1(!showH1)}
             invertH1={invertH1}
             onToggleInvertH1={() => setInvertH1(!invertH1)}
-            imageBorderStyle={imageBorderStyle}
-            onToggleImageBorder={() => setImageBorderStyle(imageBorderStyle === 'border' ? 'shadow' : 'border')}
-            codeBlockStyle={codeBlockStyle}
-            onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
             showHorizontalRule={showHorizontalRule}
             onToggleHorizontalRule={() => setShowHorizontalRuleState(!showHorizontalRule)}
+            imageBorderStyle={imageBorderStyle}
+            onToggleImageBorder={() => {
+              const next = imageBorderStyle === 'default' ? 'border' : imageBorderStyle === 'border' ? 'shadow' : 'default';
+              setImageBorderStyle(next);
+            }}
+            codeBlockStyle={codeBlockStyle}
+            onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
           />
-        </footer>
+          {isFullscreen && (
+            <button className="edit-toggle-btn" onClick={() => setIsFullscreen(false)}>
+              退出全屏
+            </button>
+          )}
+          {!showEditor && !isFullscreen && (
+            <button className="edit-toggle-btn" onClick={() => setShowEditor(true)}>
+              编辑
+            </button>
+          )}
+          {showEditor && !isFullscreen && (
+            <button className="edit-toggle-btn" onClick={() => setShowEditor(false)}>
+              预览
+            </button>
+          )}
+          <button
+            className="copy-btn"
+            onClick={handleCopyToWeChat}
+            disabled={isCopying || !markdown.trim()}
+          >
+            复制到微信
+          </button>
+        </div>
+      </div>
+
+      {/* 移动端 Tab 切换栏 */}
+      {!isFullscreen && (
+        <div className="mobile-tab-bar">
+          <button
+            className={`mobile-tab ${mobileTab === 'edit' ? 'active' : ''}`}
+            onClick={() => setMobileTab('edit')}
+          >
+            编辑
+          </button>
+          <button
+            className={`mobile-tab ${mobileTab === 'preview' ? 'active' : ''}`}
+            onClick={() => setMobileTab('preview')}
+          >
+            预览
+          </button>
+        </div>
       )}
 
+      {/* 主内容区 */}
+      <main className={mainClasses}>
+        <EditorPane
+          markdown={markdown}
+          setMarkdown={setMarkdown}
+          onScroll={handleEditorScroll}
+          onLoadExample={handleLoadExample}
+        />
+        <PreviewPane
+          html={html}
+          device={device}
+          isFullscreen={isFullscreen}
+          font={font}
+          showH1={showH1}
+          invertH1={invertH1}
+          imageBorderStyle={imageBorderStyle}
+          scrollRef={previewScrollRef}
+          onDeviceChange={setDevice}
+          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+        />
+      </main>
+
+      {/* Toast */}
       {copyStatus.visible && (
         <div
           className={`copy-toast ${copyStatus.isError ? 'copy-toast-error' : 'copy-toast-success'}`}

@@ -1,103 +1,50 @@
 .theme-switcher {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  justify-content: flex-start;
-  min-width: 0;
-}
-
-.theme-label {
-  font-size: 12px;
-  color: #ffffff;
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.theme-options {
-  display: flex;
-  gap: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
+  gap: var(--space-1);
+  background-color: var(--color-bg-hover);
   padding: 2px;
-  border-radius: 6px;
-  flex-wrap: nowrap;
-  flex: 1;
-  min-width: 0;
-  border: none;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  justify-content: flex-start;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.theme-options::-webkit-scrollbar {
-  display: none;
+  border-radius: var(--radius-lg);
 }
 
 .theme-option {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  gap: 3px;
+  padding: var(--space-1) 10px;
   background-color: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  color: #ffffff;
-  font-size: 12px;
-  transition: all 0.2s;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  transition: var(--transition-normal);
   white-space: nowrap;
-  flex: 1;
-  min-width: 0;
-  box-sizing: border-box;
-  justify-content: center;
+  font-weight: var(--font-weight-medium);
 }
 
 .theme-option:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text-primary);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .theme-option.active {
-  background-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  font-weight: 600;
+  background-color: var(--color-bg-white);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .theme-icon {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .theme-name {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 @media (max-width: 768px) {
   .theme-switcher {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  .theme-label {
-    flex-shrink: 0;
-  }
-
-  .theme-options {
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  .theme-option {
-    flex: 0 0 auto;
-    min-width: fit-content;
-    justify-content: center;
+    display: none;
   }
 }

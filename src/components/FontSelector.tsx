@@ -8,7 +8,7 @@ interface Props {
 
 // 免费无版权的字体列表
 const fonts = [
-  { key: 'default', name: '默认字体', value: `-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif` },
+  { key: 'default', name: '默认字体', value: `"Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif` },
   { key: 'microsoft-yahei', name: '微软雅黑', value: `"Microsoft YaHei", "微软雅黑", Arial, sans-serif` },
   { key: 'simsun', name: '宋体', value: `SimSun, "宋体", serif` },
   { key: 'simhei', name: '黑体', value: `SimHei, "黑体", sans-serif` },

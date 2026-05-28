@@ -18,16 +18,16 @@ function getThemeStyles(theme: string) {
     tableHeaderColor: string;
   }> = {
     green: {
-      primaryColor: '#52c41a',
-      primaryColorDark: '#237804',
-      headingColor: '#237804',
-      headingColorH2: '#237804',
-      headingColorH3H6: '#389e0d',
-      linkColor: '#52c41a',
-      blockquoteBorderColor: '#52c41a',
-      blockquoteBgColor: '#f6ffed',
-      tableHeaderBgColor: '#f6ffed',
-      tableHeaderColor: '#237804',
+      primaryColor: '#4A7FE0',
+      primaryColorDark: '#2C5AAF',
+      headingColor: '#2C5AAF',
+      headingColorH2: '#2C5AAF',
+      headingColorH3H6: '#5A82D4',
+      linkColor: '#4A7FE0',
+      blockquoteBorderColor: '#4A7FE0',
+      blockquoteBgColor: '#EEF3FC',
+      tableHeaderBgColor: '#EEF3FC',
+      tableHeaderColor: '#2C5AAF',
     },
     light: {
       primaryColor: '#1890ff',
@@ -42,16 +42,16 @@ function getThemeStyles(theme: string) {
       tableHeaderColor: '#0050b3',
     },
     dark: {
-      primaryColor: '#52c41a',
-      primaryColorDark: '#52c41a',
-      headingColor: '#52c41a',
-      headingColorH2: '#52c41a',
-      headingColorH3H6: '#73d13d',
-      linkColor: '#52c41a',
-      blockquoteBorderColor: '#52c41a',
-      blockquoteBgColor: '#1f3a0f',
-      tableHeaderBgColor: '#1f3a0f',
-      tableHeaderColor: '#52c41a',
+      primaryColor: '#4A7FE0',
+      primaryColorDark: '#4A7FE0',
+      headingColor: '#4A7FE0',
+      headingColorH2: '#4A7FE0',
+      headingColorH3H6: '#6B93E8',
+      linkColor: '#4A7FE0',
+      blockquoteBorderColor: '#4A7FE0',
+      blockquoteBgColor: '#0F1E3A',
+      tableHeaderBgColor: '#0F1E3A',
+      tableHeaderColor: '#4A7FE0',
     },
     classic: {
       primaryColor: '#555',
@@ -488,7 +488,7 @@ export function formatForWeChat(
   theme: string = 'green',
   font: string = 'default',
   showH1: boolean = true,
-  imageBorderStyle: 'border' | 'shadow' = 'border',
+  imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
   codeBlockStyle: CodeBlockStyle = 'classic',
   invertH1: boolean = false
 ): string {
@@ -696,7 +696,7 @@ function applyThemeStyles(
   themeStyles: ReturnType<typeof getThemeStyles>,
   fontFamily: string,
   showH1: boolean,
-  imageBorderStyle: 'border' | 'shadow',
+  imageBorderStyle: 'border' | 'shadow' | 'default',
   codeBlockStyle: CodeBlockStyle,
   invertH1: boolean
 ): void {
@@ -721,11 +721,12 @@ function applyThemeStyles(
     if (imageBorderStyle === 'border') {
       imgEl.style.border = '0.5px solid #e0e0e0';
       imgEl.style.boxShadow = 'none';
-    } else {
+    } else if (imageBorderStyle === 'shadow') {
       // 阴影模式：原始阴影效果
       imgEl.style.border = 'none';
       imgEl.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
     }
+    // default 模式：不额外设置图片边框或阴影
 
     // 确保图片有完整的URL
     if (imgEl.src && !imgEl.src.startsWith('http') && !imgEl.src.startsWith('data:')) {
@@ -1398,7 +1399,7 @@ export async function copySelectedToWeChat(
   theme: string = 'green',
   font: string = 'default',
   showH1: boolean = true,
-  imageBorderStyle: 'border' | 'shadow' = 'border',
+  imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
   codeBlockStyle: CodeBlockStyle = 'classic',
   invertH1: boolean = false
 ): Promise<{ success: boolean; message: string }> {
@@ -1423,7 +1424,7 @@ export async function copyHtmlToWeChat(
   theme: string = 'green',
   font: string = 'default',
   showH1: boolean = true,
-  imageBorderStyle: 'border' | 'shadow' = 'border',
+  imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
   codeBlockStyle: CodeBlockStyle = 'classic',
   invertH1: boolean = false
 ): Promise<{ success: boolean; message: string }> {
@@ -1464,7 +1465,7 @@ export async function copyHtmlToWeChat(
       await navigator.clipboard.write([clipboardItem]);
       return { 
         success: true, 
-        message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
+        message: '已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
       };
     } catch (clipboardError) {
       console.warn('Clipboard API write 失败，尝试降级方案:', clipboardError);
@@ -1551,7 +1552,7 @@ export async function copyHtmlToWeChat(
     if (copySuccess) {
       return { 
         success: true, 
-        message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
+        message: '已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。' 
       };
     }
   } catch (err) {
@@ -1587,7 +1588,7 @@ export async function copyHtmlToWeChat(
     if (copySuccess) {
       return { 
         success: true, 
-        message: '✅ 已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。\n\n注意：由于浏览器限制，部分样式可能丢失。' 
+        message: '已成功复制到剪贴板！\n\n请打开微信公众号编辑器，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴内容。\n\n注意：由于浏览器限制，部分样式可能丢失。' 
       };
     }
   } catch (err) {

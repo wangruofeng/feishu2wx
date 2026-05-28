@@ -10,11 +10,24 @@ interface Props {
   font?: string;
   showH1?: boolean;
   invertH1?: boolean;
-  imageBorderStyle?: 'border' | 'shadow';
+  imageBorderStyle?: 'border' | 'shadow' | 'default';
   scrollRef?: React.Ref<HTMLDivElement>;
+  onDeviceChange?: (device: 'desktop' | 'mobile') => void;
+  onToggleFullscreen?: () => void;
 }
 
-const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font = 'default', showH1 = true, invertH1 = false, imageBorderStyle = 'border', scrollRef }) => {
+const PreviewPane: React.FC<Props> = ({
+  html,
+  device,
+  isFullscreen = false,
+  font = 'default',
+  showH1 = true,
+  invertH1 = false,
+  imageBorderStyle = 'border',
+  scrollRef,
+  onDeviceChange,
+  onToggleFullscreen,
+}) => {
   const previewRef = useRef<HTMLDivElement>(null);
 
   const setPreviewRef = useCallback((node: HTMLDivElement | null) => {
@@ -27,13 +40,11 @@ const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font
   }, [scrollRef]);
 
   useEffect(() => {
-    // 滚动到顶部
     if (previewRef.current) {
       previewRef.current.scrollTop = 0;
     }
   }, [html]);
 
-  // 获取当前字体样式
   const currentFont = fonts.find(f => f.key === font) || fonts[0];
   const fontStyle = {
     fontFamily: currentFont.value,
@@ -43,10 +54,33 @@ const PreviewPane: React.FC<Props> = ({ html, device, isFullscreen = false, font
   return (
     <div className={`preview-pane ${isFullscreen ? 'fullscreen' : ''}`}>
       <div className="preview-header">
-        <h2>预览效果</h2>
-        <div className="device-badge">
-          {device === 'mobile' ? '📱 手机预览' : '💻 电脑预览'}
-        </div>
+        {onDeviceChange && (
+          <>
+            <button
+              className={`preview-header-btn ${device === 'desktop' ? 'active' : ''}`}
+              onClick={() => onDeviceChange('desktop')}
+              title="电脑预览"
+            >
+              💻
+            </button>
+            <button
+              className={`preview-header-btn ${device === 'mobile' ? 'active' : ''}`}
+              onClick={() => onDeviceChange('mobile')}
+              title="手机预览"
+            >
+              📱
+            </button>
+          </>
+        )}
+        {onToggleFullscreen && (
+          <button
+            className="preview-header-btn"
+            onClick={onToggleFullscreen}
+            title={isFullscreen ? '退出全屏' : '全屏预览'}
+          >
+            {isFullscreen ? '✕' : '⛶'}
+          </button>
+        )}
       </div>
       <div className="preview-content-wrapper">
         <div

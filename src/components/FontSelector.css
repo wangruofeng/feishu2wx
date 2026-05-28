@@ -1,29 +1,29 @@
 .font-selector {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3);
   height: 32px;
 }
 
 .font-label {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   color: #ffffff;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .font-select {
-  padding: 4px 24px 4px 8px;
+  padding: var(--space-1) 24px var(--space-1) var(--space-3);
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-size: var(--font-size-xs);
+  transition: var(--transition-normal);
   outline: none;
   min-width: 120px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   height: 32px;
@@ -42,7 +42,7 @@
 .font-select option {
   background-color: #1e1e1e;
   color: #ffffff;
-  padding: 8px;
+  padding: var(--space-3);
 }
 
 @media (max-width: 768px) {

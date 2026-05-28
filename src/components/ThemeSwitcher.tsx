@@ -16,20 +16,17 @@ const themes = [
 const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme }) => {
   return (
     <div className="theme-switcher">
-      <span className="theme-label">主题：</span>
-      <div className="theme-options">
-        {themes.map((t) => (
-          <button
-            key={t.key}
-            className={`theme-option ${theme === t.key ? 'active' : ''}`}
-            onClick={() => setTheme(t.key)}
-            title={t.name}
-          >
-            <span className="theme-icon">{t.icon}</span>
-            <span className="theme-name">{t.name}</span>
-          </button>
-        ))}
-      </div>
+      {themes.map((t) => (
+        <button
+          key={t.key}
+          className={`theme-option ${theme === t.key ? 'active' : ''}`}
+          onClick={() => setTheme(t.key)}
+          title={t.name}
+        >
+          <span className="theme-icon">{t.icon}</span>
+          <span className="theme-name">{t.name}</span>
+        </button>
+      ))}
     </div>
   );
 };

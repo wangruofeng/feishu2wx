@@ -1,53 +1,36 @@
 .device-toggle {
   display: flex;
-  gap: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  padding: 2px;
-  border-radius: 6px;
-  border: none;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  height: 32px;
+  gap: 2px;
   align-items: center;
 }
 
 .device-btn {
-  padding: 6px 12px;
-  background-color: transparent;
+  padding: var(--space-1) var(--space-2);
+  background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  color: #ffffff;
-  font-size: 12px;
-  transition: all 0.2s;
-  white-space: nowrap;
-  font-weight: 500;
-  height: 100%;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-lg);
+  transition: var(--transition-normal);
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .device-btn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-brand);
+  background-color: var(--color-brand-subtle);
 }
 
 .device-btn.active {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
-  font-weight: 600;
+  color: var(--color-brand);
+  background-color: var(--color-brand-subtle-hover);
 }
 
 @media (max-width: 768px) {
   .device-toggle {
-    width: 100%;
-    flex: 1;
-    min-width: 0;
-    justify-content: space-between;
-  }
-
-  .device-btn {
-    flex: 1;
-    min-width: 0;
+    gap: 0;
   }
 }

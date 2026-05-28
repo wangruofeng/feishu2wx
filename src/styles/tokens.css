@@ -1,0 +1,76 @@
+:root {
+  /* 品牌色 */
+  --color-brand: #4A7FE0;
+  --color-brand-hover: #6B93E8;
+  --color-brand-dark: #3D6ED1;
+  --color-brand-subtle: rgba(74, 127, 224, 0.08);
+  --color-brand-subtle-hover: rgba(74, 127, 224, 0.12);
+  --color-brand-focus-ring: rgba(74, 127, 224, 0.15);
+
+  /* 文本色 */
+  --color-text-primary: #333;
+  --color-text-secondary: #595959;
+  --color-text-tertiary: #8c8c8c;
+  --color-text-placeholder: #bfbfbf;
+  --color-text-heading: #262626;
+  --color-text-inverse: #fff;
+
+  /* 边框色 */
+  --color-border-primary: #e8e8e8;
+  --color-border-secondary: #d9d9d9;
+
+  /* 背景色 */
+  --color-bg-white: #ffffff;
+  --color-bg-surface: #fafafa;
+  --color-bg-hover: #f0f0f0;
+  --color-bg-subtle: #f5f5f5;
+
+  /* 状态色 */
+  --color-status-success: #07c160;
+  --color-status-error: #ff4d4f;
+
+  /* 字体 */
+  --font-sans: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  /* 字号 */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;
+
+  /* 字重 */
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* 间距 */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-6: 16px;
+  --space-8: 24px;
+
+  /* 圆角 */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-toast: 0 10px 28px rgba(0, 0, 0, 0.16);
+
+  /* 过渡 */
+  --transition-fast: all 0.15s;
+  --transition-normal: all 0.2s;
+
+  /* 布局 */
+  --top-bar-height: 48px;
+  --top-bar-height-mobile: 44px;
+}

@@ -1,56 +1,56 @@
 /* 绿意主题 - 默认主题 */
 
 .theme-green .preview-content {
-  --preview-primary-color: #52c41a;
+  --preview-primary-color: #4A7FE0;
   background-color: #ffffff;
   color: #333;
 }
 
 .theme-green .preview-content h1,
 .theme-green .preview-content h2 {
-  border-bottom-color: #237804;
-  color: #237804;
+  border-bottom-color: #2C5AAF;
+  color: #2C5AAF;
 }
 
 .theme-green .preview-content h3,
 .theme-green .preview-content h4,
 .theme-green .preview-content h5,
 .theme-green .preview-content h6 {
-  color: #389e0d;
+  color: #5A82D4;
 }
 
 .theme-green .preview-content blockquote {
-  border-left-color: #52c41a;
-  background-color: #f6ffed;
+  border-left-color: #4A7FE0;
+  background-color: #EEF3FC;
 }
 
 .theme-green .preview-content a {
-  color: #52c41a;
+  color: #4A7FE0;
 }
 
 .theme-green .preview-content a:hover {
-  color: #73d13d;
+  color: #6B93E8;
 }
 
 .theme-green .preview-content table th {
-  background-color: #f6ffed;
-  color: #237804;
+  background-color: #EEF3FC;
+  color: #2C5AAF;
 }
 
 .theme-green .preview-content hr.custom-hr,
 .theme-green .preview-content hr.custom-hr::before,
 .theme-green .preview-content hr.custom-hr::after {
-  color: #52c41a;
+  color: #4A7FE0;
 }
 
 .theme-green .toolbar-btn-primary {
-  background-color: #52c41a;
-  border-color: #52c41a;
+  background-color: #4A7FE0;
+  border-color: #4A7FE0;
 }
 
 .theme-green .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #73d13d;
-  border-color: #73d13d;
+  background-color: #6B93E8;
+  border-color: #6B93E8;
   color: #ccc;
 }
 
@@ -117,17 +117,18 @@
 
 /* 暗黑主题 - 自动跟随系统暗黑模式 */
 .theme-dark {
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #e0e0e0;
+  --color-text-tertiary: #e0e0e0;
+  --color-text-inverse: #1f1f1f;
+  --color-border-primary: #3f3f3f;
+  --color-border-secondary: #4f4f4f;
+  --color-bg-white: #2f2f2f;
+  --color-bg-surface: #1f1f1f;
+  --color-bg-hover: #4f4f4f;
+  --color-bg-subtle: #262626;
+
   background-color: #1f1f1f;
-}
-
-.theme-dark .app-footer {
-  background-color: #2f2f2f;
-  border-top-color: #3f3f3f;
-}
-
-.theme-dark .editor-pane {
-  background-color: #2f2f2f;
-  border-right-color: #3f3f3f;
 }
 
 .theme-dark .editor-header {
@@ -144,30 +145,10 @@
   color: #e0e0e0;
 }
 
-.theme-dark .editor-toolbar {
-  background-color: #262626;
-  border-top-color: #3f3f3f;
-}
-
 .theme-dark .editor-toolbar button {
   background-color: #3f3f3f;
   border-color: #4f4f4f;
   color: #e0e0e0;
-}
-
-.theme-dark .editor-toolbar button:hover {
-  background-color: #4f4f4f;
-  border-color: #52c41a;
-  color: #52c41a;
-}
-
-.theme-dark .preview-pane {
-  background-color: #1f1f1f;
-}
-
-.theme-dark .preview-header {
-  background-color: #2f2f2f;
-  border-bottom-color: #3f3f3f;
 }
 
 .theme-dark .preview-header h2 {
@@ -175,33 +156,33 @@
 }
 
 .theme-dark .preview-content {
-  --preview-primary-color: #52c41a;
+  --preview-primary-color: #4A7FE0;
   background-color: #2f2f2f;
   color: #e0e0e0;
 }
 
 .theme-dark .preview-content h1,
 .theme-dark .preview-content h2 {
-  border-bottom-color: #52c41a;
-  color: #52c41a;
+  border-bottom-color: #4A7FE0;
+  color: #4A7FE0;
 }
 
 .theme-dark .preview-content h3,
 .theme-dark .preview-content h4,
 .theme-dark .preview-content h5,
 .theme-dark .preview-content h6 {
-  color: #73d13d;
+  color: #6B93E8;
 }
 
 .theme-dark .preview-content blockquote {
-  border-left-color: #52c41a;
-  background-color: #1f3a0f;
+  border-left-color: #4A7FE0;
+  background-color: #0F1E3A;
   color: #e0e0e0;
 }
 
 .theme-dark .preview-content code {
   background-color: #1f1f1f;
-  color: #52c41a;
+  color: #4A7FE0;
 }
 
 .theme-dark .preview-content pre {
@@ -210,22 +191,22 @@
 }
 
 .theme-dark .preview-content a {
-  color: #52c41a;
+  color: #4A7FE0;
 }
 
 .theme-dark .preview-content a:hover {
-  color: #73d13d;
+  color: #6B93E8;
 }
 
 .theme-dark .preview-content table th {
-  background-color: #1f3a0f;
-  color: #52c41a;
+  background-color: #0F1E3A;
+  color: #4A7FE0;
 }
 
 .theme-dark .preview-content hr.custom-hr,
 .theme-dark .preview-content hr.custom-hr::before,
 .theme-dark .preview-content hr.custom-hr::after {
-  color: #52c41a;
+  color: #4A7FE0;
 }
 
 .theme-dark .preview-content table td {
@@ -240,18 +221,18 @@
 
 .theme-dark .toolbar-btn:hover:not(:disabled) {
   background-color: #4f4f4f;
-  border-color: #52c41a;
-  color: #52c41a;
+  border-color: #4A7FE0;
+  color: #4A7FE0;
 }
 
 .theme-dark .toolbar-btn-primary {
-  background-color: #52c41a;
-  border-color: #52c41a;
+  background-color: #4A7FE0;
+  border-color: #4A7FE0;
 }
 
 .theme-dark .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #73d13d;
-  border-color: #73d13d;
+  background-color: #6B93E8;
+  border-color: #6B93E8;
   color: #ccc;
 }
 

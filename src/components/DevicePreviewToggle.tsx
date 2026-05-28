@@ -14,14 +14,14 @@ const DevicePreviewToggle: React.FC<Props> = ({ device, setDevice }) => {
         onClick={() => setDevice('desktop')}
         title="电脑预览"
       >
-        💻 电脑
+        💻
       </button>
       <button
         className={`device-btn ${device === 'mobile' ? 'active' : ''}`}
         onClick={() => setDevice('mobile')}
         title="手机预览"
       >
-        📱 手机
+        📱
       </button>
     </div>
   );
