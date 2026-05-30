@@ -6,9 +6,6 @@
 # 安装依赖
 npm install
 
-# 开发（热重载）
-npm start
-
 # 构建
 npm run build
 
@@ -21,6 +18,32 @@ npm run deploy
 # 提交前检查
 npm run pre-commit-check
 ```
+
+## 启动模式
+
+### 纯前端启动
+
+```bash
+npm start
+```
+
+仅启动 CRA 开发服务器（端口 3100），适合只做排版/预览相关的开发。推送草稿箱等后端 API 不可用。
+
+### 前后端同时启动（Express 后端）
+
+```bash
+npm run dev
+```
+
+同时启动 CRA 开发服务器（端口 3100）和 Express 后端（端口 3101），CRA 通过 `src/setupProxy.js` 将 `/api` 请求代理到后端。适合开发推送草稿箱等需要后端的功能。
+
+### 前后端同时启动（Cloudflare Pages 本地模拟）
+
+```bash
+npm run cf:dev
+```
+
+同时启动 CRA 开发服务器和 Wrangler Pages Dev，由 Wrangler 代理 CRA 并处理 `functions/` 下的 Cloudflare Functions。`CF_DEV=1` 环境变量会跳过 CRA 代理配置，避免与 Wrangler 冲突。适合开发或调试 Cloudflare Functions。
 
 ## 变更测试建议
 
