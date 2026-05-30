@@ -18,9 +18,12 @@ const App: React.FC = () => {
   const savedFont = localStorage.getItem('feishu2wx_font') || 'default';
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
   const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' | 'default' || 'border';
+  const savedImageBorderRadius = localStorage.getItem('feishu2wx_imageBorderRadius') === 'true';
   const savedShowH1 = localStorage.getItem('feishu2wx_showH1') === 'true';
   const savedInvertH1 = localStorage.getItem('feishu2wx_invertH1') === 'true';
   const savedAlignH1Left = localStorage.getItem('feishu2wx_alignH1Left') === 'true';
+  const savedInvertH2 = localStorage.getItem('feishu2wx_invertH2') === 'true';
+  const savedAlignH2Left = localStorage.getItem('feishu2wx_alignH2Left') === 'true';
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
   const savedTableShadow = localStorage.getItem('feishu2wx_tableShadow') !== 'false';
   const savedDarkMode = localStorage.getItem('feishu2wx_darkMode') as 'system' | 'light' | 'dark' || 'system';
@@ -37,7 +40,10 @@ const App: React.FC = () => {
   const [showH1, setShowH1] = useState<boolean>(savedShowH1);
   const [invertH1, setInvertH1] = useState<boolean>(savedInvertH1);
   const [alignH1Left, setAlignH1Left] = useState<boolean>(savedAlignH1Left);
+  const [invertH2, setInvertH2] = useState<boolean>(savedInvertH2);
+  const [alignH2Left, setAlignH2Left] = useState<boolean>(savedAlignH2Left);
   const [imageBorderStyle, setImageBorderStyle] = useState<'border' | 'shadow' | 'default'>(savedImageBorderStyle);
+  const [imageBorderRadius, setImageBorderRadius] = useState<boolean>(savedImageBorderRadius);
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>(savedCodeBlockStyle);
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
   const [tableShadow, setTableShadow] = useState<boolean>(savedTableShadow);
@@ -147,9 +153,12 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_font', font); }, [font]);
   useEffect(() => { localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle); }, [codeBlockStyle]);
   useEffect(() => { localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle); }, [imageBorderStyle]);
+  useEffect(() => { localStorage.setItem('feishu2wx_imageBorderRadius', String(imageBorderRadius)); }, [imageBorderRadius]);
   useEffect(() => { localStorage.setItem('feishu2wx_showH1', String(showH1)); }, [showH1]);
   useEffect(() => { localStorage.setItem('feishu2wx_invertH1', String(invertH1)); }, [invertH1]);
   useEffect(() => { localStorage.setItem('feishu2wx_alignH1Left', String(alignH1Left)); }, [alignH1Left]);
+  useEffect(() => { localStorage.setItem('feishu2wx_invertH2', String(invertH2)); }, [invertH2]);
+  useEffect(() => { localStorage.setItem('feishu2wx_alignH2Left', String(alignH2Left)); }, [alignH2Left]);
 
   useEffect(() => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
@@ -196,24 +205,39 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeBlockStyle]);
 
+  // 响应式移动端检测
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
         setIsFullscreen(false);
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        setIsFullscreen((prev) => !prev);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+        e.preventDefault();
+        if (!isMobile && !isFullscreen) {
+          setShowEditor((prev) => !prev);
+        }
+      }
     };
 
-    if (isFullscreen) {
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isFullscreen]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen, isMobile]);
 
   const isDark = darkMode === 'system' ? isSystemDark : darkMode === 'dark';
   const displayTheme = theme === 'light' || theme === 'dark' ? (isDark ? 'dark' : 'light') : theme;
-  const wechatTheme = isDark ? 'dark' : displayTheme;
+  const wechatTheme = displayTheme;
 
   const handleCopyToWeChat = useCallback(async () => {
     setIsCopying(true);
@@ -237,7 +261,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -248,7 +272,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
       }
 
       setCopyStatus({
@@ -266,19 +290,10 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1]);
+  }, [html, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
-  }, []);
-
-  // 响应式移动端检测
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // 主内容区的类名
@@ -341,6 +356,10 @@ const App: React.FC = () => {
             onToggleInvertH1={() => setInvertH1(!invertH1)}
             alignH1Left={alignH1Left}
             onToggleAlignH1Left={() => setAlignH1Left(!alignH1Left)}
+            invertH2={invertH2}
+            onToggleInvertH2={() => setInvertH2(!invertH2)}
+            alignH2Left={alignH2Left}
+            onToggleAlignH2Left={() => setAlignH2Left(!alignH2Left)}
             showHorizontalRule={showHorizontalRule}
             onToggleHorizontalRule={() => setShowHorizontalRuleState(!showHorizontalRule)}
             tableShadow={tableShadow}
@@ -350,6 +369,8 @@ const App: React.FC = () => {
               const next = imageBorderStyle === 'default' ? 'border' : imageBorderStyle === 'border' ? 'shadow' : 'default';
               setImageBorderStyle(next);
             }}
+            imageBorderRadius={imageBorderRadius}
+            onToggleImageBorderRadius={() => setImageBorderRadius(!imageBorderRadius)}
             codeBlockStyle={codeBlockStyle}
             onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
             isOpen={settingsOpen}
@@ -393,7 +414,7 @@ const App: React.FC = () => {
             className="publish-btn-top"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
@@ -439,8 +460,11 @@ const App: React.FC = () => {
           showH1={showH1}
           invertH1={invertH1}
           alignH1Left={alignH1Left}
+          invertH2={invertH2}
+          alignH2Left={alignH2Left}
           tableShadow={tableShadow}
           imageBorderStyle={imageBorderStyle}
+          imageBorderRadius={imageBorderRadius}
           scrollRef={previewScrollRef}
           onDeviceChange={setDevice}
           onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}

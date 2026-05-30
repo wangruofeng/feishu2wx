@@ -1,11 +1,15 @@
 :root {
-  /* 品牌色 */
-  --color-brand: #4A7FE0;
-  --color-brand-hover: #6B93E8;
-  --color-brand-dark: #3D6ED1;
-  --color-brand-subtle: rgba(74, 127, 224, 0.08);
-  --color-brand-subtle-hover: rgba(74, 127, 224, 0.12);
-  --color-brand-focus-ring: rgba(74, 127, 224, 0.15);
+  /* 品牌色 - Teal */
+  --color-brand: #0D9488;
+  --color-brand-hover: #14B8A6;
+  --color-brand-dark: #0F766E;
+  --color-brand-subtle: rgba(13, 148, 136, 0.08);
+  --color-brand-subtle-hover: rgba(13, 148, 136, 0.12);
+  --color-brand-focus-ring: rgba(13, 148, 136, 0.15);
+
+  /* 强调色 */
+  --color-accent: #EA580C;
+  --color-accent-hover: #F97316;
 
   /* 文本色 */
   --color-text-primary: #333;
@@ -31,8 +35,8 @@
   --color-status-error: #ff4d4f;
 
   /* 字体 */
-  --font-sans: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
 
   /* 字号 */
   --font-size-xs: 12px;

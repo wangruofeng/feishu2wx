@@ -25,7 +25,7 @@
 
 .theme-option:hover {
   color: var(--color-text-primary);
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(128, 128, 128, 0.12);
 }
 
 .theme-option.active {
@@ -35,8 +35,18 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.theme-dark .theme-option.active {
+  color: var(--color-brand);
+}
+
+.theme-dark .theme-option:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
 .theme-icon {
-  font-size: var(--font-size-sm);
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
 }
 
 .theme-name {

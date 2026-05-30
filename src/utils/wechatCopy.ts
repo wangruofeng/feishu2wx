@@ -5,6 +5,9 @@ import { modernCodeBlockStyles } from './codeBlockStyles';
  * 获取主题相关的样式配置
  */
 function getThemeStyles(theme: string) {
+  // 向后兼容：旧版 'green' → 新版 'teal'
+  const normalizedTheme = theme === 'green' ? 'teal' : theme;
+
   const themes: Record<string, {
     primaryColor: string;
     primaryColorDark: string;
@@ -17,41 +20,17 @@ function getThemeStyles(theme: string) {
     tableHeaderBgColor: string;
     tableHeaderColor: string;
   }> = {
-    green: {
-      primaryColor: '#52c41a',
-      primaryColorDark: '#237804',
-      headingColor: '#237804',
-      headingColorH2: '#237804',
-      headingColorH3H6: '#389e0d',
-      linkColor: '#52c41a',
-      blockquoteBorderColor: '#52c41a',
-      blockquoteBgColor: '#f6ffed',
-      tableHeaderBgColor: '#f6ffed',
-      tableHeaderColor: '#237804',
-    },
-    light: {
-      primaryColor: '#1890ff',
-      primaryColorDark: '#0050b3',
-      headingColor: '#0050b3',
-      headingColorH2: '#0050b3',
-      headingColorH3H6: '#096dd9',
-      linkColor: '#1890ff',
-      blockquoteBorderColor: '#1890ff',
-      blockquoteBgColor: '#e6f7ff',
-      tableHeaderBgColor: '#e6f7ff',
-      tableHeaderColor: '#0050b3',
-    },
-    dark: {
-      primaryColor: '#4A7FE0',
-      primaryColorDark: '#4A7FE0',
-      headingColor: '#4A7FE0',
-      headingColorH2: '#4A7FE0',
-      headingColorH3H6: '#6B93E8',
-      linkColor: '#4A7FE0',
-      blockquoteBorderColor: '#4A7FE0',
-      blockquoteBgColor: '#0F1E3A',
-      tableHeaderBgColor: '#0F1E3A',
-      tableHeaderColor: '#4A7FE0',
+    teal: {
+      primaryColor: '#0D9488',
+      primaryColorDark: '#0F766E',
+      headingColor: '#115E59',
+      headingColorH2: '#115E59',
+      headingColorH3H6: '#0F766E',
+      linkColor: '#0D9488',
+      blockquoteBorderColor: '#0D9488',
+      blockquoteBgColor: '#F0FDFA',
+      tableHeaderBgColor: '#F0FDFA',
+      tableHeaderColor: '#115E59',
     },
     classic: {
       primaryColor: '#555',
@@ -65,41 +44,17 @@ function getThemeStyles(theme: string) {
       tableHeaderBgColor: '#f5f5f5',
       tableHeaderColor: '#222',
     },
-    purple: {
-      primaryColor: '#722ed1',
-      primaryColorDark: '#391085',
-      headingColor: '#391085',
-      headingColorH2: '#391085',
-      headingColorH3H6: '#531dab',
-      linkColor: '#722ed1',
-      blockquoteBorderColor: '#722ed1',
-      blockquoteBgColor: '#f9f0ff',
-      tableHeaderBgColor: '#f9f0ff',
-      tableHeaderColor: '#391085',
-    },
     orange: {
-      primaryColor: '#fa8c16',
-      primaryColorDark: '#ad4e00',
-      headingColor: '#ad4e00',
-      headingColorH2: '#ad4e00',
-      headingColorH3H6: '#d46b08',
-      linkColor: '#fa8c16',
-      blockquoteBorderColor: '#fa8c16',
-      blockquoteBgColor: '#fff7e6',
-      tableHeaderBgColor: '#fff7e6',
-      tableHeaderColor: '#ad4e00',
-    },
-    pink: {
-      primaryColor: '#eb2f96',
-      primaryColorDark: '#9e1068',
-      headingColor: '#9e1068',
-      headingColorH2: '#9e1068',
-      headingColorH3H6: '#c41d7f',
-      linkColor: '#eb2f96',
-      blockquoteBorderColor: '#eb2f96',
-      blockquoteBgColor: '#fff0f6',
-      tableHeaderBgColor: '#fff0f6',
-      tableHeaderColor: '#9e1068',
+      primaryColor: '#EA580C',
+      primaryColorDark: '#9A3412',
+      headingColor: '#9A3412',
+      headingColorH2: '#9A3412',
+      headingColorH3H6: '#C2410C',
+      linkColor: '#EA580C',
+      blockquoteBorderColor: '#EA580C',
+      blockquoteBgColor: '#FFF7ED',
+      tableHeaderBgColor: '#FFF7ED',
+      tableHeaderColor: '#9A3412',
     },
     blue: {
       primaryColor: '#0F4C81',
@@ -113,33 +68,9 @@ function getThemeStyles(theme: string) {
       tableHeaderBgColor: '#f0f7ff',
       tableHeaderColor: '#0F4C81',
     },
-    red: {
-      primaryColor: '#ff4d4f',
-      primaryColorDark: '#a8071a',
-      headingColor: '#a8071a',
-      headingColorH2: '#a8071a',
-      headingColorH3H6: '#cf1322',
-      linkColor: '#ff4d4f',
-      blockquoteBorderColor: '#ff4d4f',
-      blockquoteBgColor: '#fff1f0',
-      tableHeaderBgColor: '#fff1f0',
-      tableHeaderColor: '#a8071a',
-    },
-    cyan: {
-      primaryColor: '#13c2c2',
-      primaryColorDark: '#002329',
-      headingColor: '#002329',
-      headingColorH2: '#002329',
-      headingColorH3H6: '#00474f',
-      linkColor: '#13c2c2',
-      blockquoteBorderColor: '#13c2c2',
-      blockquoteBgColor: '#e6fffb',
-      tableHeaderBgColor: '#e6fffb',
-      tableHeaderColor: '#002329',
-    },
   };
 
-  return themes[theme] || themes.green;
+  return themes[normalizedTheme] || themes.classic;
 }
 
 /**
@@ -485,12 +416,15 @@ export async function convertSvgImagesToPng(html: string): Promise<string> {
  */
 export function formatForWeChat(
   html: string,
-  theme: string = 'green',
+  theme: string = 'classic',
   font: string = 'default',
   showH1: boolean = true,
   imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
+  imageBorderRadius: boolean = false,
   codeBlockStyle: CodeBlockStyle = 'classic',
-  invertH1: boolean = false
+  invertH1: boolean = false,
+  invertH2: boolean = false,
+  alignH2Left: boolean = false
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
@@ -500,7 +434,7 @@ export function formatForWeChat(
   tempDiv.innerHTML = html;
 
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
 
   return tempDiv.innerHTML;
 }
@@ -697,8 +631,11 @@ function applyThemeStyles(
   fontFamily: string,
   showH1: boolean,
   imageBorderStyle: 'border' | 'shadow' | 'default',
+  imageBorderRadius: boolean,
   codeBlockStyle: CodeBlockStyle,
-  invertH1: boolean
+  invertH1: boolean,
+  invertH2: boolean,
+  alignH2Left: boolean
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -715,7 +652,7 @@ function applyThemeStyles(
     imgEl.style.verticalAlign = 'top';
     // 上下间距由图片外层块统一控制，避免图片自身和 figure/wrapper 叠加。
     imgEl.style.margin = '0 auto';
-    imgEl.style.borderRadius = '4px';
+    imgEl.style.borderRadius = imageBorderRadius ? '4px' : '0';
 
     // 根据图片边框模式设置样式
     if (imageBorderStyle === 'border') {
@@ -1068,6 +1005,17 @@ function applyThemeStyles(
   const h2Elements = container.querySelectorAll('h2');
   h2Elements.forEach((h2) => {
     const h2El = h2 as HTMLElement;
+    let inlineWrapper = h2El.querySelector(':scope > .h2-inline-block') as HTMLElement | null;
+
+    if (invertH2 && !inlineWrapper) {
+      inlineWrapper = document.createElement('span');
+      inlineWrapper.className = 'h2-inline-block';
+      while (h2El.firstChild) {
+        inlineWrapper.appendChild(h2El.firstChild);
+      }
+      h2El.appendChild(inlineWrapper);
+    }
+
     h2El.style.fontSize = '18px';
     h2El.style.marginTop = '32px';
     h2El.style.marginBottom = '16px';
@@ -1085,7 +1033,19 @@ function applyThemeStyles(
     h2El.style.paddingRight = '0';
     h2El.style.color = themeStyles.headingColorH2;
     h2El.style.display = 'block';
+    h2El.style.textAlign = alignH2Left ? 'left' : 'center';
     h2El.style.fontFamily = fontFamily;
+
+    if (inlineWrapper) {
+      inlineWrapper.style.display = invertH2 ? 'inline-block' : 'inline';
+      inlineWrapper.style.margin = invertH2 ? '0 auto' : '0';
+      inlineWrapper.style.padding = invertH2 ? '4px 12px' : '0';
+      const invertBgColor = theme === 'orange' ? themeStyles.headingColorH2 : themeStyles.primaryColor;
+      inlineWrapper.style.backgroundColor = invertH2 ? invertBgColor : 'transparent';
+      inlineWrapper.style.color = invertH2 ? '#ffffff' : themeStyles.headingColorH2;
+      inlineWrapper.style.borderRadius = '0';
+      inlineWrapper.style.lineHeight = '1.25';
+    }
   });
 
   const h3Elements = container.querySelectorAll('h3');
@@ -1472,23 +1432,26 @@ function getSelectedHtmlFromPreview(): string | null {
  * 复制选中的内容到微信公众号编辑器
  */
 export async function copySelectedToWeChat(
-  theme: string = 'green',
+  theme: string = 'classic',
   font: string = 'default',
   showH1: boolean = true,
   imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
+  imageBorderRadius: boolean = false,
   codeBlockStyle: CodeBlockStyle = 'classic',
-  invertH1: boolean = false
+  invertH1: boolean = false,
+  invertH2: boolean = false,
+  alignH2Left: boolean = false
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
-  
+
   if (!selectedHtml || !selectedHtml.trim()) {
-    return { 
-      success: false, 
-      message: '请先在预览区域选择要复制的内容' 
+    return {
+      success: false,
+      message: '请先在预览区域选择要复制的内容'
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
 }
 
 /**
@@ -1497,19 +1460,22 @@ export async function copySelectedToWeChat(
  */
 export async function copyHtmlToWeChat(
   html: string,
-  theme: string = 'green',
+  theme: string = 'classic',
   font: string = 'default',
   showH1: boolean = true,
   imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
+  imageBorderRadius: boolean = false,
   codeBlockStyle: CodeBlockStyle = 'classic',
-  invertH1: boolean = false
+  invertH1: boolean = false,
+  invertH2: boolean = false,
+  alignH2Left: boolean = false
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

@@ -343,5 +343,21 @@ export function renderMarkdown(markdown: string): string {
     h1.appendChild(wrapper);
   });
 
+  const h2Elements = tempDiv.querySelectorAll('h2');
+  h2Elements.forEach((h2) => {
+    if (h2.querySelector(':scope > .h2-inline-block')) {
+      return;
+    }
+
+    const wrapper = document.createElement('span');
+    wrapper.className = 'h2-inline-block';
+
+    while (h2.firstChild) {
+      wrapper.appendChild(h2.firstChild);
+    }
+
+    h2.appendChild(wrapper);
+  });
+
   return tempDiv.innerHTML;
 }

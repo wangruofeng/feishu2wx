@@ -6,11 +6,21 @@ interface Props {
   setTheme: (theme: string) => void;
 }
 
+interface ThemeIconProps {
+  color: string;
+}
+
+const ThemeIcon: React.FC<ThemeIconProps> = ({ color }) => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="6" fill={color} stroke={color} strokeWidth="1" />
+  </svg>
+);
+
 const themes = [
-  { key: 'classic', name: '经典', icon: '🖤' },
-  { key: 'orange', name: '橙色', icon: '🧡' },
-  { key: 'blue', name: '蓝色', icon: '💙' },
-  { key: 'green', name: '绿意', icon: '🌿' },
+  { key: 'classic', name: '经典', icon: <ThemeIcon color="#555" /> },
+  { key: 'orange', name: '橙色', icon: <ThemeIcon color="#EA580C" /> },
+  { key: 'blue', name: '蓝色', icon: <ThemeIcon color="#0F4C81" /> },
+  { key: 'teal', name: '青绿', icon: <ThemeIcon color="#0D9488" /> },
 ];
 
 const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme }) => {

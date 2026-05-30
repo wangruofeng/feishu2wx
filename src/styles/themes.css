@@ -1,121 +1,70 @@
-/* 绿意主题 - 默认主题 */
+/* ========== Teal 主题（默认） ========== */
 
-.theme-green .preview-content {
-  --preview-primary-color: #52c41a;
+.theme-teal .preview-content {
+  --preview-primary-color: #0D9488;
   background-color: #ffffff;
   color: #333;
 }
 
-.theme-green .preview-content h1,
-.theme-green .preview-content h2 {
-  border-bottom-color: #237804;
-  color: #237804;
+.theme-teal .preview-content h1,
+.theme-teal .preview-content h2 {
+  border-bottom-color: #115E59;
+  color: #115E59;
 }
 
-.theme-green .preview-content h3,
-.theme-green .preview-content h4,
-.theme-green .preview-content h5,
-.theme-green .preview-content h6 {
-  color: #389e0d;
+.theme-teal .preview-content h3,
+.theme-teal .preview-content h4,
+.theme-teal .preview-content h5,
+.theme-teal .preview-content h6 {
+  color: #0F766E;
 }
 
-.theme-green .preview-content blockquote {
-  border-left-color: #52c41a;
-  background-color: #f6ffed;
+.theme-teal .preview-content blockquote {
+  border-left-color: #0D9488;
+  background-color: #F0FDFA;
 }
 
-.theme-green .preview-content a {
-  color: #52c41a;
+.theme-teal .preview-content a {
+  color: #0D9488;
 }
 
-.theme-green .preview-content a:hover {
-  color: #73d13d;
+.theme-teal .preview-content a:hover {
+  color: #14B8A6;
 }
 
-.theme-green .preview-content table th {
-  background-color: #f6ffed;
-  color: #237804;
+.theme-teal .preview-content table th {
+  background-color: #F0FDFA;
+  color: #115E59;
 }
 
-.theme-green .preview-content hr.custom-hr,
-.theme-green .preview-content hr.custom-hr::before,
-.theme-green .preview-content hr.custom-hr::after {
-  color: #52c41a;
+.theme-teal .preview-content hr.custom-hr,
+.theme-teal .preview-content hr.custom-hr::before,
+.theme-teal .preview-content hr.custom-hr::after {
+  color: #0D9488;
 }
 
-.theme-green .toolbar-btn-primary {
-  background-color: #52c41a;
-  border-color: #52c41a;
+.theme-teal .toolbar-btn-primary {
+  background-color: #0D9488;
+  border-color: #0D9488;
 }
 
-.theme-green .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #73d13d;
-  border-color: #73d13d;
+.theme-teal .toolbar-btn-primary:hover:not(:disabled) {
+  background-color: #14B8A6;
+  border-color: #14B8A6;
   color: #ccc;
 }
 
-/* 明亮主题 - 自动跟随系统浅色模式 */
-
-.theme-light .preview-content {
-  --preview-primary-color: #1890ff;
-  background-color: #ffffff;
-  color: #333;
+.theme-teal .theme-option.active {
+  color: #0D9488;
 }
 
-.theme-light .preview-content h1,
-.theme-light .preview-content h2 {
-  border-bottom-color: #0050b3;
-  color: #0050b3;
-}
-
-.theme-light .preview-content h3,
-.theme-light .preview-content h4,
-.theme-light .preview-content h5,
-.theme-light .preview-content h6 {
-  color: #096dd9;
-}
-
-.theme-light .preview-content blockquote {
-  border-left-color: #1890ff;
-  background-color: #e6f7ff;
-}
-
-.theme-light .preview-content a {
-  color: #1890ff;
-}
-
-.theme-light .preview-content a:hover {
-  color: #40a9ff;
-}
-
-.theme-light .preview-content table th {
-  background-color: #e6f7ff;
-  color: #0050b3;
-}
-
-.theme-light .preview-content hr.custom-hr,
-.theme-light .preview-content hr.custom-hr::before,
-.theme-light .preview-content hr.custom-hr::after {
-  color: #1890ff;
-}
-
-.theme-light .toolbar-btn-primary {
-  background-color: #1890ff;
-  border-color: #1890ff;
-}
-
-.theme-light .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #40a9ff;
-  border-color: #40a9ff;
-  color: #ccc;
-}
-
-.theme-light .theme-option.active {
-  color: #1890ff;
+.theme-teal .preview-content.invert-h1 h1 .h1-inline-block {
+  background-color: #115E59;
 }
 
 
-/* 暗黑主题 - 自动跟随系统暗黑模式 */
+/* ========== 暗黑主题（仅 UI，不影响预览内容） ========== */
+
 .theme-dark {
   --color-text-primary: #e0e0e0;
   --color-text-secondary: #e0e0e0;
@@ -155,64 +104,6 @@
   color: #fff;
 }
 
-.theme-dark .preview-content {
-  --preview-primary-color: #4A7FE0;
-  background-color: #2f2f2f;
-  color: #e0e0e0;
-}
-
-.theme-dark .preview-content h1,
-.theme-dark .preview-content h2 {
-  border-bottom-color: #4A7FE0;
-  color: #4A7FE0;
-}
-
-.theme-dark .preview-content h3,
-.theme-dark .preview-content h4,
-.theme-dark .preview-content h5,
-.theme-dark .preview-content h6 {
-  color: #6B93E8;
-}
-
-.theme-dark .preview-content blockquote {
-  border-left-color: #4A7FE0;
-  background-color: #0F1E3A;
-  color: #e0e0e0;
-}
-
-.theme-dark .preview-content code {
-  background-color: #1f1f1f;
-  color: #4A7FE0;
-}
-
-.theme-dark .preview-content pre {
-  background-color: #1f1f1f;
-  color: #e0e0e0;
-}
-
-.theme-dark .preview-content a {
-  color: #4A7FE0;
-}
-
-.theme-dark .preview-content a:hover {
-  color: #6B93E8;
-}
-
-.theme-dark .preview-content table th {
-  background-color: #0F1E3A;
-  color: #4A7FE0;
-}
-
-.theme-dark .preview-content hr.custom-hr,
-.theme-dark .preview-content hr.custom-hr::before,
-.theme-dark .preview-content hr.custom-hr::after {
-  color: #4A7FE0;
-}
-
-.theme-dark .preview-content table td {
-  border-color: #4f4f4f;
-}
-
 .theme-dark .toolbar-btn {
   background-color: #3f3f3f;
   border-color: #4f4f4f;
@@ -221,22 +112,23 @@
 
 .theme-dark .toolbar-btn:hover:not(:disabled) {
   background-color: #4f4f4f;
-  border-color: #4A7FE0;
-  color: #4A7FE0;
+  border-color: #0D9488;
+  color: #0D9488;
 }
 
 .theme-dark .toolbar-btn-primary {
-  background-color: #4A7FE0;
-  border-color: #4A7FE0;
+  background-color: #0D9488;
+  border-color: #0D9488;
 }
 
 .theme-dark .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #6B93E8;
-  border-color: #6B93E8;
+  background-color: #14B8A6;
+  border-color: #14B8A6;
   color: #ccc;
 }
 
-/* 经典主题 */
+
+/* ========== 经典主题 ========== */
 
 .theme-classic .preview-content {
   --preview-primary-color: #555;
@@ -297,185 +189,71 @@
   color: #555;
 }
 
-/* 紫色主题 */
 
-.theme-purple .preview-content {
-  --preview-primary-color: #722ed1;
-}
-
-.theme-purple .preview-content h1,
-.theme-purple .preview-content h2 {
-  border-bottom-color: #391085;
-  color: #391085;
-}
-
-.theme-purple .preview-content h3,
-.theme-purple .preview-content h4,
-.theme-purple .preview-content h5,
-.theme-purple .preview-content h6 {
-  color: #531dab;
-}
-
-.theme-purple .preview-content blockquote {
-  border-left-color: #722ed1;
-  background-color: #f9f0ff;
-}
-
-.theme-purple .preview-content a {
-  color: #722ed1;
-}
-
-.theme-purple .preview-content a:hover {
-  color: #9254de;
-}
-
-.theme-purple .preview-content table th {
-  background-color: #f9f0ff;
-  color: #391085;
-}
-
-.theme-purple .preview-content hr.custom-hr,
-.theme-purple .preview-content hr.custom-hr::before,
-.theme-purple .preview-content hr.custom-hr::after {
-  color: #722ed1;
-}
-
-.theme-purple .toolbar-btn-primary {
-  background-color: #722ed1;
-  border-color: #722ed1;
-}
-
-.theme-purple .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #9254de;
-  border-color: #9254de;
-  color: #ccc;
-}
-
-.theme-purple .theme-option.active {
-  color: #722ed1;
-}
-
-/* 橙色主题 */
+/* ========== 橙色主题 ========== */
 
 .theme-orange .preview-content {
-  --preview-primary-color: #fa8c16;
+  --preview-primary-color: #EA580C;
 }
 
 .theme-orange .preview-content h1,
 .theme-orange .preview-content h2 {
-  border-bottom-color: #ad4e00;
-  color: #ad4e00;
+  border-bottom-color: #9A3412;
+  color: #9A3412;
 }
 
 .theme-orange .preview-content h3,
 .theme-orange .preview-content h4,
 .theme-orange .preview-content h5,
 .theme-orange .preview-content h6 {
-  color: #d46b08;
+  color: #C2410C;
 }
 
 .theme-orange .preview-content blockquote {
-  border-left-color: #ad4e00;
-  background-color: #ad4e0024;
+  border-left-color: #EA580C;
+  background-color: #FFF7ED;
 }
 
 .theme-orange .preview-content a {
-  color: #fa8c16;
+  color: #EA580C;
 }
 
 .theme-orange .preview-content a:hover {
-  color: #ffa940;
+  color: #F97316;
 }
 
 .theme-orange .preview-content table th {
-  background-color: #fff7e6;
-  color: #ad4e00;
+  background-color: #FFF7ED;
+  color: #9A3412;
 }
 
 .theme-orange .preview-content hr.custom-hr,
 .theme-orange .preview-content hr.custom-hr::before,
 .theme-orange .preview-content hr.custom-hr::after {
-  color: #fa8c16;
+  color: #EA580C;
 }
 
 .theme-orange .toolbar-btn-primary {
-  background-color: #fa8c16;
-  border-color: #fa8c16;
+  background-color: #EA580C;
+  border-color: #EA580C;
 }
 
 .theme-orange .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #ffa940;
-  border-color: #ffa940;
+  background-color: #F97316;
+  border-color: #F97316;
   color: #ccc;
 }
 
 .theme-orange .theme-option.active {
-  color: #fa8c16;
+  color: #EA580C;
 }
 
 .theme-orange .preview-content.invert-h1 h1 .h1-inline-block {
-  background-color: #ad4e00;
+  background-color: #9A3412;
 }
 
-/* 粉色主题 */
 
-.theme-pink .preview-content {
-  --preview-primary-color: #eb2f96;
-}
-
-.theme-pink .preview-content h1,
-.theme-pink .preview-content h2 {
-  border-bottom-color: #9e1068;
-  color: #9e1068;
-}
-
-.theme-pink .preview-content h3,
-.theme-pink .preview-content h4,
-.theme-pink .preview-content h5,
-.theme-pink .preview-content h6 {
-  color: #c41d7f;
-}
-
-.theme-pink .preview-content blockquote {
-  border-left-color: #eb2f96;
-  background-color: #fff0f6;
-}
-
-.theme-pink .preview-content a {
-  color: #eb2f96;
-}
-
-.theme-pink .preview-content a:hover {
-  color: #f759ab;
-}
-
-.theme-pink .preview-content table th {
-  background-color: #fff0f6;
-  color: #9e1068;
-}
-
-.theme-pink .preview-content hr.custom-hr,
-.theme-pink .preview-content hr.custom-hr::before,
-.theme-pink .preview-content hr.custom-hr::after {
-  color: #eb2f96;
-}
-
-.theme-pink .toolbar-btn-primary {
-  background-color: #eb2f96;
-  border-color: #eb2f96;
-}
-
-.theme-pink .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #f759ab;
-  border-color: #f759ab;
-  color: #ccc;
-}
-
-.theme-pink .theme-option.active {
-  color: #eb2f96;
-}
-
-/* 蓝色主题 */
+/* ========== 蓝色主题 ========== */
 
 .theme-blue .preview-content {
   --preview-primary-color: #0F4C81;
@@ -531,119 +309,4 @@
 
 .theme-blue .theme-option.active {
   color: #0F4C81;
-}
-
-
-/* 红色主题 */
-.theme-red .preview-content {
-  --preview-primary-color: #ff4d4f;
-}
-
-.theme-red .preview-content h1,
-.theme-red .preview-content h2 {
-  border-bottom-color: #a8071a;
-  color: #a8071a;
-}
-
-.theme-red .preview-content h3,
-.theme-red .preview-content h4,
-.theme-red .preview-content h5,
-.theme-red .preview-content h6 {
-  color: #cf1322;
-}
-
-.theme-red .preview-content blockquote {
-  border-left-color: #ff4d4f;
-  background-color: #fff1f0;
-}
-
-.theme-red .preview-content a {
-  color: #ff4d4f;
-}
-
-.theme-red .preview-content a:hover {
-  color: #ff7875;
-}
-
-.theme-red .preview-content table th {
-  background-color: #fff1f0;
-  color: #a8071a;
-}
-
-.theme-red .preview-content hr.custom-hr,
-.theme-red .preview-content hr.custom-hr::before,
-.theme-red .preview-content hr.custom-hr::after {
-  color: #f5222d;
-}
-
-.theme-red .toolbar-btn-primary {
-  background-color: #ff4d4f;
-  border-color: #ff4d4f;
-}
-
-.theme-red .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #ff7875;
-  border-color: #ff7875;
-  color: #ccc;
-}
-
-.theme-red .theme-option.active {
-  color: #ff4d4f;
-}
-
-/* 青色主题 */
-.theme-cyan .preview-content {
-  --preview-primary-color: #13c2c2;
-}
-
-.theme-cyan .preview-content h1,
-.theme-cyan .preview-content h2 {
-  border-bottom-color: #002329;
-  color: #002329;
-}
-
-.theme-cyan .preview-content h3,
-.theme-cyan .preview-content h4,
-.theme-cyan .preview-content h5,
-.theme-cyan .preview-content h6 {
-  color: #00474f;
-}
-
-.theme-cyan .preview-content blockquote {
-  border-left-color: #13c2c2;
-  background-color: #e6fffb;
-}
-
-.theme-cyan .preview-content a {
-  color: #13c2c2;
-}
-
-.theme-cyan .preview-content a:hover {
-  color: #36cfc9;
-}
-
-.theme-cyan .preview-content table th {
-  background-color: #e6fffb;
-  color: #002329;
-}
-
-.theme-cyan .preview-content hr.custom-hr,
-.theme-cyan .preview-content hr.custom-hr::before,
-.theme-cyan .preview-content hr.custom-hr::after {
-  color: #13c2c2;
-}
-
-.theme-cyan .toolbar-btn-primary {
-  background-color: #13c2c2;
-  border-color: #13c2c2;
-}
-
-.theme-cyan .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #36cfc9;
-  border-color: #36cfc9;
-  color: #ccc;
-}
-
-.theme-cyan .theme-option.active {
-  color: #13c2c2;
 }

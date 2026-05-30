@@ -12,12 +12,18 @@ interface Props {
   onToggleInvertH1: () => void;
   alignH1Left: boolean;
   onToggleAlignH1Left: () => void;
+  invertH2: boolean;
+  onToggleInvertH2: () => void;
+  alignH2Left: boolean;
+  onToggleAlignH2Left: () => void;
   showHorizontalRule: boolean;
   onToggleHorizontalRule: () => void;
   tableShadow: boolean;
   onToggleTableShadow: () => void;
   imageBorderStyle: 'border' | 'shadow' | 'default';
   onToggleImageBorder: () => void;
+  imageBorderRadius: boolean;
+  onToggleImageBorderRadius: () => void;
   codeBlockStyle: CodeBlockStyle;
   onToggleCodeBlockStyle: () => void;
   isOpen: boolean;
@@ -57,12 +63,18 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleInvertH1,
   alignH1Left,
   onToggleAlignH1Left,
+  invertH2,
+  onToggleInvertH2,
+  alignH2Left,
+  onToggleAlignH2Left,
   showHorizontalRule,
   onToggleHorizontalRule,
   tableShadow,
   onToggleTableShadow,
   imageBorderStyle,
   onToggleImageBorder,
+  imageBorderRadius,
+  onToggleImageBorderRadius,
   codeBlockStyle,
   onToggleCodeBlockStyle,
   isOpen,
@@ -100,20 +112,6 @@ const SettingsPanel: React.FC<Props> = ({
 
   return (
     <div className="settings-panel" ref={panelRef}>
-      <div className="settings-section">
-        <label className="settings-label">字体</label>
-        <select
-          className="settings-select"
-          value={font}
-          onChange={(e) => setFont(e.target.value)}
-        >
-          {fonts.map((f) => (
-            <option key={f.key} value={f.key}>
-              {f.name}
-            </option>
-          ))}
-        </select>
-      </div>
 
       <div className="settings-section">
         <label className="settings-label">H1 样式</label>
@@ -135,6 +133,24 @@ const SettingsPanel: React.FC<Props> = ({
             onClick={onToggleAlignH1Left}
           >
             {alignH1Left ? 'H1 左对齐' : 'H1 居中'}
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <label className="settings-label">H2 样式</label>
+        <div className="settings-toggles">
+          <button
+            className={`settings-toggle ${invertH2 ? 'active' : ''}`}
+            onClick={onToggleInvertH2}
+          >
+            H2 反色
+          </button>
+          <button
+            className={`settings-toggle ${alignH2Left ? 'active' : ''}`}
+            onClick={onToggleAlignH2Left}
+          >
+            {alignH2Left ? 'H2 左对齐' : 'H2 居中'}
           </button>
         </div>
       </div>
@@ -180,6 +196,12 @@ const SettingsPanel: React.FC<Props> = ({
           >
             阴影
           </button>
+          <button
+            className={`settings-toggle ${imageBorderRadius ? 'active' : ''}`}
+            onClick={onToggleImageBorderRadius}
+          >
+            圆角
+          </button>
         </div>
       </div>
 
@@ -199,6 +221,21 @@ const SettingsPanel: React.FC<Props> = ({
             现代
           </button>
         </div>
+      </div>
+
+      <div className="settings-section">
+        <label className="settings-label">字体</label>
+        <select
+          className="settings-select"
+          value={font}
+          onChange={(e) => setFont(e.target.value)}
+        >
+          {fonts.map((f) => (
+            <option key={f.key} value={f.key}>
+              {f.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="settings-section">

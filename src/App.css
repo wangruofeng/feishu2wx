@@ -261,7 +261,7 @@
 }
 
 .copy-toast-success {
-  border-left-color: var(--color-status-success);
+  border-left-color: var(--color-brand);
 }
 
 .copy-toast-error {

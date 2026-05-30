@@ -77,9 +77,9 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `markdown`、`html`
 - `theme`、`font`
 - `showEditor`、`isFullscreen`、`device`
-- `showH1`、`invertH1`、`showHorizontalRule`
+- `showH1`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`
 - `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
-- `isSystemDark`
+- `isSystemDark`、`isDarkMode`（手动深色/浅色主题切换）
 - `copyStatus`（复制结果弹窗）
 
 所有设置都会持久化到 localStorage（键名前缀 `feishu2wx_`）。预览 HTML 由 `markdown` 和渲染选项通过纯函数派生。
@@ -93,7 +93,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、绿意）。
 - `FontSelector.tsx`：字体下拉选择器（16 种字体）。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换。
-- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、分割线、表格阴影、图片模式（默认/边框/阴影）、代码块样式的可视化配置。
+- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、H2 样式（反色/对齐）、分割线、表格阴影、图片模式（默认/边框/阴影）、代码块样式的可视化配置。
+- `ImageViewer.tsx`：图片查看器，支持键盘左右切换预览区所有图片，底部显示序号。
 
 ## 关键行为
 
@@ -121,6 +122,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - H1 下划线显隐
 - H1 反显（主题色背景 + 白色文字，宽度自适应）
 - H1 左对齐 / 居中对齐切换
+- H2 反显（主题色背景 + 白色文字）
+- H2 左对齐 / 居中对齐切换
 - 水平分割线显隐
 - 表格阴影显隐
 - 图片默认 / 边框 / 阴影模式切换
