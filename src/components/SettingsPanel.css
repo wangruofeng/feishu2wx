@@ -8,7 +8,7 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   padding: var(--space-6);
-  width: 240px;
+  width: 300px;
   z-index: 1100;
   animation: settings-panel-in 150ms ease-out;
 }
@@ -105,6 +105,6 @@
 @media (max-width: 768px) {
   .settings-panel {
     right: -40px;
-    width: 220px;
+    width: 280px;
   }
 }

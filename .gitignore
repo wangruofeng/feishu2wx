@@ -31,3 +31,4 @@ yarn-error.log*
 # AI
 .claude/
 .omx/
+.playwright-mcp/
