@@ -32,3 +32,9 @@ yarn-error.log*
 .claude/
 .omx/
 .playwright-mcp/
+
+# Server data (sensitive)
+server/data/
+
+# Cloudflare
+.wrangler/

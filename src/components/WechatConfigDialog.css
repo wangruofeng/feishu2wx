@@ -1,0 +1,214 @@
+/* 遮罩层 */
+.wc-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: wc-overlay-in 150ms ease-out;
+}
+
+@keyframes wc-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 弹窗卡片 */
+.wc-dialog {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  width: min(440px, calc(100vw - 32px));
+  animation: wc-dialog-in 200ms ease-out;
+  overflow: hidden;
+}
+
+@keyframes wc-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 头部 */
+.wc-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border-secondary);
+}
+
+.wc-dialog-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-heading);
+}
+
+.wc-dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  transition: var(--transition-normal);
+}
+
+.wc-dialog-close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+/* 内容区 */
+.wc-dialog-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 提示框 */
+.wc-dialog-warning {
+  background: #FFF8E1;
+  color: #6D4C00;
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+}
+
+.wc-dialog-warning a {
+  color: #3370FF;
+  text-decoration: none;
+}
+
+.wc-dialog-warning a:hover {
+  text-decoration: underline;
+}
+
+/* 表单字段 */
+.wc-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wc-dialog-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.wc-dialog-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  background: var(--color-bg-white);
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.wc-dialog-input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.wc-dialog-input:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px var(--color-brand-focus-ring);
+}
+
+/* 消息提示 */
+.wc-dialog-msg {
+  font-size: var(--font-size-xs);
+  padding: 6px 10px;
+  border-radius: var(--radius-lg);
+}
+
+.wc-dialog-msg--ok {
+  background: #f0fff4;
+  color: #38a169;
+}
+
+.wc-dialog-msg--err {
+  background: #fff5f5;
+  color: #e53e3e;
+}
+
+/* 底部按钮 */
+.wc-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border-secondary);
+}
+
+.wc-dialog-footer-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.wc-dialog-btn {
+  padding: 7px 20px;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  white-space: nowrap;
+}
+
+.wc-dialog-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wc-dialog-btn--cancel {
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border-secondary);
+  color: var(--color-text-secondary);
+}
+
+.wc-dialog-btn--cancel:hover {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-primary);
+}
+
+.wc-dialog-btn--save {
+  background: #07C160;
+  border: 1px solid #07C160;
+  color: #fff;
+}
+
+.wc-dialog-btn--save:hover:not(:disabled) {
+  background: #06ad56;
+  border-color: #06ad56;
+}
+
+.wc-dialog-btn--danger {
+  background: transparent;
+  border: none;
+  color: var(--color-text-tertiary);
+  padding: 7px 12px;
+}
+
+.wc-dialog-btn--danger:hover:not(:disabled) {
+  color: #e53e3e;
+}

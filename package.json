@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx",
-  "version": "1.12.3",
+  "version": "1.14.0",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
   "homepage": "/feishu2wx",
@@ -12,6 +12,7 @@
   ],
   "author": "",
   "license": "MIT",
+  "proxy": "http://localhost:3101",
   "dependencies": {
     "highlight.js": "^11.9.0",
     "markdown-it": "^13.0.1",
@@ -29,6 +30,11 @@
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
+    "server": "ts-node --project server/tsconfig.json server/index.ts",
+    "dev": "concurrently \"PORT=3100 npm start\" \"npm run server\"",
+    "cf:dev": "wrangler pages dev -- npx react-scripts start",
+    "cf:deploy": "npm run build && wrangler pages deploy ./build --branch main",
+    "cf:kv:create": "npx wrangler kv namespace create CONFIG_KV && echo '' && echo '=== 请将输出的 ID 填入 wrangler.toml 中的 id 和 preview_id ==='",
     "pre-commit-check": "node scripts/pre-commit-check.js",
     "prepare": "test -x ./node_modules/.bin/husky && ./node_modules/.bin/husky || true",
     "postinstall": "test -x ./node_modules/.bin/patch-package && ./node_modules/.bin/patch-package || true"
@@ -51,13 +57,22 @@
     ]
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260530.1",
     "@csstools/normalize.css": "^12.1.1",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/markdown-it": "^14.1.2",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@types/turndown": "^5.0.6",
+    "concurrently": "^8.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.0",
     "gh-pages": "^6.3.0",
     "husky": "^9.1.7",
-    "patch-package": "^8.0.1"
+    "patch-package": "^8.0.1",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^4.95.0"
   }
 }

@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
+import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
 
 interface Props {
@@ -21,6 +22,9 @@ interface Props {
   onToggleCodeBlockStyle: () => void;
   isOpen: boolean;
   onClose: () => void;
+  wechatConfigured: boolean;
+  onSaveWechatConfig: (appId: string, appSecret: string) => Promise<{ success: boolean; error?: string }>;
+  onDeleteWechatConfig: () => Promise<void>;
 }
 
 const fonts = [
@@ -61,8 +65,12 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleCodeBlockStyle,
   isOpen,
   onClose,
+  wechatConfigured,
+  onSaveWechatConfig,
+  onDeleteWechatConfig,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -188,6 +196,31 @@ const SettingsPanel: React.FC<Props> = ({
           </button>
         </div>
       </div>
+
+      <div className="settings-divider" />
+
+      <div className="settings-section">
+        <label className="settings-label">公众号配置</label>
+        <div className="wechat-config-status">
+          {wechatConfigured && (
+            <span className="wechat-config-badge wechat-config-badge--ok">已配置</span>
+          )}
+          <button
+            className="wechat-config-btn"
+            onClick={() => setWechatDialogOpen(true)}
+          >
+            {wechatConfigured ? '修改配置' : '去配置'}
+          </button>
+        </div>
+      </div>
+
+      <WechatConfigDialog
+        open={wechatDialogOpen}
+        configured={wechatConfigured}
+        onClose={() => setWechatDialogOpen(false)}
+        onSave={onSaveWechatConfig}
+        onDelete={onDeleteWechatConfig}
+      />
     </div>
   );
 };

@@ -108,3 +108,43 @@
     width: 280px;
   }
 }
+
+/* 公众号配置 */
+.settings-divider {
+  height: 1px;
+  background: var(--color-border-secondary);
+  margin: 14px 0;
+}
+
+.wechat-config-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wechat-config-badge {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-lg);
+}
+
+.wechat-config-badge--ok {
+  background: #f0fff4;
+  color: #38a169;
+}
+
+.wechat-config-btn {
+  padding: 5px var(--space-4);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-white);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition-normal);
+}
+
+.wechat-config-btn:hover {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}

@@ -197,3 +197,57 @@ npm run deploy
 ---
 
 **提示**：建议使用 GitHub Actions 方式，因为它更自动化，每次代码更新都会自动部署。
+
+---
+
+# Cloudflare Pages + Functions 部署（含后端 API）
+
+如果要使用「推送到草稿箱」和「公众号配置」功能，需要将后端 API 一并部署到 Cloudflare Pages。
+
+## 前置条件
+
+1. 拥有 Cloudflare 账号
+2. Node.js 和 npm 已安装
+
+## 部署步骤
+
+### 1. 创建 KV Namespace
+
+```bash
+npm run cf:kv:create
+```
+
+将输出的 KV Namespace ID 填入 `wrangler.toml` 的 `id` 和 `preview_id`。
+
+### 2. 部署
+
+```bash
+npm run cf:deploy
+```
+
+### 3. 配置环境变量
+
+在 Cloudflare Pages 控制台 → 项目 → Settings → Environment variables 中设置：
+
+```
+REACT_APP_API_URL= （留空，前端和后端同源部署）
+```
+
+## 本地测试 Cloudflare 模式
+
+```bash
+npm run cf:dev
+```
+
+这会在本地同时启动前端开发和 Cloudflare Functions 模拟环境。
+
+## 架构说明
+
+- `functions/` 目录中的 Cloudflare Pages Functions 处理 API 请求
+- 微信配置存储在 Cloudflare KV 中（而非本地文件系统）
+- `server/` 目录的 Express 服务器仅用于本地 `npm run dev` 开发模式
+
+## 重要提示
+
+- GitHub Pages 部署的前端（无后端）排版功能不受影响，只是推送功能不可用
+- Cloudflare Pages 部署包含完整的前后端功能，推荐作为主要部署方式

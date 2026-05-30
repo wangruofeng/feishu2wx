@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import EditorPane from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import SettingsPanel from './components/SettingsPanel';
+import PublishDialog from './components/PublishDialog';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
-import { copyHtmlToWeChat, copySelectedToWeChat } from './utils/wechatCopy';
+import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng } from './utils/wechatCopy';
+import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
 import './App.css';
 import './styles/themes.css';
@@ -45,6 +47,9 @@ const App: React.FC = () => {
   });
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
+  const [publishOpen, setPublishOpen] = useState<boolean>(false);
+  const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
+  const [publishHtml, setPublishHtml] = useState<string>('');
 
   const copyStatusTimerRef = useRef<number | null>(null);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
@@ -94,6 +99,17 @@ const App: React.FC = () => {
   }, [syncPreviewScrollFromEditor]);
 
   // 检测系统暗黑模式
+  useEffect(() => {
+    fetchWechatConfig()
+      .then((data) => setWechatConfigured(data.configured))
+      .catch(() => setWechatConfigured(false));
+  }, []);
+
+  const articleTitle = useMemo(() => {
+    const h1Match = markdown.match(/^#\s+(.+)$/m);
+    return h1Match ? h1Match[1].trim() : '未命名文章';
+  }, [markdown]);
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     setIsSystemDark(mediaQuery.matches);
@@ -333,10 +349,20 @@ const App: React.FC = () => {
             onToggleCodeBlockStyle={() => setCodeBlockStyleState(codeBlockStyle === 'classic' ? 'modern' : 'classic')}
             isOpen={settingsOpen}
             onClose={() => setSettingsOpen(false)}
+            wechatConfigured={wechatConfigured}
+            onSaveWechatConfig={async (appId: string, appSecret: string) => {
+              const result = await saveWechatConfig(appId, appSecret);
+              if (result.success) setWechatConfigured(true);
+              return result;
+            }}
+            onDeleteWechatConfig={async () => {
+              await deleteWechatConfig();
+              setWechatConfigured(false);
+            }}
           />
           {isFullscreen && (
             <button className="edit-toggle-btn" onClick={() => setIsFullscreen(false)}>
-              退出全屏
+              退出
             </button>
           )}
           {!showEditor && !isFullscreen && (
@@ -355,6 +381,19 @@ const App: React.FC = () => {
             disabled={isCopying || !markdown.trim()}
           >
             复制
+          </button>
+          <button
+            className="publish-btn-top"
+            onClick={async () => {
+              const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+              setPublishHtml(formatted);
+              setPublishOpen(true);
+            }}
+            disabled={!wechatConfigured || !markdown.trim()}
+            title={!wechatConfigured ? '请先在设置中配置公众号' : '推送到草稿箱'}
+          >
+            推送
           </button>
         </div>
       </div>
@@ -412,6 +451,14 @@ const App: React.FC = () => {
           <div className="copy-toast-message">{copyStatus.message}</div>
         </div>
       )}
+
+      {/* 推送弹窗 */}
+      <PublishDialog
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        title={articleTitle}
+        htmlContent={publishHtml}
+      />
     </div>
   );
 };

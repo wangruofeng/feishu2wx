@@ -116,6 +116,30 @@
   cursor: not-allowed;
 }
 
+/* 推送按钮 */
+.publish-btn-top {
+  padding: var(--space-2) var(--space-6);
+  background: transparent;
+  color: var(--color-brand);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition-normal);
+  white-space: nowrap;
+}
+
+.publish-btn-top:hover:not(:disabled) {
+  background-color: var(--color-brand);
+  color: var(--color-text-inverse);
+}
+
+.publish-btn-top:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* 编辑/预览切换按钮 (编辑器隐藏时显示) */
 .edit-toggle-btn {
   padding: var(--space-2) var(--space-4);
