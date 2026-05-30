@@ -43,7 +43,7 @@ async function uploadContentImage(data: Uint8Array, filename: string, token: str
   const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
 
   const formData = new FormData();
-  const blob = new Blob([data]);
+  const blob = new Blob([data.buffer]);
   formData.append('media', blob, filename);
 
   const res = await fetch(url, { method: 'POST', body: formData });
@@ -60,7 +60,7 @@ export async function uploadCoverImage(data: Uint8Array, filename: string, token
   const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
 
   const formData = new FormData();
-  const blob = new Blob([data]);
+  const blob = new Blob([data.buffer]);
   formData.append('media', blob, filename);
 
   const res = await fetch(url, { method: 'POST', body: formData });
@@ -112,7 +112,7 @@ export async function processContentImages(html: string, token: string): Promise
   firstImageUrl: string | null;
 }> {
   const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
-  const matches = [...html.matchAll(imgRegex)];
+  const matches = Array.from(html.matchAll(imgRegex));
 
   if (matches.length === 0) {
     return { html, firstImageUrl: null };
