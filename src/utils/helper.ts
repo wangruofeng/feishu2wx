@@ -4,7 +4,7 @@
  */
 export async function convertWebpToPng(html: string): Promise<string> {
   const webpImgRegex = /<img[^>]+src=["']([^"']+\.webp[^"']*)["']/gi;
-  const matches = [...html.matchAll(webpImgRegex)];
+  const matches = Array.from(html.matchAll(webpImgRegex));
 
   if (matches.length === 0) return html;
 
