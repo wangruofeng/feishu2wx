@@ -64,13 +64,14 @@ test('formats h1 with inverted text and background styles when enabled', () => {
     'default',
     true,
     'border',
+    false,
     'classic',
     true
   );
 
   expect(formattedHtml).toContain('display: table');
   expect(formattedHtml).toContain('color: rgb(255, 255, 255)');
-  expect(formattedHtml).toContain('background-color: rgb(82, 196, 26)');
+  expect(formattedHtml).toContain('background-color: rgb(13, 148, 136)');
 });
 
 test('formats inverted h1 wrapper centered for wechat copy', () => {
@@ -82,6 +83,7 @@ test('formats inverted h1 wrapper centered for wechat copy', () => {
     'default',
     true,
     'border',
+    false,
     'classic',
     true
   );
@@ -89,6 +91,32 @@ test('formats inverted h1 wrapper centered for wechat copy', () => {
   expect(formattedHtml).toContain('text-align: center');
   expect(formattedHtml).toContain('display: table');
   expect(formattedHtml).toContain('margin: 0px auto');
+});
+
+test('matches orange preview heading colors for wechat copy and publish', () => {
+  const html = '<h1>一级标题</h1><h2>二级标题</h2>';
+
+  const formattedHtml = formatForWeChat(
+    html,
+    'orange',
+    'default',
+    true,
+    'border',
+    false,
+    'classic',
+    true,
+    true
+  );
+
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  const h1Wrapper = container.querySelector('h1 .h1-inline-block');
+  const h2Wrapper = container.querySelector('h2 .h2-inline-block');
+
+  expect(h1Wrapper.style.backgroundColor).toBe('rgb(154, 52, 18)');
+  expect(h1Wrapper.style.color).toBe('rgb(255, 255, 255)');
+  expect(h2Wrapper.style.backgroundColor).toBe('rgb(234, 88, 12)');
+  expect(h2Wrapper.style.color).toBe('rgb(255, 255, 255)');
 });
 
 test('formats classic code blocks left-aligned for wechat copy', () => {
@@ -100,6 +128,7 @@ test('formats classic code blocks left-aligned for wechat copy', () => {
     'default',
     true,
     'border',
+    false,
     'classic',
     false
   );
@@ -117,6 +146,7 @@ test('keeps normal code blocks as preformatted html for wechat copy', () => {
     'default',
     true,
     'border',
+    false,
     'classic',
     false
   );
@@ -135,6 +165,7 @@ test('keeps unmarked ascii-looking code blocks as preformatted html for wechat c
     'default',
     true,
     'border',
+    false,
     'classic',
     false
   );
@@ -152,6 +183,7 @@ test('removes extra vertical spacing around copied images', () => {
     'default',
     true,
     'border',
+    false,
     'classic',
     false
   );
@@ -187,6 +219,7 @@ test('removes extra vertical spacing around copied image figures', () => {
     'default',
     true,
     'border',
+    false,
     'classic',
     false
   );
@@ -207,6 +240,36 @@ test('removes extra vertical spacing around copied image figures', () => {
   expect(img.style.margin).toBe('0px auto');
 });
 
+test('removes formatting whitespace from loose lists before wechat publish', () => {
+  const html = '<ol>\n<li>\n<p><strong>主体描述尽量简洁</strong>——减少空行</p>\n</li>\n<li>\n<p><strong>色彩点缀自动生成</strong>——保持紧凑</p>\n</li>\n</ol><ul>\n<li>\n<p><strong>ChatGPT Images</strong>——线条最干净</p>\n</li>\n</ul>';
+
+  const formattedHtml = formatForWeChat(
+    html,
+    'green',
+    'default',
+    true,
+    'border',
+    false,
+    'classic',
+    false
+  );
+
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  const listItems = Array.from(container.querySelectorAll('li'));
+
+  expect(listItems).toHaveLength(3);
+  expect(container.querySelector('li p')).toBeNull();
+
+  listItems.forEach((li) => {
+    expect(Array.from(li.childNodes).some((node) => (
+      node.nodeType === Node.TEXT_NODE && /[\r\n]/.test(node.textContent || '') && !node.textContent.trim()
+    ))).toBe(false);
+    expect(li.textContent.trim()).not.toBe('');
+    expect(li.firstElementChild?.tagName).toBe('SPAN');
+  });
+});
+
 test('formats modern code blocks with the same key visual styles as preview', () => {
   const html = '<pre class="modern-code-block"><div class="code-block-header"><span class="code-block-dot red"></span><span class="code-block-dot orange"></span><span class="code-block-dot green"></span></div><div class="code-block-content"><code class="hljs language-js"><span class="hljs-keyword">const</span> answer = 42;</code></div></pre>';
 
@@ -216,6 +279,7 @@ test('formats modern code blocks with the same key visual styles as preview', ()
     'default',
     true,
     'border',
+    false,
     'modern',
     false
   );
@@ -249,6 +313,7 @@ test('formats modern code block header dots as non-empty elements for wechat pas
     'default',
     true,
     'border',
+    false,
     'modern',
     false
   );
@@ -272,6 +337,7 @@ test('formats modern code blocks with explicit whitespace preservation for inden
     'default',
     true,
     'border',
+    false,
     'modern',
     false
   );

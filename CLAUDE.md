@@ -18,7 +18,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 推送流程（需后端）：
   前端 localStorage → POST /api/publish/draft { appId, appSecret, ... }
                       ↓
-          Cloudflare Functions → 微信 API（access_token → 上传图片 → 创建草稿）
+         Express server / Cloudflare Functions → 微信 API（access_token → 并发上传图片(最多4个) → 创建草稿）
 ```
 
 关键职责：

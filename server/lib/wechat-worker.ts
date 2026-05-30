@@ -33,6 +33,26 @@ function toBlobPart(data: Uint8Array): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      results[currentIndex] = await worker(items[currentIndex], currentIndex);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
 export async function getAccessTokenFromCredentials(appId: string, appSecret: string): Promise<string> {
   const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSecret}`;
   const res = await fetch(url);
@@ -125,15 +145,12 @@ export async function processContentImages(html: string, token: string): Promise
   }
 
   let processedHtml = html;
-  let firstImageUrl: string | null = null;
-
-  for (const match of matches) {
+  const processedImages = await mapWithConcurrency(matches, 4, async (match) => {
     const originalUrl = match[1];
 
     // 跳过微信图床图片
     if (originalUrl.includes('mmbiz.qpic.cn')) {
-      if (!firstImageUrl) firstImageUrl = originalUrl;
-      continue;
+      return { originalUrl, wechatUrl: originalUrl };
     }
 
     // 处理 data URI (base64)
@@ -144,29 +161,41 @@ export async function processContentImages(html: string, token: string): Promise
           const ext = dataMatch[1] === 'png' ? 'png' : 'jpg';
           const imgData = base64ToUint8Array(dataMatch[2]);
           const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token);
-          if (!firstImageUrl) firstImageUrl = wechatUrl;
-          processedHtml = processedHtml.split(originalUrl).join(wechatUrl);
+          return { originalUrl, wechatUrl };
         }
       } catch (e) {
         console.error('上传 data URI 图片失败:', e);
       }
-      continue;
+      return { originalUrl, wechatUrl: null };
     }
 
     // 处理外部 URL
     try {
       const imgRes = await fetch(originalUrl);
-      if (!imgRes.ok) continue;
+      if (!imgRes.ok) return { originalUrl, wechatUrl: null };
       const imgData = new Uint8Array(await imgRes.arrayBuffer());
       const urlObj = new URL(originalUrl);
       const ext = urlObj.pathname.split('.').pop()?.split('?')[0] || 'jpg';
       const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token);
-      if (!firstImageUrl) firstImageUrl = wechatUrl;
-      processedHtml = processedHtml.split(originalUrl).join(wechatUrl);
+      return { originalUrl, wechatUrl };
     } catch (e) {
       console.error(`上传图片失败 (${originalUrl}):`, e);
+      return { originalUrl, wechatUrl: null };
     }
-  }
+  });
+
+  let firstImageUrl: string | null = null;
+  processedImages.forEach(({ originalUrl, wechatUrl }) => {
+    if (!wechatUrl) {
+      return;
+    }
+
+    if (!firstImageUrl) {
+      firstImageUrl = wechatUrl;
+    }
+
+    processedHtml = processedHtml.split(originalUrl).join(wechatUrl);
+  });
 
   return { html: processedHtml, firstImageUrl };
 }

@@ -197,6 +197,26 @@ function removeEmptyParagraphsAdjacentToImages(container: HTMLElement): void {
   });
 }
 
+function removeListFormattingWhitespace(container: HTMLElement): void {
+  const listContainers = container.querySelectorAll('ul, ol');
+  listContainers.forEach((list) => {
+    Array.from(list.childNodes).forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE && /[\r\n]/.test(child.textContent || '') && !child.textContent?.trim()) {
+        child.parentNode?.removeChild(child);
+      }
+    });
+  });
+
+  const listItems = container.querySelectorAll('li');
+  listItems.forEach((li) => {
+    Array.from(li.childNodes).forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE && /[\r\n]/.test(child.textContent || '') && !child.textContent?.trim()) {
+        child.parentNode?.removeChild(child);
+      }
+    });
+  });
+}
+
 function applyCompactImageWrapperStyles(wrapper: HTMLElement): void {
   wrapper.className = 'wechat-image-wrapper';
   wrapper.style.margin = '16px 0';
@@ -1040,8 +1060,7 @@ function applyThemeStyles(
       inlineWrapper.style.display = invertH2 ? 'inline-block' : 'inline';
       inlineWrapper.style.margin = invertH2 ? '0 auto' : '0';
       inlineWrapper.style.padding = invertH2 ? '4px 12px' : '0';
-      const invertBgColor = theme === 'orange' ? themeStyles.headingColorH2 : themeStyles.primaryColor;
-      inlineWrapper.style.backgroundColor = invertH2 ? invertBgColor : 'transparent';
+      inlineWrapper.style.backgroundColor = invertH2 ? themeStyles.primaryColor : 'transparent';
       inlineWrapper.style.color = invertH2 ? '#ffffff' : themeStyles.headingColorH2;
       inlineWrapper.style.borderRadius = '0';
       inlineWrapper.style.lineHeight = '1.25';
@@ -1103,6 +1122,7 @@ function applyThemeStyles(
       pEl.remove();
     }
   });
+  removeListFormattingWhitespace(container);
 
   // 处理列表项
   const listItems = container.querySelectorAll('li');

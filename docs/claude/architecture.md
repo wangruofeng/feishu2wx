@@ -48,6 +48,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 三级剪贴板回退策略：(1) Clipboard API + ClipboardItem → (2) execCommand + contenteditable div → (3) textarea 回退。
 - 智能复制：检测预览区是否有选中内容，有则仅复制选中部分，否则复制全文。
 - 多项微信编辑器反格式化对策：`<li>` 内容包裹 `<span>`、`<p>` 标签扁平化、列表内粗体标签转为 styled span。
+- 列表空白清理（`removeListFormattingWhitespace`）：推送前移除 `<ul>/<ol>` 和 `<li>` 中的纯换行文本节点，并将 `<li>` 内的 `<p>` 展开为 `<span>`，确保微信编辑器不产生多余空行。
 - Task List checkbox 内联样式处理：为 `.task-checkbox` 添加 `margin-right`、`font-size`、`vertical-align`；为 `li.task-list-item` 移除列表标记并左移。
 - 脚注内联样式处理：`hr.footnotes-sep`（细线分隔）、`section.footnotes`（小字号灰色）、`ol.footnotes-list`（缩进）、`.footnote-ref`（上标主题色）、`.footnote-backref`（主题色链接）。
 
@@ -132,4 +133,4 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ### 布局与排版规则
 
 - 标题、段落、列表和表格的间距都针对文章阅读体验与微信粘贴保真度做过调整。
-- 橙色主题的 H1 反显使用 `headingColor` 而非 `primaryColor` 作为背景色。
+- 橙色主题的 H1 反显使用 `headingColor` 而非 `primaryColor` 作为背景色；H2 反显统一使用 `primaryColor`。
