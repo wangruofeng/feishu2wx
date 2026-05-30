@@ -27,6 +27,12 @@ export function base64ToUint8Array(base64: string): Uint8Array {
   return bytes;
 }
 
+function toBlobPart(data: Uint8Array): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(data.length);
+  bytes.set(data);
+  return bytes;
+}
+
 export async function getAccessTokenFromCredentials(appId: string, appSecret: string): Promise<string> {
   const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSecret}`;
   const res = await fetch(url);
@@ -43,7 +49,7 @@ async function uploadContentImage(data: Uint8Array, filename: string, token: str
   const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
 
   const formData = new FormData();
-  const blob = new Blob([data.buffer]);
+  const blob = new Blob([toBlobPart(data)]);
   formData.append('media', blob, filename);
 
   const res = await fetch(url, { method: 'POST', body: formData });
@@ -60,7 +66,7 @@ export async function uploadCoverImage(data: Uint8Array, filename: string, token
   const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
 
   const formData = new FormData();
-  const blob = new Blob([data.buffer]);
+  const blob = new Blob([toBlobPart(data)]);
   formData.append('media', blob, filename);
 
   const res = await fetch(url, { method: 'POST', body: formData });
