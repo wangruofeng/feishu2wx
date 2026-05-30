@@ -23,6 +23,7 @@ const App: React.FC = () => {
   const savedAlignH1Left = localStorage.getItem('feishu2wx_alignH1Left') === 'true';
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
   const savedTableShadow = localStorage.getItem('feishu2wx_tableShadow') !== 'false';
+  const savedDarkMode = localStorage.getItem('feishu2wx_darkMode') as 'system' | 'light' | 'dark' || 'system';
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
@@ -50,6 +51,7 @@ const App: React.FC = () => {
   const [publishOpen, setPublishOpen] = useState<boolean>(false);
   const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
   const [publishHtml, setPublishHtml] = useState<string>('');
+  const [darkMode, setDarkMode] = useState<'system' | 'light' | 'dark'>(savedDarkMode);
 
   const copyStatusTimerRef = useRef<number | null>(null);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
@@ -104,6 +106,8 @@ const App: React.FC = () => {
       .then((data) => setWechatConfigured(data.configured))
       .catch(() => setWechatConfigured(false));
   }, []);
+
+  useEffect(() => { localStorage.setItem('feishu2wx_darkMode', darkMode); }, [darkMode]);
 
   const articleTitle = useMemo(() => {
     const h1Match = markdown.match(/^#\s+(.+)$/m);
@@ -207,8 +211,9 @@ const App: React.FC = () => {
     }
   }, [isFullscreen]);
 
-  const effectiveTheme = isSystemDark ? 'dark' : 'light';
-  const displayTheme = theme === 'light' || theme === 'dark' ? effectiveTheme : theme;
+  const isDark = darkMode === 'system' ? isSystemDark : darkMode === 'dark';
+  const displayTheme = theme === 'light' || theme === 'dark' ? (isDark ? 'dark' : 'light') : theme;
+  const wechatTheme = isDark ? 'dark' : displayTheme;
 
   const handleCopyToWeChat = useCallback(async () => {
     setIsCopying(true);
@@ -232,7 +237,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -243,7 +248,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
       }
 
       setCopyStatus({
@@ -289,7 +294,7 @@ const App: React.FC = () => {
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={`app theme-${displayTheme} ${isSystemDark ? 'system-dark' : 'system-light'}`}>
+    <div className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}`}>
       {/* 顶栏 */}
       <div className={`top-bar ${isFullscreen ? 'fullscreen-bar' : ''}`}>
         <span className="top-bar-brand" title="飞书文档转公众号排版一键排版工具，秒级完成排版，效率起飞还免费">feishu<span className="brand-accent">2wx</span></span>
@@ -359,6 +364,8 @@ const App: React.FC = () => {
               await deleteWechatConfig();
               setWechatConfigured(false);
             }}
+            darkMode={darkMode}
+            onDarkModeChange={setDarkMode}
           />
           {isFullscreen && (
             <button className="edit-toggle-btn" onClick={() => setIsFullscreen(false)}>
@@ -386,7 +393,7 @@ const App: React.FC = () => {
             className="publish-btn-top"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, displayTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1, imageBorderStyle, codeBlockStyle, invertH1);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}

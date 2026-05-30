@@ -4,7 +4,7 @@
 
 ## 项目概览
 
-`feishu2wx` 是一个纯前端 React 应用，用于将飞书（Lark）文档转换成微信公众号文章格式。用户可以粘贴飞书 HTML 或直接编写 Markdown，然后预览并复制公众号编辑器。
+`feishu2wx` 是一个 React 应用，用于将飞书文档转换成微信公众号文章格式。用户可以粘贴飞书 HTML 或直接编写 Markdown，然后预览并复制公众号编辑器，也可以配置公众号凭证后直接推送到微信草稿箱。
 
 ## 核心数据流
 
@@ -14,6 +14,11 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
                               renderMarkdown() → HTML Preview
                                               ↓
                               formatForWeChat() → Inline-styled HTML → Clipboard
+
+推送流程（需后端）：
+  前端 localStorage → POST /api/publish/draft { appId, appSecret, ... }
+                      ↓
+          Cloudflare Functions → 微信 API（access_token → 上传图片 → 创建草稿）
 ```
 
 关键职责：
@@ -21,10 +26,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `src/utils/htmlToMarkdown.ts`：飞书 HTML 转 Markdown
 - `src/utils/markdownRenderer.ts`：Markdown 转预览 HTML
 - `src/utils/wechatCopy.ts`：将预览 HTML 转为微信公众号兼容的内联样式 HTML 并复制
+- `src/utils/publishApi.ts`：推送草稿箱 API + localStorage 凭证管理
+- `functions/api/publish/draft.ts`：Cloudflare Function，代理微信草稿箱 API
+- `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传、创建草稿）
 
 ## 必须知道的约束
 
-- 这是纯前端项目，主要改动集中在 `src/`
+- 核心排版是前端项目，主要改动集中在 `src/`；推送草稿箱功能涉及 `functions/`（Cloudflare Functions）和 `server/lib/`（共享逻辑）
 - 微信公众号输出必须依赖内联样式，不能假设外部 CSS 生效
 - 代码块、列表、图片、表格、视频是高风险区域，改动后要重点验证
 - Task List（`- [x]` / `- [ ]`）通过 DOM 后处理实现（非 markdown-it 插件），在 `markdownRenderer.ts` 的 `renderMarkdown()` 中处理
@@ -35,6 +43,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），改主题时三处都要同步
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
+- 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储
 - 提交前会运行 Husky 检查：
   - `package.json` 版本号必须更新
   - 源码变更通常需要同步更新文档
@@ -43,6 +52,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 - 架构与渲染细节：[docs/claude/architecture.md](docs/claude/architecture.md)
 - 开发命令、测试、部署与提交流程：[docs/claude/development.md](docs/claude/development.md)
+- 部署说明（GitHub Pages + Cloudflare Pages）：[DEPLOY.md](DEPLOY.md)
 
 
 ## 行为准则

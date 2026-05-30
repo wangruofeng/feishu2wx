@@ -200,9 +200,9 @@ npm run deploy
 
 ---
 
-# Cloudflare Pages + Functions 部署（含后端 API）
+# Cloudflare Pages + Functions 部署（后端 API）
 
-如果要使用「推送到草稿箱」和「公众号配置」功能，需要将后端 API 一并部署到 Cloudflare Pages。
+如果要使用「推送到草稿箱」功能，需要将后端 API 部署到 Cloudflare Pages。
 
 ## 前置条件
 
@@ -211,27 +211,22 @@ npm run deploy
 
 ## 部署步骤
 
-### 1. 创建 KV Namespace
-
-```bash
-npm run cf:kv:create
-```
-
-将输出的 KV Namespace ID 填入 `wrangler.toml` 的 `id` 和 `preview_id`。
-
-### 2. 部署
+### 1. 部署
 
 ```bash
 npm run cf:deploy
 ```
 
-### 3. 配置环境变量
+### 2. 配置 GitHub Actions 环境变量
 
-在 Cloudflare Pages 控制台 → 项目 → Settings → Environment variables 中设置：
+GitHub Pages 构建时需要知道后端 API 地址，已在 `.github/workflows/deploy.yml` 中配置：
 
+```yaml
+env:
+  REACT_APP_API_URL: https://feishu2wx-b4h.pages.dev
 ```
-REACT_APP_API_URL= （留空，前端和后端同源部署）
-```
+
+如果使用自己的 Cloudflare 项目，将域名替换为自己的。
 
 ## 本地测试 Cloudflare 模式
 
@@ -243,11 +238,13 @@ npm run cf:dev
 
 ## 架构说明
 
-- `functions/` 目录中的 Cloudflare Pages Functions 处理 API 请求
-- 微信配置存储在 Cloudflare KV 中（而非本地文件系统）
-- `server/` 目录的 Express 服务器仅用于本地 `npm run dev` 开发模式
+- `functions/api/publish/draft.ts` — Cloudflare Function，处理推送到微信草稿箱
+- `server/lib/wechat-worker.ts` — 微信 API 封装（access_token、图片上传、创建草稿），与 Cloudflare Functions 共享
+- `server/lib/publish-handler.ts` — HTTP handler，前端提交的凭证（appId/appSecret）直接用于调用微信 API
+- 用户公众号凭证仅保存在浏览器 localStorage，不经过服务端存储
 
 ## 重要提示
 
 - GitHub Pages 部署的前端（无后端）排版功能不受影响，只是推送功能不可用
 - Cloudflare Pages 部署包含完整的前后端功能，推荐作为主要部署方式
+- 多用户使用：每个用户在前端输入自己的公众号凭证即可，凭证保存在浏览器本地，互不干扰

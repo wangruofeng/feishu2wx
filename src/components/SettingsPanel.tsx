@@ -25,6 +25,8 @@ interface Props {
   wechatConfigured: boolean;
   onSaveWechatConfig: (appId: string, appSecret: string) => Promise<{ success: boolean; error?: string }>;
   onDeleteWechatConfig: () => Promise<void>;
+  darkMode: 'system' | 'light' | 'dark';
+  onDarkModeChange: (mode: 'system' | 'light' | 'dark') => void;
 }
 
 const fonts = [
@@ -68,6 +70,8 @@ const SettingsPanel: React.FC<Props> = ({
   wechatConfigured,
   onSaveWechatConfig,
   onDeleteWechatConfig,
+  darkMode,
+  onDarkModeChange,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
@@ -193,6 +197,30 @@ const SettingsPanel: React.FC<Props> = ({
             onClick={codeBlockStyle === 'classic' ? onToggleCodeBlockStyle : undefined}
           >
             现代
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <label className="settings-label">深色模式</label>
+        <div className="settings-toggles">
+          <button
+            className={`settings-toggle ${darkMode === 'system' ? 'active' : ''}`}
+            onClick={() => onDarkModeChange('system')}
+          >
+            跟随系统
+          </button>
+          <button
+            className={`settings-toggle ${darkMode === 'light' ? 'active' : ''}`}
+            onClick={() => onDarkModeChange('light')}
+          >
+            浅色
+          </button>
+          <button
+            className={`settings-toggle ${darkMode === 'dark' ? 'active' : ''}`}
+            onClick={() => onDarkModeChange('dark')}
+          >
+            深色
           </button>
         </div>
       </div>
