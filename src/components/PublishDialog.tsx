@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { publishToDraft } from '../utils/publishApi';
 import { generateCover } from '../utils/coverCanvas';
+import { convertWebpToPng } from '../utils/helper';
 import './PublishDialog.css';
 
 interface Props {
@@ -27,9 +28,12 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, htmlContent }) =
       // 生成封面
       const coverDataUrl = await generateCover(coverUrl || undefined, htmlContent, articleTitle);
 
+      // 将 WebP 图片转为 PNG（微信 API 不支持 WebP）
+      const publishContent = await convertWebpToPng(htmlContent);
+
       const result = await publishToDraft({
         title: articleTitle,
-        content: htmlContent,
+        content: publishContent,
         author: author || undefined,
         coverDataUrl,
       });

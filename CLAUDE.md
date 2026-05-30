@@ -27,6 +27,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `src/utils/markdownRenderer.ts`：Markdown 转预览 HTML
 - `src/utils/wechatCopy.ts`：将预览 HTML 转为微信公众号兼容的内联样式 HTML 并复制
 - `src/utils/publishApi.ts`：推送草稿箱 API + localStorage 凭证管理
+- `src/utils/helper.ts`：工具函数（如 WebP 转 PNG）
 - `functions/api/publish/draft.ts`：Cloudflare Function，代理微信草稿箱 API
 - `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传、创建草稿）
 
@@ -38,6 +39,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - Task List（`- [x]` / `- [ ]`）通过 DOM 后处理实现（非 markdown-it 插件），在 `markdownRenderer.ts` 的 `renderMarkdown()` 中处理
 - 脚注通过 `markdown-it-footnote` 插件支持，样式分散在 `PreviewPane.css`（预览）和 `wechatCopy.ts`（微信输出）
 - 图片有 alt 时渲染为 `<figure>`（含 `<figcaption>`），无 alt 时为裸 `<img>`；微信输出的图片上下间距由外层块统一控制，不应在 `<img>` 上设置上下 margin
+- 微信推送 API 不支持 WebP 图片，推送前需在 `PublishDialog.tsx` 中用 `convertWebpToPng()` 转为 PNG
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
