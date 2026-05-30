@@ -265,11 +265,13 @@ const SettingsPanel: React.FC<Props> = ({
       <div className="settings-divider" />
 
       <div className="settings-section">
-        <label className="settings-label">公众号配置</label>
-        <div className="wechat-config-status">
+        <label className="settings-label wechat-config-label">
+          公众号配置
           {wechatConfigured && (
             <span className="wechat-config-badge wechat-config-badge--ok">已配置</span>
           )}
+        </label>
+        <div className="wechat-config-status">
           <button
             className="wechat-config-btn"
             onClick={() => setWechatDialogOpen(true)}

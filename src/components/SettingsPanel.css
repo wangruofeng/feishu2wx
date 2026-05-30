@@ -116,6 +116,12 @@
   margin: 14px 0;
 }
 
+.wechat-config-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .wechat-config-status {
   display: flex;
   align-items: center;

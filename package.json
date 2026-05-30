@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx",
-  "version": "1.15.2",
+  "version": "1.15.3",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
   "homepage": "/feishu2wx",
