@@ -64,7 +64,7 @@ const WechatConfigDialog: React.FC<Props> = ({ open, configured, onClose, onSave
 
         <div className="wc-dialog-body">
           <div className="wc-dialog-warning">
-            配置信息保存在本地服务器，不会上传到任何第三方。请前往
+            配置信息保存在浏览器本地，仅你自己可见。请前往
             <a href="https://mp.weixin.qq.com" target="_blank" rel="noopener noreferrer"> 微信公众平台 </a>
             获取 AppID 和 AppSecret。
           </div>

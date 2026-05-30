@@ -1,5 +1,5 @@
 import type { ConfigStore } from './config-store';
-import { getAccessToken, base64ToUint8Array, processContentImages, uploadCoverImage, createDraft } from './wechat-worker';
+import { getAccessToken, getAccessTokenFromCredentials, base64ToUint8Array, processContentImages, uploadCoverImage, createDraft } from './wechat-worker';
 import { jsonResponse } from './config-handlers';
 
 interface PublishBody {
@@ -7,23 +7,29 @@ interface PublishBody {
   content?: string;
   author?: string;
   coverDataUrl?: string;
+  appId?: string;
+  appSecret?: string;
 }
 
 export async function handlePublishDraft(store: ConfigStore, body: PublishBody): Promise<Response> {
   try {
-    const { title, content, author, coverDataUrl } = body;
+    const { title, content, author, coverDataUrl, appId, appSecret } = body;
 
     if (!title || !content) {
       return jsonResponse({ error: '标题和内容不能为空' }, 400);
     }
 
-    const config = await store.get();
-    if (!config) {
-      return jsonResponse({ error: '请先配置公众号 AppID 和 AppSecret' }, 400);
+    // 获取 access_token：优先使用请求体中的凭证（其他用户 localStorage），其次从 KV 读取（所有者）
+    let token: string;
+    if (appId && appSecret) {
+      token = await getAccessTokenFromCredentials(appId, appSecret);
+    } else {
+      const config = await store.get();
+      if (!config) {
+        return jsonResponse({ error: '请先配置公众号 AppID 和 AppSecret' }, 400);
+      }
+      token = await getAccessToken(store);
     }
-
-    // 获取一次 token，复用整次请求
-    const token = await getAccessToken(store);
 
     // 1. 处理文中图片
     const { html: processedContent, firstImageUrl } = await processContentImages(content, token);

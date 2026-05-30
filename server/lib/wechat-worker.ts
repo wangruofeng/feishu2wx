@@ -46,6 +46,18 @@ export async function getAccessToken(store: ConfigStore): Promise<string> {
   return data.access_token!;
 }
 
+export async function getAccessTokenFromCredentials(appId: string, appSecret: string): Promise<string> {
+  const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appId}&secret=${appSecret}`;
+  const res = await fetch(url);
+  const data = (await res.json()) as WechatTokenResponse;
+
+  if (data.errcode) {
+    throw new Error(`获取 access_token 失败: ${data.errmsg} (${data.errcode})`);
+  }
+
+  return data.access_token!;
+}
+
 async function uploadContentImage(data: Uint8Array, filename: string, token: string): Promise<string> {
   const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
 
