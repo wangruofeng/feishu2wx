@@ -1,9 +1,3 @@
 name = "feishu2wx"
 compatibility_date = "2025-08-01"
 pages_build_output_dir = "./build"
-
-# KV namespace for WeChat config storage
-[[kv_namespaces]]
-binding = "CONFIG_KV"
-id = "abd824867992480a9b6520577cbe73e0"
-preview_id = "abd824867992480a9b6520577cbe73e0"
