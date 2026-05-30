@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx",
-  "version": "1.14.2",
+  "version": "1.14.3",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
   "homepage": "/feishu2wx",
@@ -33,7 +33,7 @@
     "server": "ts-node --project server/tsconfig.json server/index.ts",
     "dev": "concurrently \"PORT=3100 npm start\" \"npm run server\"",
     "cf:dev": "concurrently \"PORT=3100 react-scripts start\" \"sleep 5 && wrangler pages dev --proxy 3100 \"",
-    "cf:deploy": "npm run build && wrangler pages deploy ./build --branch main",
+    "cf:deploy": "npm run build && npx wrangler pages deploy --branch main",
     "cf:kv:create": "npx wrangler kv namespace create CONFIG_KV && echo '' && echo '=== 请将输出的 ID 填入 wrangler.toml 中的 id 和 preview_id ==='",
     "pre-commit-check": "node scripts/pre-commit-check.js",
     "prepare": "test -x ./node_modules/.bin/husky && ./node_modules/.bin/husky || true",
