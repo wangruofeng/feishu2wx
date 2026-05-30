@@ -1,5 +1,18 @@
-import { handleGetConfig, handleSaveConfig, handleDeleteConfig } from '../../server/lib/config-handlers';
+import { handleGetConfig, handleSaveConfig, handleDeleteConfig, jsonResponse } from '../../server/lib/config-handlers';
 import { KVConfigStore } from '../../server/lib/config-kv';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export const onRequestOptions: PagesFunction<{ CONFIG_KV: KVNamespace }> = async () => {
+  return new Response(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
+};
 
 export const onRequestGet: PagesFunction<{ CONFIG_KV: KVNamespace }> = async (context) => {
   return handleGetConfig(new KVConfigStore(context.env.CONFIG_KV));
