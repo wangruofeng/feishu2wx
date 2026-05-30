@@ -1,5 +1,3 @@
-import type { ConfigStore } from './config-store';
-
 interface WechatTokenResponse {
   access_token?: string;
   expires_in?: number;
@@ -27,23 +25,6 @@ export function base64ToUint8Array(base64: string): Uint8Array {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
-}
-
-export async function getAccessToken(store: ConfigStore): Promise<string> {
-  const config = await store.get();
-  if (!config) {
-    throw new Error('请先配置公众号 AppID 和 AppSecret');
-  }
-
-  const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${config.appId}&secret=${config.appSecret}`;
-  const res = await fetch(url);
-  const data = (await res.json()) as WechatTokenResponse;
-
-  if (data.errcode) {
-    throw new Error(`获取 access_token 失败: ${data.errmsg} (${data.errcode})`);
-  }
-
-  return data.access_token!;
 }
 
 export async function getAccessTokenFromCredentials(appId: string, appSecret: string): Promise<string> {
