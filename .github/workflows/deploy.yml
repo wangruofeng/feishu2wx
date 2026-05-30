@@ -33,6 +33,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          REACT_APP_API_URL: https://feishu2wx-b4h.pages.dev
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
