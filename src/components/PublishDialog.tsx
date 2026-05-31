@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { publishToDraft } from '../utils/publishApi';
 import { generateCover } from '../utils/coverCanvas';
 import { convertWebpToPng } from '../utils/helper';
+import { Button } from './ui';
 import './PublishDialog.css';
 
 interface Props {
@@ -62,7 +63,7 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, htmlContent }) =
       <div className="publish-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="publish-header">
           <h3>推送到草稿箱</h3>
-          <button className="publish-close" onClick={onClose}>&times;</button>
+          <Button variant="publishClose" onClick={onClose} aria-label="关闭">&times;</Button>
         </div>
 
         <div className="publish-body">
@@ -112,16 +113,16 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, htmlContent }) =
         </div>
 
         <div className="publish-footer">
-          <button className="publish-btn publish-btn--cancel" onClick={onClose}>
+          <Button variant="publishBtnCancel" onClick={onClose}>
             取消
-          </button>
-          <button
-            className="publish-btn publish-btn--primary"
+          </Button>
+          <Button
+            variant="publishBtnPrimary"
             disabled={publishing}
             onClick={handlePublish}
           >
             {publishing ? '推送中...' : '推送到草稿箱'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Button } from './ui';
 import './ImageViewer.css';
 
 interface Props {
@@ -22,25 +23,27 @@ const ImageViewer: React.FC<Props> = ({ images, initialIndex, onClose }) => {
 
   return (
     <div className="image-viewer-overlay" onClick={onClose}>
-      <button className="image-viewer-close" onClick={onClose} title="关闭">
+      <Button variant="imageViewerClose" onClick={onClose} title="关闭">
         &times;
-      </button>
+      </Button>
       {images.length > 1 && (
         <div className="image-viewer-nav">
-          <button
-            className="image-viewer-arrow image-viewer-prev"
+          <Button
+            variant="imageViewerArrow"
+            className="image-viewer-prev"
             onClick={(e) => { e.stopPropagation(); setIndex((i) => (i - 1 + images.length) % images.length); }}
             title="上一张"
           >
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13,3 7,10 13,17" /></svg>
-          </button>
-          <button
-            className="image-viewer-arrow image-viewer-next"
+          </Button>
+          <Button
+            variant="imageViewerArrow"
+            className="image-viewer-next"
             onClick={(e) => { e.stopPropagation(); setIndex((i) => (i + 1) % images.length); }}
             title="下一张"
           >
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="7,3 13,10 7,17" /></svg>
-          </button>
+          </Button>
         </div>
       )}
       <img

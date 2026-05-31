@@ -4,6 +4,7 @@ import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
+import { Button } from './components/ui';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng } from './utils/wechatCopy';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
@@ -330,8 +331,9 @@ const App: React.FC = () => {
         </div>
 
         <div className="top-bar-right">
-          <button
-            className={`settings-trigger ${settingsOpen ? 'active' : ''}`}
+          <Button
+            variant="settingsTrigger"
+            active={settingsOpen}
             onClick={() => setSettingsOpen(!settingsOpen)}
             title="设置"
           >
@@ -346,7 +348,7 @@ const App: React.FC = () => {
                 d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-          </button>
+          </Button>
           <SettingsPanel
             font={font}
             setFont={setFont}
@@ -389,29 +391,29 @@ const App: React.FC = () => {
             onDarkModeChange={setDarkMode}
           />
           {isFullscreen && (
-            <button className="edit-toggle-btn" onClick={() => setIsFullscreen(false)}>
+            <Button className="exit-btn" onClick={() => setIsFullscreen(false)}>
               退出
-            </button>
+            </Button>
           )}
           {!showEditor && !isFullscreen && (
-            <button className="edit-toggle-btn" onClick={() => setShowEditor(true)}>
+            <Button onClick={() => setShowEditor(true)}>
               编辑
-            </button>
+            </Button>
           )}
           {showEditor && !isFullscreen && (
-            <button className="edit-toggle-btn" onClick={() => setShowEditor(false)}>
+            <Button onClick={() => setShowEditor(false)}>
               预览
-            </button>
+            </Button>
           )}
-          <button
-            className="copy-btn"
+          <Button
+            variant="primary"
             onClick={handleCopyToWeChat}
             disabled={isCopying || !markdown.trim()}
           >
             复制
-          </button>
-          <button
-            className="publish-btn-top"
+          </Button>
+          <Button
+            variant="outline"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
               const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
@@ -422,25 +424,27 @@ const App: React.FC = () => {
             title={!wechatConfigured ? '请先在设置中配置公众号' : '推送到草稿箱'}
           >
             推送
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* 移动端 Tab 切换栏 */}
       {!isFullscreen && (
         <div className="mobile-tab-bar">
-          <button
-            className={`mobile-tab ${mobileTab === 'edit' ? 'active' : ''}`}
+          <Button
+            variant="tab"
+            active={mobileTab === 'edit'}
             onClick={() => setMobileTab('edit')}
           >
             编辑
-          </button>
-          <button
-            className={`mobile-tab ${mobileTab === 'preview' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="tab"
+            active={mobileTab === 'preview'}
             onClick={() => setMobileTab('preview')}
           >
             预览
-          </button>
+          </Button>
         </div>
       )}
 

@@ -118,7 +118,7 @@
 
 /* 推送按钮 */
 .publish-btn-top {
-  padding: var(--space-2) var(--space-6);
+  padding: calc(var(--space-2) - 1px) calc(var(--space-6) - 1px);
   background: transparent;
   color: var(--color-brand);
   border: 1px solid var(--color-brand);
@@ -128,6 +128,8 @@
   font-weight: var(--font-weight-semibold);
   transition: var(--transition-normal);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 .publish-btn-top:hover:not(:disabled) {
@@ -156,6 +158,10 @@
 .edit-toggle-btn:hover {
   border-color: var(--color-brand);
   color: var(--color-brand);
+}
+
+.exit-btn {
+  padding: calc(var(--space-2) - 1px) calc(var(--space-6) - 1px);
 }
 
 /* ===== 主内容区 ===== */
@@ -314,6 +320,11 @@
     font-size: var(--font-size-xs);
   }
 
+  .publish-btn-top {
+    padding: 4px calc(var(--space-4) - 1px);
+    font-size: var(--font-size-xs);
+  }
+
   .settings-trigger {
     font-size: var(--font-size-lg);
   }
@@ -357,5 +368,9 @@
   .edit-toggle-btn {
     padding: var(--space-1) var(--space-3);
     font-size: var(--font-size-xs);
+  }
+
+  .exit-btn {
+    padding: 4px calc(var(--space-4) - 1px);
   }
 }

@@ -1,5 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
+import { Button } from './ui';
 import './EditorPane.css';
 
 interface Props {
@@ -263,20 +264,20 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
     <div className="editor-pane">
       {/* 顶部：格式工具栏 */}
       <div className="editor-toolbar">
-        <button onClick={() => insertMarkdown('# ', '')} title="标题1">H1</button>
-        <button onClick={() => insertMarkdown('## ', '')} title="标题2">H2</button>
-        <button onClick={() => insertMarkdown('### ', '')} title="标题3">H3</button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('# ', '')} title="标题1">H1</Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('## ', '')} title="标题2">H2</Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('### ', '')} title="标题3">H3</Button>
         <div className="toolbar-divider" />
-        <button onClick={() => insertMarkdown('**', '**')} title="粗体">B</button>
-        <button onClick={() => insertMarkdown('*', '*')} title="斜体"><i>I</i></button>
-        <button onClick={() => insertMarkdown('`', '`')} title="行内代码">Code</button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('**', '**')} title="粗体">B</Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('*', '*')} title="斜体"><i>I</i></Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('`', '`')} title="行内代码">Code</Button>
         <div className="toolbar-divider" />
-        <button onClick={() => insertMarkdown('- ', '')} title="无序列表">&#8226; List</button>
-        <button onClick={() => insertMarkdown('1. ', '')} title="有序列表">1. List</button>
-        <button onClick={() => insertMarkdown('> ', '')} title="引用">Quote</button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('- ', '')} title="无序列表">&#8226; List</Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('1. ', '')} title="有序列表">1. List</Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('> ', '')} title="引用">Quote</Button>
         <div className="toolbar-divider" />
-        <button onClick={() => insertMarkdown('[链接文本](', ')')} title="链接">Link</button>
-        <button onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('[链接文本](', ')')} title="链接">Link</Button>
+        <Button variant="editorToolbar" onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</Button>
       </div>
 
       {/* 中间：编辑区 */}
@@ -296,15 +297,15 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
 
       {/* 底部：文件操作 */}
       <div className="editor-footer">
-        <button className="editor-footer-btn" onClick={triggerFileInput} title="导入 Markdown 文件">
+        <Button variant="footer" onClick={triggerFileInput} title="导入 Markdown 文件">
           📂 导入
-        </button>
-        <button className="editor-footer-btn" onClick={onLoadExample}>
+        </Button>
+        <Button variant="footer" onClick={onLoadExample}>
           加载示例
-        </button>
-        <button className="editor-footer-btn" onClick={handleClear}>
+        </Button>
+        <Button variant="footer" onClick={handleClear}>
           清空
-        </button>
+        </Button>
         <span className="editor-stats">
           <strong>{markdown.split('\n').length.toLocaleString()}</strong> 行 · <strong>{markdown.length.toLocaleString()}</strong> 字符
         </span>

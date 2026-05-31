@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from './ui';
 import './WechatConfigDialog.css';
 
 interface Props {
@@ -59,7 +60,7 @@ const WechatConfigDialog: React.FC<Props> = ({ open, configured, onClose, onSave
       <div className="wc-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="wc-dialog-header">
           <span className="wc-dialog-title">公众号配置</span>
-          <button className="wc-dialog-close" onClick={handleClose}>✕</button>
+          <Button variant="wcDialogClose" onClick={handleClose}>✕</Button>
         </div>
 
         <div className="wc-dialog-body">
@@ -100,25 +101,25 @@ const WechatConfigDialog: React.FC<Props> = ({ open, configured, onClose, onSave
 
         <div className="wc-dialog-footer">
           {configured && (
-            <button
-              className="wc-dialog-btn wc-dialog-btn--danger"
-              onClick={handleDelete}
+            <Button
+              variant="wcDialogBtnDanger"
               disabled={deleting}
+              onClick={handleDelete}
             >
               {deleting ? '清除中...' : '清除配置'}
-            </button>
+            </Button>
           )}
           <div className="wc-dialog-footer-right">
-            <button className="wc-dialog-btn wc-dialog-btn--cancel" onClick={handleClose}>
+            <Button variant="wcDialogBtnCancel" onClick={handleClose}>
               取消
-            </button>
-            <button
-              className="wc-dialog-btn wc-dialog-btn--save"
+            </Button>
+            <Button
+              variant="wcDialogBtnSave"
               disabled={saving || !appId || !appSecret}
               onClick={handleSave}
             >
               {saving ? '保存中...' : '保存'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

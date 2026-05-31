@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fonts } from './FontSelector';
 import { getModernCodeBlockCssVars } from '../utils/codeBlockStyles';
+import { Button } from './ui';
 import ImageViewer from './ImageViewer';
 import './PreviewPane.css';
 
@@ -104,30 +105,32 @@ const PreviewPane: React.FC<Props> = ({
       <div className="preview-header">
         {onDeviceChange && (
           <>
-            <button
-              className={`preview-header-btn ${device === 'desktop' ? 'active' : ''}`}
+            <Button
+              variant="ghost"
+              active={device === 'desktop'}
               onClick={() => onDeviceChange('desktop')}
               title="电脑预览"
             >
               💻
-            </button>
-            <button
-              className={`preview-header-btn ${device === 'mobile' ? 'active' : ''}`}
+            </Button>
+            <Button
+              variant="ghost"
+              active={device === 'mobile'}
               onClick={() => onDeviceChange('mobile')}
               title="手机预览"
             >
               📱
-            </button>
+            </Button>
           </>
         )}
         {onToggleFullscreen && (
-          <button
-            className="preview-header-btn"
+          <Button
+            variant="ghost"
             onClick={onToggleFullscreen}
             title={isFullscreen ? '退出全屏' : '全屏预览'}
           >
             {isFullscreen ? '✕' : '⛶'}
-          </button>
+          </Button>
         )}
       </div>
       <div className="preview-content-wrapper">

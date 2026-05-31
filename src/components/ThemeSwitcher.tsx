@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from './ui';
 import './ThemeSwitcher.css';
 
 interface Props {
@@ -18,7 +19,7 @@ const ThemeIcon: React.FC<ThemeIconProps> = ({ color }) => (
 
 const themes = [
   { key: 'classic', name: '经典', icon: <ThemeIcon color="#555" /> },
-  { key: 'orange', name: '橙色', icon: <ThemeIcon color="#EA580C" /> },
+  { key: 'orange', name: '橙色', icon: <ThemeIcon color="#C96442" /> },
   { key: 'blue', name: '蓝色', icon: <ThemeIcon color="#0F4C81" /> },
   { key: 'teal', name: '青绿', icon: <ThemeIcon color="#0D9488" /> },
 ];
@@ -27,15 +28,16 @@ const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme }) => {
   return (
     <div className="theme-switcher">
       {themes.map((t) => (
-        <button
+        <Button
           key={t.key}
-          className={`theme-option ${theme === t.key ? 'active' : ''}`}
+          variant="themeOption"
+          active={theme === t.key}
           onClick={() => setTheme(t.key)}
           title={t.name}
         >
           <span className="theme-icon">{t.icon}</span>
           <span className="theme-name">{t.name}</span>
-        </button>
+        </Button>
       ))}
     </div>
   );

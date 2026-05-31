@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
+import { Button } from './ui';
 import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
 
@@ -116,110 +117,110 @@ const SettingsPanel: React.FC<Props> = ({
       <div className="settings-section">
         <label className="settings-label">H1 样式</label>
         <div className="settings-toggles">
-          <button
-            className={`settings-toggle ${showH1 ? 'active' : ''}`}
+          <Button
+            variant="toggle" active={showH1}
             onClick={onToggleH1}
           >
             H1 底线
-          </button>
-          <button
-            className={`settings-toggle ${invertH1 ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={invertH1}
             onClick={onToggleInvertH1}
           >
             H1 反色
-          </button>
-          <button
-            className={`settings-toggle ${alignH1Left ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={alignH1Left}
             onClick={onToggleAlignH1Left}
           >
             {alignH1Left ? 'H1 左对齐' : 'H1 居中'}
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="settings-section">
         <label className="settings-label">H2 样式</label>
         <div className="settings-toggles">
-          <button
-            className={`settings-toggle ${invertH2 ? 'active' : ''}`}
+          <Button
+            variant="toggle" active={invertH2}
             onClick={onToggleInvertH2}
           >
             H2 反色
-          </button>
-          <button
-            className={`settings-toggle ${alignH2Left ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={alignH2Left}
             onClick={onToggleAlignH2Left}
           >
             {alignH2Left ? 'H2 左对齐' : 'H2 居中'}
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="settings-section">
         <label className="settings-label">分割线</label>
-        <button
-          className={`settings-toggle ${showHorizontalRule ? 'active' : ''}`}
+        <Button
+          variant="toggle" active={showHorizontalRule}
           onClick={onToggleHorizontalRule}
         >
           {showHorizontalRule ? '显示' : '隐藏'}
-        </button>
+        </Button>
       </div>
 
       <div className="settings-section">
         <label className="settings-label">表格阴影</label>
-        <button
-          className={`settings-toggle ${tableShadow ? 'active' : ''}`}
+        <Button
+          variant="toggle" active={tableShadow}
           onClick={onToggleTableShadow}
         >
           {tableShadow ? '显示' : '隐藏'}
-        </button>
+        </Button>
       </div>
 
       <div className="settings-section">
         <label className="settings-label">图片模式</label>
         <div className="settings-toggles">
-          <button
-            className={`settings-toggle ${imageBorderStyle === 'default' ? 'active' : ''}`}
+          <Button
+            variant="toggle" active={imageBorderStyle === 'default'}
             onClick={imageBorderStyle !== 'default' ? onToggleImageBorder : undefined}
           >
             默认
-          </button>
-          <button
-            className={`settings-toggle ${imageBorderStyle === 'border' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={imageBorderStyle === 'border'}
             onClick={imageBorderStyle !== 'border' ? onToggleImageBorder : undefined}
           >
             边框
-          </button>
-          <button
-            className={`settings-toggle ${imageBorderStyle === 'shadow' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={imageBorderStyle === 'shadow'}
             onClick={imageBorderStyle !== 'shadow' ? onToggleImageBorder : undefined}
           >
             阴影
-          </button>
-          <button
-            className={`settings-toggle ${imageBorderRadius ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={imageBorderRadius}
             onClick={onToggleImageBorderRadius}
           >
             圆角
-          </button>
+          </Button>
         </div>
       </div>
 
       <div className="settings-section">
         <label className="settings-label">代码块</label>
         <div className="settings-toggles">
-          <button
-            className={`settings-toggle ${codeBlockStyle === 'classic' ? 'active' : ''}`}
+          <Button
+            variant="toggle" active={codeBlockStyle === 'classic'}
             onClick={codeBlockStyle === 'modern' ? onToggleCodeBlockStyle : undefined}
           >
             极简
-          </button>
-          <button
-            className={`settings-toggle ${codeBlockStyle === 'modern' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={codeBlockStyle === 'modern'}
             onClick={codeBlockStyle === 'classic' ? onToggleCodeBlockStyle : undefined}
           >
             现代
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -241,24 +242,24 @@ const SettingsPanel: React.FC<Props> = ({
       <div className="settings-section">
         <label className="settings-label">深色模式</label>
         <div className="settings-toggles">
-          <button
-            className={`settings-toggle ${darkMode === 'system' ? 'active' : ''}`}
+          <Button
+            variant="toggle" active={darkMode === 'system'}
             onClick={() => onDarkModeChange('system')}
           >
             跟随系统
-          </button>
-          <button
-            className={`settings-toggle ${darkMode === 'light' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={darkMode === 'light'}
             onClick={() => onDarkModeChange('light')}
           >
             浅色
-          </button>
-          <button
-            className={`settings-toggle ${darkMode === 'dark' ? 'active' : ''}`}
+          </Button>
+          <Button
+            variant="toggle" active={darkMode === 'dark'}
             onClick={() => onDarkModeChange('dark')}
           >
             深色
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -272,12 +273,12 @@ const SettingsPanel: React.FC<Props> = ({
           )}
         </label>
         <div className="wechat-config-status">
-          <button
-            className="wechat-config-btn"
+          <Button
+            variant="wechatConfig"
             onClick={() => setWechatDialogOpen(true)}
           >
             {wechatConfigured ? '修改配置' : '去配置'}
-          </button>
+          </Button>
         </div>
       </div>
 

@@ -30,6 +30,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `src/utils/helper.ts`：工具函数（如 WebP 转 PNG）
 - `functions/api/publish/draft.ts`：Cloudflare Function，代理微信草稿箱 API
 - `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传、创建草稿）
+- `src/components/ui/Button.tsx`：统一按钮组件，所有 `<button>` 应从该组件导入，通过 `variant` 映射原始 CSS 类名
 
 ## 必须知道的约束
 

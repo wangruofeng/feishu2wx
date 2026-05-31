@@ -46,21 +46,29 @@ test('toggles h1 inverted style on preview content', () => {
   const previewContent = container.querySelector('.preview-content');
   expect(previewContent.className.includes('invert-h1')).toBe(false);
 
+  // 先打开设置面板
+  const settingsButton = container.querySelector('.settings-trigger');
+  act(() => {
+    settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  // 点击 "H1 反色" 按钮
   const invertButton = Array.from(container.querySelectorAll('button')).find((button) =>
-    button.textContent.includes('开启 H1 反显')
+    button.textContent.includes('H1 反色')
   );
 
   act(() => {
-    invertButton.click();
+    if (invertButton) invertButton.click();
   });
   expect(previewContent.className.includes('invert-h1')).toBe(true);
 
+  // 再次点击 "H1 反色" 按钮取消反显
   const resetButton = Array.from(container.querySelectorAll('button')).find((button) =>
-    button.textContent.includes('关闭 H1 反显')
+    button.textContent.includes('H1 反色')
   );
 
   act(() => {
-    resetButton.click();
+    if (resetButton) resetButton.click();
   });
   expect(previewContent.className.includes('invert-h1')).toBe(false);
 });

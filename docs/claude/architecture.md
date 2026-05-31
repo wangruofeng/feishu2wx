@@ -127,6 +127,10 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - H2 左对齐 / 居中对齐切换
 - 水平分割线显隐
 - 表格阴影显隐
+
+### UI 组件
+
+- `src/components/ui/Button.tsx`：统一按钮组件，通过 `variant` 属性映射项目中已有的 CSS 类名（如 `copy-btn`、`publish-btn-top` 等），不改变原始样式。所有 `<button>` 应从该组件导入。
 - 图片默认 / 边框 / 阴影模式切换
 - 代码块 极简 / 现代 切换
 
