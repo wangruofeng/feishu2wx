@@ -18,7 +18,13 @@ interface WechatDraftResponse {
   errmsg?: string;
 }
 
-type SupportedImageExtension = 'jpg' | 'png' | 'gif';
+type SupportedImageExtension = 'jpg' | 'png' | 'gif' | 'webp';
+type WechatUploadImage = {
+  data: Uint8Array;
+  ext: Exclude<SupportedImageExtension, 'webp'>;
+};
+
+const WECHAT_UPLOADIMG_MAX_BYTES = 1024 * 1024;
 
 export function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
@@ -35,12 +41,65 @@ function normalizeImageExtension(value: string | null | undefined): SupportedIma
   if (normalized.includes('png')) return 'png';
   if (normalized.includes('jpg') || normalized.includes('jpeg')) return 'jpg';
   if (normalized.includes('gif')) return 'gif';
+  if (normalized.includes('webp')) return 'webp';
   return null;
 }
 
 function getImageContentType(ext: SupportedImageExtension): string {
   if (ext === 'gif') return 'image/gif';
+  if (ext === 'webp') return 'image/webp';
   return ext === 'png' ? 'image/png' : 'image/jpeg';
+}
+
+function hasWebpSignature(data: Uint8Array): boolean {
+  return data.length >= 12
+    && data[0] === 82
+    && data[1] === 73
+    && data[2] === 70
+    && data[3] === 70
+    && data[8] === 87
+    && data[9] === 69
+    && data[10] === 66
+    && data[11] === 80;
+}
+
+async function normalizeWechatUploadImage(
+  data: Uint8Array,
+  ext: SupportedImageExtension
+): Promise<WechatUploadImage> {
+  if (ext !== 'webp' && !hasWebpSignature(data)) {
+    return { data, ext };
+  }
+
+  const { default: sharp } = await import('sharp');
+  const input = Buffer.from(data);
+  const image = sharp(input, { animated: true });
+  const metadata = await image.metadata();
+
+  if ((metadata.pages || 1) > 1) {
+    const widths = [800, 640, 512, 480, 420, 360, 300];
+
+    for (const width of widths) {
+      const gif = await sharp(input, { animated: true })
+        .resize({
+          width,
+          height: width,
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .gif({ colours: 128, effort: 10 })
+        .toBuffer();
+
+      if (gif.length <= WECHAT_UPLOADIMG_MAX_BYTES) {
+        return { data: new Uint8Array(gif), ext: 'gif' };
+      }
+    }
+
+    throw new Error('动态 WebP 转 GIF 后仍超过微信正文图片大小限制，请压缩动图后重试');
+  }
+
+  const png = await sharp(input).png().toBuffer();
+  return { data: new Uint8Array(png), ext: 'png' };
 }
 
 function toBlobPart(data: Uint8Array): Uint8Array<ArrayBuffer> {
@@ -176,7 +235,13 @@ export async function processContentImages(html: string, token: string): Promise
         if (dataMatch) {
           const ext = normalizeImageExtension(dataMatch[1]) || 'jpg';
           const imgData = base64ToUint8Array(dataMatch[2]);
-          const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token, getImageContentType(ext));
+          const uploadImage = await normalizeWechatUploadImage(imgData, ext);
+          const wechatUrl = await uploadContentImage(
+            uploadImage.data,
+            `image.${uploadImage.ext}`,
+            token,
+            getImageContentType(uploadImage.ext)
+          );
           return { originalUrl, wechatUrl };
         }
       } catch (e) {
@@ -195,7 +260,13 @@ export async function processContentImages(html: string, token: string): Promise
       const ext = normalizeImageExtension(imgRes.headers.get('content-type'))
         || normalizeImageExtension(extFromUrl)
         || 'jpg';
-      const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token, getImageContentType(ext));
+      const uploadImage = await normalizeWechatUploadImage(imgData, ext);
+      const wechatUrl = await uploadContentImage(
+        uploadImage.data,
+        `image.${uploadImage.ext}`,
+        token,
+        getImageContentType(uploadImage.ext)
+      );
       return { originalUrl, wechatUrl };
     } catch (e) {
       console.error(`上传图片失败 (${originalUrl}):`, e);

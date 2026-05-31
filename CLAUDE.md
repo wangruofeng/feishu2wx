@@ -30,7 +30,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `src/utils/helper.ts`：工具函数（内容感知 WebP 检测，检查文件签名 RIFF/WEBP 和 HTTP Content-Type，不依赖 URL 后缀）
 - `src/utils/helper.test.js`：helper 工具函数单元测试
 - `functions/api/publish/draft.ts`：Cloudflare Function，代理微信草稿箱 API
-- `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传（MIME type 正确设置，优先用 HTTP 响应头检测类型）、创建草稿）
+- `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传（WebP 上传前归一化为 PNG/GIF，MIME type 正确设置，优先用 HTTP 响应头检测类型）、创建草稿）
 - `src/components/ui/Button.tsx`：统一按钮组件，所有 `<button>` 应从该组件导入，通过 `variant` 映射原始 CSS 类名
 
 ## 必须知道的约束
@@ -41,7 +41,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - Task List（`- [x]` / `- [ ]`）通过 DOM 后处理实现（非 markdown-it 插件），在 `markdownRenderer.ts` 的 `renderMarkdown()` 中处理
 - 脚注通过 `markdown-it-footnote` 插件支持，样式分散在 `PreviewPane.css`（预览）和 `wechatCopy.ts`（微信输出）
 - 图片有 alt 时渲染为 `<figure>`（含 `<figcaption>`），无 alt 时为裸 `<img>`；微信输出的图片上下间距由外层块统一控制，不应在 `<img>` 上设置上下 margin
-- 微信推送 API 不支持 WebP 图片，推送前在 `PublishDialog.tsx` 中调用 `convertWebpToPng()` 转为 PNG；该函数通过文件签名（RIFF/WEBP）和 HTTP Content-Type 检测 WebP，不依赖 URL 后缀，防止误判伪装后缀的图片
+- WebP 图片在服务端上传微信 API 前归一化：静态 WebP 转 PNG，动态 WebP 转 GIF，以兼容微信正文图上传并保留动图；前端 `convertWebpToPng()` 保留为备用工具函数
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
