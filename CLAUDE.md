@@ -45,7 +45,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
-- 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），改主题时三处都要同步
+- 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），ThemeSwitcher 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储

@@ -47,6 +47,14 @@ function greet(name) {
 
 ![示例图片](https://img1.baidu.com/it/u=352739982,3234821554&fm=253&app=138&f=JPEG?w=500&h=857)
 
+![jpeg 静图](https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1200)
+
+![gif 图片](https://img.soogif.com/4Gqn7FD7yosx2oaLbxp4zz7VyuwHpxhL.gif)
+
+![webp 动图](https://upload.wikimedia.org/wikipedia/commons/0/0b/AnimatedWebPSample.webp)
+
+![webp 静图](https://www.gstatic.com/webp/gallery/1.webp)
+
 ## 表格示例
 
 | 列1 | 列2 | 列3 |
