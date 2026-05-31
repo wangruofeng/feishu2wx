@@ -35,7 +35,7 @@ export async function handlePublishDraft(body: PublishBody): Promise<Response> {
       if (matches) {
         const ext = matches[1] === 'png' ? 'png' : 'jpg';
         const data = base64ToUint8Array(matches[2]);
-        thumbMediaId = await uploadCoverImage(data, `cover.${ext}`, token);
+        thumbMediaId = await uploadCoverImage(data, `cover.${ext}`, token, ext === 'png' ? 'image/png' : 'image/jpeg');
       } else {
         return jsonResponse({ error: '封面图格式无效' }, 400);
       }

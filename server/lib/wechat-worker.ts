@@ -18,6 +18,8 @@ interface WechatDraftResponse {
   errmsg?: string;
 }
 
+type SupportedImageExtension = 'jpg' | 'png' | 'gif';
+
 export function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -25,6 +27,20 @@ export function base64ToUint8Array(base64: string): Uint8Array {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
+}
+
+function normalizeImageExtension(value: string | null | undefined): SupportedImageExtension | null {
+  const normalized = value?.toLowerCase();
+  if (!normalized) return null;
+  if (normalized.includes('png')) return 'png';
+  if (normalized.includes('jpg') || normalized.includes('jpeg')) return 'jpg';
+  if (normalized.includes('gif')) return 'gif';
+  return null;
+}
+
+function getImageContentType(ext: SupportedImageExtension): string {
+  if (ext === 'gif') return 'image/gif';
+  return ext === 'png' ? 'image/png' : 'image/jpeg';
 }
 
 function toBlobPart(data: Uint8Array): Uint8Array<ArrayBuffer> {
@@ -65,11 +81,11 @@ export async function getAccessTokenFromCredentials(appId: string, appSecret: st
   return data.access_token!;
 }
 
-async function uploadContentImage(data: Uint8Array, filename: string, token: string): Promise<string> {
+async function uploadContentImage(data: Uint8Array, filename: string, token: string, contentType: string): Promise<string> {
   const url = `https://api.weixin.qq.com/cgi-bin/media/uploadimg?access_token=${token}`;
 
   const formData = new FormData();
-  const blob = new Blob([toBlobPart(data)]);
+  const blob = new Blob([toBlobPart(data)], { type: contentType });
   formData.append('media', blob, filename);
 
   const res = await fetch(url, { method: 'POST', body: formData });
@@ -82,11 +98,11 @@ async function uploadContentImage(data: Uint8Array, filename: string, token: str
   return result.url!;
 }
 
-export async function uploadCoverImage(data: Uint8Array, filename: string, token: string): Promise<string> {
+export async function uploadCoverImage(data: Uint8Array, filename: string, token: string, contentType?: string): Promise<string> {
   const url = `https://api.weixin.qq.com/cgi-bin/material/add_material?access_token=${token}&type=image`;
 
   const formData = new FormData();
-  const blob = new Blob([toBlobPart(data)]);
+  const blob = new Blob([toBlobPart(data)], contentType ? { type: contentType } : undefined);
   formData.append('media', blob, filename);
 
   const res = await fetch(url, { method: 'POST', body: formData });
@@ -158,9 +174,9 @@ export async function processContentImages(html: string, token: string): Promise
       try {
         const dataMatch = originalUrl.match(/^data:image\/(\w+);base64,(.+)$/);
         if (dataMatch) {
-          const ext = dataMatch[1] === 'png' ? 'png' : 'jpg';
+          const ext = normalizeImageExtension(dataMatch[1]) || 'jpg';
           const imgData = base64ToUint8Array(dataMatch[2]);
-          const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token);
+          const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token, getImageContentType(ext));
           return { originalUrl, wechatUrl };
         }
       } catch (e) {
@@ -175,8 +191,11 @@ export async function processContentImages(html: string, token: string): Promise
       if (!imgRes.ok) return { originalUrl, wechatUrl: null };
       const imgData = new Uint8Array(await imgRes.arrayBuffer());
       const urlObj = new URL(originalUrl);
-      const ext = urlObj.pathname.split('.').pop()?.split('?')[0] || 'jpg';
-      const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token);
+      const extFromUrl = urlObj.pathname.split('.').pop();
+      const ext = normalizeImageExtension(imgRes.headers.get('content-type'))
+        || normalizeImageExtension(extFromUrl)
+        || 'jpg';
+      const wechatUrl = await uploadContentImage(imgData, `image.${ext}`, token, getImageContentType(ext));
       return { originalUrl, wechatUrl };
     } catch (e) {
       console.error(`上传图片失败 (${originalUrl}):`, e);
