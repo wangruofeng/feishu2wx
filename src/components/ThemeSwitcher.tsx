@@ -18,7 +18,7 @@ const ThemeIcon: React.FC<ThemeIconProps> = ({ color }) => (
 );
 
 const themes = [
-  { key: 'classic', name: '经典', icon: <ThemeIcon color="#555" /> },
+  { key: 'classic', name: '经典', icon: <ThemeIcon color="#000000e6" /> },
   { key: 'orange', name: '橙色', icon: <ThemeIcon color="#C96442" /> },
   { key: 'blue', name: '蓝色', icon: <ThemeIcon color="#0F4C81" /> },
   { key: 'teal', name: '青绿', icon: <ThemeIcon color="#0D9488" /> },

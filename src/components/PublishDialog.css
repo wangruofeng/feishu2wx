@@ -114,6 +114,7 @@
   font-size: var(--font-size-xs);
   padding: 6px 10px;
   border-radius: var(--radius-lg);
+  white-space: pre-wrap;
 }
 
 .publish-msg--ok {
@@ -127,6 +128,15 @@
 }
 
 .publish-msg--ok a:hover {
+  text-decoration: underline;
+}
+
+.publish-msg--err a {
+  color: #3370FF;
+  text-decoration: none;
+}
+
+.publish-msg--err a:hover {
   text-decoration: underline;
 }
 

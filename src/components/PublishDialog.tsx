@@ -4,6 +4,17 @@ import { generateCover } from '../utils/coverCanvas';
 import { Button } from './ui';
 import './PublishDialog.css';
 
+/** 将文本中的 URL 转为可点击链接 */
+function linkify(text: string): React.ReactNode {
+  const parts = text.split(/(https?:\/\/[^\s]+)/);
+  if (parts.length === 1) return text;
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part)
+      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer">{part}</a>
+      : part
+  );
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -45,10 +56,10 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, htmlContent }) =
           ),
         });
       } else {
-        setMsg({ type: 'err', element: result.error || '推送失败' });
+        setMsg({ type: 'err', element: linkify(result.error || '推送失败') });
       }
     } catch (e) {
-      setMsg({ type: 'err', element: e instanceof Error ? e.message : '推送失败' });
+      setMsg({ type: 'err', element: linkify(e instanceof Error ? e.message : '推送失败') });
     } finally {
       setPublishing(false);
     }

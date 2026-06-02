@@ -299,6 +299,43 @@
   }
 }
 
+/* ===== 浮动操作按钮 ===== */
+.fab-group {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.fab-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-bg-white);
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-normal);
+}
+
+.fab-btn:hover {
+  background: var(--color-bg-white);
+  color: var(--color-brand);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+}
+
+.fab-btn:active {
+  transform: translateY(0);
+}
+
 /* ===== 响应式 ===== */
 @media (max-width: 768px) {
   .top-bar {

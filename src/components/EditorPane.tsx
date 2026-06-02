@@ -22,6 +22,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
+  const redoStackRef = useRef<HistoryEntry[]>([]);
   const isUndoRef = useRef(false);
 
   // 保存当前状态到历史
@@ -157,6 +158,12 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
         const history = historyRef.current;
         if (history.length === 0) return;
         const entry = history.pop()!;
+        // 保存当前状态到 redo 栈
+        redoStackRef.current.push({
+          content: markdown,
+          cursorStart: textareaRef.current?.selectionStart ?? 0,
+          cursorEnd: textareaRef.current?.selectionEnd ?? 0,
+        });
         isUndoRef.current = true;
         setMarkdown(entry.content);
         setTimeout(() => {
@@ -175,6 +182,9 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
       } else if (e.key === 'i') {
         e.preventDefault();
         toggleMarkdown('*', '*');
+      } else if (e.key === 'u') {
+        e.preventDefault();
+        toggleMarkdown('<u>', '</u>');
       } else if (e.key === 'k') {
         e.preventDefault();
         pushHistory();
@@ -206,6 +216,29 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
           }, 0);
         }
       }
+    }
+    // Cmd+Shift+Z 重做
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey && e.key === 'z') {
+      e.preventDefault();
+      const redoStack = redoStackRef.current;
+      if (redoStack.length === 0) return;
+      const entry = redoStack.pop()!;
+      // 保存当前状态回 undo 栈
+      historyRef.current.push({
+        content: markdown,
+        cursorStart: textareaRef.current?.selectionStart ?? 0,
+        cursorEnd: textareaRef.current?.selectionEnd ?? 0,
+      });
+      isUndoRef.current = true;
+      setMarkdown(entry.content);
+      setTimeout(() => {
+        const textarea = textareaRef.current;
+        if (textarea) {
+          textarea.setSelectionRange(entry.cursorStart, entry.cursorEnd);
+          textarea.focus();
+        }
+        isUndoRef.current = false;
+      }, 0);
     }
   }, [markdown, setMarkdown, toggleMarkdown, pushHistory]);
 

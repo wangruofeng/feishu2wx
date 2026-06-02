@@ -131,26 +131,26 @@
 /* ========== 经典主题 ========== */
 
 .theme-classic .preview-content {
-  --preview-primary-color: #555;
+  --preview-primary-color: #000000e6;
   background-color: #ffffff;
-  color: #555;
+  color: #000000e6;
 }
 
 .theme-classic .preview-content h1,
 .theme-classic .preview-content h2 {
-  border-bottom-color: #222;
-  color: #222;
+  border-bottom-color: #000000cc;
+  color: #000000cc;
 }
 
 .theme-classic .preview-content h3,
 .theme-classic .preview-content h4,
 .theme-classic .preview-content h5,
 .theme-classic .preview-content h6 {
-  color: #555;
+  color: #000000e6;
 }
 
 .theme-classic .preview-content blockquote {
-  border-left-color: #555;
+  border-left-color: #000000e6;
   background-color: #f5f5f5;
 }
 
@@ -164,29 +164,29 @@
 
 .theme-classic .preview-content table th {
   background-color: #f5f5f5;
-  color: #222;
+  color: #000000cc;
 }
 
 .theme-classic .preview-content hr.custom-hr,
 .theme-classic .preview-content hr.custom-hr::before,
 .theme-classic .preview-content hr.custom-hr::after {
-  color: #555;
+  color: #000000e6;
 }
 
 .theme-classic .toolbar-btn-primary {
-  background-color: #555;
-  border-color: #555;
+  background-color: #000000e6;
+  border-color: #000000e6;
   color: white;
 }
 
 .theme-classic .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: #777;
-  border-color: #777;
+  background-color: #000000b3;
+  border-color: #000000b3;
   color: #ccc;
 }
 
 .theme-classic .theme-option.active {
-  color: #555;
+  color: #000000e6;
 }
 
 

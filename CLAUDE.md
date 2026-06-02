@@ -49,6 +49,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储
+- 快捷键：`EditorPane.tsx` 管理编辑区快捷键（Cmd+B 加粗切换、Cmd+I 斜体切换、Cmd+U 下划线切换、Cmd+K 链接、Cmd+Z 撤销、Cmd+Shift+Z 重做），`App.tsx` 管理全局快捷键（Option+E 编辑/预览切换）；所有快捷键在 `ShortcutsDrawer` 组件中展示
+- 经典主题主色调为 `#000000e6`（90% 不透明黑），配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`）
 - 提交前会运行 Husky 检查：
   - `package.json` 版本号必须更新
   - 源码变更通常需要同步更新文档

@@ -4,6 +4,7 @@ import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
+import ShortcutsDrawer from './components/ShortcutsDrawer';
 import { Button } from './components/ui';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng } from './utils/wechatCopy';
@@ -59,6 +60,8 @@ const App: React.FC = () => {
   const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
   const [publishHtml, setPublishHtml] = useState<string>('');
   const [darkMode, setDarkMode] = useState<'system' | 'light' | 'dark'>(savedDarkMode);
+  const [shortcutsOpen, setShortcutsOpen] = useState<boolean>(false);
+  const [showBackTop, setShowBackTop] = useState<boolean>(false);
 
   const copyStatusTimerRef = useRef<number | null>(null);
   const previewScrollRef = useRef<HTMLDivElement | null>(null);
@@ -215,20 +218,25 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // 监听预览区滚动，控制回到顶部按钮显隐
+  useEffect(() => {
+    const preview = previewScrollRef.current;
+    if (!preview) return;
+    const handleScroll = () => {
+      setShowBackTop(preview.scrollTop > preview.clientHeight);
+    };
+    preview.addEventListener('scroll', handleScroll, { passive: true });
+    return () => preview.removeEventListener('scroll', handleScroll);
+  }, [html]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
         setIsFullscreen(false);
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+      if (e.altKey && e.code === 'KeyE' && !isMobile && !isFullscreen) {
         e.preventDefault();
-        setIsFullscreen((prev) => !prev);
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-        e.preventDefault();
-        if (!isMobile && !isFullscreen) {
-          setShowEditor((prev) => !prev);
-        }
+        setShowEditor((prev) => !prev);
       }
     };
 
@@ -493,6 +501,37 @@ const App: React.FC = () => {
         onClose={() => setPublishOpen(false)}
         title={articleTitle}
         htmlContent={publishHtml}
+      />
+
+      {/* 浮动操作按钮 */}
+      <div className="fab-group">
+        {showBackTop && <button
+          className="fab-btn"
+          onClick={() => {
+            const preview = previewScrollRef.current;
+            if (preview) {
+              preview.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }}
+          title="回到顶部"
+        >
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+            <path fillRule="evenodd" d="M8 1a.75.75 0 01.75.75v10.69l2.72-2.72a.75.75 0 111.06 1.06l-4 4a.75.75 0 01-1.06 0l-4-4a.75.75 0 111.06-1.06l2.72 2.72V1.75A.75.75 0 018 1z" transform="rotate(180 8 8)" />
+          </svg>
+        </button>}
+        <button
+          className="fab-btn"
+          onClick={() => setShortcutsOpen(true)}
+          title="快捷键"
+        >
+          <strong>?</strong>
+        </button>
+      </div>
+
+      {/* 快捷键抽屉 */}
+      <ShortcutsDrawer
+        open={shortcutsOpen}
+        onClose={() => setShortcutsOpen(false)}
       />
     </div>
   );

@@ -134,7 +134,10 @@ export async function getAccessTokenFromCredentials(appId: string, appSecret: st
   const data = (await res.json()) as WechatTokenResponse;
 
   if (data.errcode) {
-    throw new Error(`获取 access_token 失败: ${data.errmsg} (${data.errcode})`);
+    const hint = (data.errcode === 40164 || /invalid\s*ip|ip.*white/i.test(data.errmsg || ''))
+      ? `\n\n请在微信公众平台 → 我的业务与服务 → 基本信息 → API IP白名单 中添加服务器 IP。\n配置地址：https://developers.weixin.qq.com/`
+      : '';
+    throw new Error(`获取 access_token 失败: ${data.errmsg} (${data.errcode})${hint}`);
   }
 
   return data.access_token!;
