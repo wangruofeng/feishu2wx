@@ -31,7 +31,7 @@
 - ⛶ **全屏预览** - 支持全屏预览模式，内容居中显示（60%宽度），电脑预览和手机预览模式优化，移除多余间隙，保持圆角样式
 - 📝 **Markdown 工具栏** - 快速插入标题、列表、链接等常见元素
 - 📋 **一键复制** - 一键复制格式化后的内容到微信公众号编辑器，保留所有样式
-- ⌨️ **编辑器快捷键** - 支持 Ctrl/Cmd+B（粗体）、Ctrl/Cmd+I（斜体）、Ctrl/Cmd+K（链接）、Ctrl/Cmd+Z（自定义撤销，50 步历史）
+- ⌨️ **编辑器快捷键** - 支持 Ctrl/Cmd+B（粗体）、Ctrl/Cmd+I（斜体）、Ctrl/Cmd+U（下划线）、Ctrl/Cmd+K（链接）、Ctrl/Cmd+Z（自定义撤销，50 步历史）
 - 👁️ **H1 底线切换** - 可隐藏/显示 H1 标题底部横线，满足不同排版需求
 - 🏷️ **H1 反显切换** - 可为 H1 标题开启主色背景反显，背景宽度随文本自适应，复制公众号后保持居中
 - 🖼️ **图片样式切换** - 支持边框模式和阴影模式，灵活调整图片视觉效果
@@ -83,6 +83,8 @@ npm run dev
    - 在左侧编辑区域粘贴（Ctrl+V / Cmd+V）
    - 系统会自动将 HTML 格式转换为 Markdown
    - 如果复制来源是渲染后的 Markdown 页面，而 `text/plain` 已经丢失 Markdown 语法，编辑器会优先根据剪贴板中的 HTML 结构还原标题、列表和代码块
+   - 粘贴检测逻辑在 `src/utils/pasteDetection.ts` 中实现，支持飞书/Lark 标记、HTML 表格、渲染后 Markdown 等多种检测条件
+   - 如果遇到来源 HTML 中包含 `data-lark`、`larksuite`、`feishu.cn` 等关键词导致误判，可以在设置面板里关闭“智能 HTML 转 Markdown”
 
 2. **编辑 Markdown**
 
@@ -144,23 +146,32 @@ npm run dev
 
 11. **图片样式切换**
 
-    - 点击"边框模式"按钮可切换为图片边框样式
-    - 点击"阴影模式"按钮可切换为图片阴影样式
-    - 边框模式：图片带有淡灰色边框（0.5px #e0e0e0）
-    - 阴影模式：图片带有柔和阴影效果
-    - 此设置会影响预览和复制公众号的效果
+   - 点击"边框模式"按钮可切换为图片边框样式
+   - 点击"阴影模式"按钮可切换为图片阴影样式
+   - 边框模式：图片带有淡灰色边框（0.5px #e0e0e0）
+   - 阴影模式：图片带有柔和阴影效果
+   - 此设置会影响预览和复制公众号的效果
 
 12. **表格阴影切换**
 
-    - 在设置面板中切换表格阴影显示/隐藏
+   - 在设置面板中切换表格阴影显示/隐藏
 
 14. **配置公众号（推送草稿箱）**
 
-    - 点击右上角设置按钮 → 点击"去配置"按钮
-    - 输入微信公众号的 AppID 和 AppSecret（可在 [微信公众平台](https://mp.weixin.qq.com) 获取）
-    - 配置信息保存在浏览器本地，仅你自己可见
-    - 配置完成后，点击"推送"按钮可将文章直接推送到公众号草稿箱
-    - 支持设置文章标题、作者和封面图片
+   - 点击右上角设置按钮 → 点击"去配置"按钮
+   - 输入微信公众号的 AppID 和 AppSecret（可在 [微信公众平台](https://mp.weixin.qq.com) 获取）
+   - 配置信息保存在浏览器本地，仅你自己可见
+   - 配置完成后，点击"推送"按钮可将文章直接推送到公众号草稿箱
+   - 支持设置文章标题、作者和封面图片
+
+15. **复制到公众号**
+   - 编辑完成后，点击"复制"按钮，一键复制到公众号
+   - 如果在右侧预览区域**选中了部分内容**，将仅复制选中部分
+   - 如果**未选中任何内容**，则会复制整篇文章
+   - 打开微信公众号编辑器后，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴
+   - 主题、字体、代码高亮等样式会尽可能通过内联样式完整保留
+   - 微信导出默认使用保守标签子集：`p`、`span`、`strong/b`、`em/i`、`u`、`ul/ol/li`、`a`、`img`、`section`、`blockquote`、`h1-h6`、`table/tr/th/td`、`hr`、`sup/sub`
+   - `figure`、`figcaption`、复杂布局标签和脚本标签不作为微信稳定能力依赖，导出链路会优先降级或过滤
 
 ### 多用户使用
 
@@ -170,15 +181,6 @@ npm run dev
 - **各自配置**：每个用户可在设置中配置自己的公众号 AppID 和 AppSecret
 - **数据隔离**：凭证仅保存在各自浏览器本地，互不干扰，不经过任何服务器存储
 - **无需部署**：无需克隆项目或部署后端，开箱即用
-
-13. **复制公众号**
-   - 编辑完成后，点击"一键复制公众号"按钮
-   - 如果在右侧预览区域**选中了部分内容**，将仅复制选中部分
-   - 如果**未选中任何内容**，则会复制整篇文章
-   - 打开微信公众号编辑器后，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴
-   - 主题、字体、代码高亮等样式会尽可能通过内联样式完整保留
-   - 微信导出默认使用保守标签子集：`p`、`span`、`strong/b`、`em/i`、`u`、`ul/ol/li`、`a`、`img`、`section`、`blockquote`、`h1-h6`、`table/tr/th/td`、`hr`、`sup/sub`
-   - `figure`、`figcaption`、复杂布局标签和脚本标签不作为微信稳定能力依赖，导出链路会优先降级或过滤
 
 ### Markdown 工具栏
 
@@ -196,7 +198,7 @@ npm run dev
 
 **Markdown 语法：**
 - **H1, H2, H3** - 插入标题
-- **B, I** - 粗体、斜体
+- **B, I, U** - 粗体、斜体、下划线
 - **Code** - 行内代码（渲染后显示为加粗）
 - **• List, 1. List** - 无序列表、有序列表
 - **Quote** - 引用块
@@ -230,7 +232,7 @@ npm run dev
 
 清新蓝色风格，适合商务、专业类文章
 
-### 绿意主题 🌿
+### 青绿主题 💚
 
 清新绿色风格，适合科技类、自然类文章
 
@@ -262,16 +264,26 @@ feishu2wx/
 │   │   ├── FontSelector.tsx       # 字体选择器
 │   │   ├── DevicePreviewToggle.tsx # 设备预览切换
 │   │   ├── SettingsPanel.tsx      # 排版设置面板
-│   │   └── Toolbar.tsx            # 工具栏
+│   │   ├── Toolbar.tsx            # 工具栏
+│   │   ├── ShortcutsDrawer.tsx    # 快捷键抽屉面板
+│   │   ├── ImageViewer.tsx        # 图片查看器
+│   │   ├── PublishDialog.tsx      # 推送对话框
+│   │   └── WechatConfigDialog.tsx # 公众号配置对话框
 │   ├── data/                # 数据文件
 │   │   └── example.ts             # 示例 Markdown 内容
 │   ├── utils/              # 工具函数
 │   │   ├── htmlToMarkdown.ts      # HTML 转 Markdown
 │   │   ├── markdownRenderer.ts    # Markdown 渲染
 │   │   ├── wechatCopy.ts          # 微信公众号复制
-│   │   └── codeBlockStyles.ts     # modern 代码块样式参数
+│   │   ├── codeBlockStyles.ts     # modern 代码块样式参数
+│   │   ├── pasteDetection.ts      # 智能粘贴检测
+│   │   ├── publishApi.ts          # 推送草稿箱 API
+│   │   ├── wechatTagWhitelist.ts  # 微信标签白名单
+│   │   ├── coverCanvas.ts         # 封面图生成
+│   │   └── helper.ts              # 工具函数
 │   ├── styles/             # 样式文件
-│   │   └── themes.css      # 主题样式
+│   │   ├── themes.css      # 主题样式
+│   │   └── tokens.css      # 设计 Token
 │   ├── types/              # 类型声明
 │   ├── App.tsx             # 主应用组件
 │   ├── App.css             # 主应用样式

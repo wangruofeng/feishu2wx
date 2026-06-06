@@ -90,7 +90,11 @@
 | `markdownRenderer.ts` | Markdown 转预览 HTML（markdown-it + highlight.js） |
 | `wechatCopy.ts` | 预览 HTML 转微信兼容内联样式 HTML 并复制 |
 | `codeBlockStyles.ts` | Modern 代码块的共享样式参数 |
+| `pasteDetection.ts` | 智能粘贴检测（飞书标记、HTML 表格、渲染后 Markdown） |
 | `publishApi.ts` | 推送草稿箱 API + localStorage 凭证管理 |
+| `wechatTagWhitelist.ts` | 微信兼容标签白名单定义 |
+| `coverCanvas.ts` | 封面图生成 |
+| `helper.ts` | 工具函数（WebP 检测等） |
 
 ### 组件结构
 
@@ -102,6 +106,7 @@ App.tsx            主容器，状态中心
 ├── ThemeSwitcher   主题切换（4 套主题）
 ├── FontSelector    字体选择（16 种字体）
 ├── SettingsPanel   设置面板（H1/H2 样式、图片、代码块、主题模式、公众号配置）
+├── ShortcutsDrawer  快捷键面板（格式、编辑、视图三组）
 ├── ImageViewer     图片查看器（键盘导航）
 ├── PublishDialog   推送对话框（标题、作者、封面）
 └── WechatConfigDialog  公众号配置对话框

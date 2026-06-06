@@ -65,6 +65,8 @@ npm run cf:dev
 
 - `src/utils/wechatCopy.test.js`：10 个测试用例，覆盖 H1 反显、代码块对齐、图片间距、modern 代码块样式、缩进空白保留等。
 - `src/App.test.js`：基础渲染测试。
+- `src/utils/pasteDetection.test.js`：粘贴检测测试，覆盖飞书标记、HTML 表格、渲染后 Markdown 检测等场景。
+- `src/utils/helper.test.js`：helper 工具函数测试。
 - `scripts/start-script.test.mjs`：启动脚本测试。
 
 运行测试：
@@ -115,9 +117,14 @@ npm run cli -- --user theme status
 
 ## 智能粘贴检测
 
-- 飞书/Lark 的 HTML 会按自定义规则转换为 Markdown。
+粘贴检测逻辑在 `src/utils/pasteDetection.ts` 中实现，`EditorPane` 调用 `shouldConvertPastedHtml()` 判断：
+
+- 飞书/Lark 的 HTML（含 `data-lark`、`larksuite`、`feishu.cn`、`docs.feishu`、`doc.feishu` 标记）会按自定义规则转换为 Markdown。
+- HTML 表格（`<table`）会直接转换。
+- 渲染后的 Markdown HTML（含 h1-h6、pre、blockquote 等标签）且纯文本不含 Markdown 语法时，会转换。
 - 编辑器中的纯 Markdown 会直接使用。
 - 其他来源会回退为纯文本处理。
+- 用户可在设置面板中关闭"智能 HTML 转 Markdown"开关。
 
 ## 配置注意事项
 

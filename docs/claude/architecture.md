@@ -57,13 +57,36 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 导出 `modernCodeBlockStyles` 常量对象，包含 modern 代码块所有样式参数（颜色、内边距、圆点尺寸等）。
 - 导出 `getModernCodeBlockCssVars()` 生成 CSS 自定义属性映射。
 
+### `src/utils/pasteDetection.ts`
+
+- 导出 `shouldConvertPastedHtml(htmlData, textData)` 判断粘贴内容是否需要走 HTML 转 Markdown。
+- 导出 `looksLikeMarkdownText(text)` 检测纯文本是否包含 Markdown 语法。
+- 内部函数 `looksLikeRenderedMarkdownHtml(html)` 检测 HTML 是否像渲染后的 Markdown。
+
+### `src/utils/publishApi.ts`
+
+- 推送草稿箱 API 封装：`fetchWechatConfig()`、`saveWechatConfig()`、`deleteWechatConfig()`、`publishToDraft()`。
+- 凭证保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端。
+
+### `src/utils/wechatTagWhitelist.ts`
+
+- 导出微信兼容标签白名单：`WECHAT_SAFE_HTML_TAGS`（稳定标签）、`WECHAT_UNSTABLE_HTML_TAGS`（不作为稳定依赖）、`WECHAT_UNSUPPORTED_HTML_TAGS`（不支持）。
+
+### `src/utils/coverCanvas.ts`
+
+- 导出 `generateCover()` 用于 `PublishDialog` 生成封面图片。
+
+### `src/utils/helper.ts`
+
+- 工具函数，包括内容感知 WebP 检测（检查文件签名 RIFF/WEBP 和 HTTP Content-Type，不依赖 URL 后缀）。
+
 ## 主题系统
 
-- 8 种命名主题：经典、绿意、紫色、橙色、粉色、蓝色、红色、青色，定义在 `src/styles/themes.css`。
-- `wechatCopy.ts` 内部额外定义了 `light` 和 `dark` 两种主题样式映射，供系统暗黑模式检测使用，但未暴露在 ThemeSwitcher UI 中。
+- 4 种命名主题：经典（`#000000e6`）、橙色、蓝色、青绿，定义在 `src/styles/themes.css`。
+- 暗黑模式独立于主题配色，通过 `.theme-dark` CSS 类覆盖设计 token 值实现，可在任意主题下启用。
+- `ThemeSwitcher.tsx` 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承。
 - 预览区通过 CSS 类（`theme-{name}`）应用主题。
 - 微信输出通过 `wechatCopy.ts` 中的内联样式映射注入。
-- 暗黑模式通过 `window.matchMedia('(prefers-color-scheme: dark)')` 实时检测（当前仅影响 CSS 类名 `system-dark` / `system-light`，不影响主题选择）。
 - 主题配置分散在 `ThemeSwitcher.tsx`（UI）、`wechatCopy.ts`（导出样式）、`styles/themes.css`（预览样式）三处。
 
 ## 字体系统
@@ -80,28 +103,43 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `showEditor`、`isFullscreen`、`device`
 - `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`
 - `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
-- `isSystemDark`、`isDarkMode`（手动深色/浅色主题切换）
+- `isSystemDark`、`darkMode`（`'system' | 'light' | 'dark'` 三态切换）
 - `copyStatus`（复制结果弹窗）
+- `shouldConvertPastedHtml`（智能 HTML 转 Markdown 开关）
+- `shortcutsOpen`（快捷键抽屉面板）
+- `showBackTop`（回到顶部按钮）
+- `publishOpen`、`publishHtml`（推送对话框）
+- `wechatConfigured`（公众号凭证状态）
 
 所有设置都会持久化到 localStorage（键名前缀 `feishu2wx_`）。预览 HTML 由 `markdown` 和渲染选项通过纯函数派生。
 
 ## 组件结构
 
 - `App.tsx`：主容器与状态中心，含顶部控制栏（字体、设备切换、全屏、主题、设置面板）。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、快捷键（B/I/K/Z）、自定义撤销（50 步历史）。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
 - `Toolbar.tsx`：底部工具栏（加载示例、清空、H1 底线、H1 反显、水平分割线、图片样式、代码块样式、一键复制）。
-- `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、绿意）。
+- `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
 - `FontSelector.tsx`：字体下拉选择器（16 种字体）。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换。
-- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、H2 样式（反色/对齐）、分割线、表格阴影、图片模式（默认/边框/阴影）、代码块样式的可视化配置。
+- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、H2 样式（反色/对齐）、分割线、表格阴影、图片模式（默认/边框/阴影）、代码块样式、智能 HTML 转 Markdown 开关的可视化配置。
 - `ImageViewer.tsx`：图片查看器，支持键盘左右切换预览区所有图片，底部显示序号。
+- `ShortcutsDrawer.tsx`：快捷键抽屉面板，展示所有键盘快捷键（格式、编辑、视图三组），支持 ESC 关闭和遮罩点击关闭。
+- `PublishDialog.tsx`：推送对话框（标题、作者、封面）。
+- `WechatConfigDialog.tsx`：公众号配置对话框。
 
 ## 关键行为
 
 ### 飞书 HTML 检测
 
-`EditorPane` 检查剪贴板 HTML 是否包含 `feishu`、`larksuite`、`feishu.cn`、`lark` 等标记，决定走 HTML 转 Markdown 还是直接保留纯文本。
+粘贴检测逻辑抽取到 `src/utils/pasteDetection.ts`，`EditorPane` 调用 `shouldConvertPastedHtml(htmlData, textData)` 判断是否将粘贴的 HTML 转为 Markdown。检测条件：
+
+1. Feishu/Lark 标记（`data-lark`、`larksuite`、`feishu.cn`、`docs.feishu`、`doc.feishu`）→ 直接转换。
+2. HTML 表格（`<table`）→ 直接转换。
+3. HTML 看起来像渲染后的 Markdown（含 `h1-h6`、`pre`、`blockquote`、`ul`、`ol`、`li`、`hr`），且纯文本不包含 Markdown 语法 → 转换。
+4. 其他情况 → 保留纯文本。
+
+用户可在设置面板中关闭"智能 HTML 转 Markdown"开关（`shouldConvertPastedHtml` 状态），回退为仅粘贴纯文本。
 
 ### 微信公众号兼容性约束
 
@@ -133,10 +171,15 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ### UI 组件
 
 - `src/components/ui/Button.tsx`：统一按钮组件，通过 `variant` 属性映射项目中已有的 CSS 类名（如 `copy-btn`、`publish-btn-top` 等），不改变原始样式。所有 `<button>` 应从该组件导入。
-- 图片默认 / 边框 / 阴影模式切换
-- 代码块 极简 / 现代 切换
+
+### 快捷键系统
+
+- 编辑区快捷键在 `EditorPane.tsx` 中实现：Cmd+B（加粗）、Cmd+I（斜体）、Cmd+U（下划线）、Cmd+K（链接）、Cmd+Z（撤销）、Cmd+Shift+Z（重做）。
+- 全局快捷键在 `App.tsx` 中实现：Option+E（编辑/预览切换）。
+- 所有快捷键在 `ShortcutsDrawer` 组件中展示，通过抽屉面板查看。
 
 ### 布局与排版规则
 
 - 标题、段落、列表和表格的间距都针对文章阅读体验与微信粘贴保真度做过调整。
 - 橙色主题的 H1 反显使用 `headingColor` 而非 `primaryColor` 作为背景色；H2 反显统一使用 `primaryColor`。
+- 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用。字体变量名为 `--font-sans`。
