@@ -1,4 +1,7 @@
-import { handlePublishDraft } from '../../../server/lib/publish-handler';
+import { createPublishDraftHandler } from '../../../server/lib/publish-handler';
+import * as wechat from '../../../server/lib/wechat-pages';
+
+const handlePublishDraft = createPublishDraftHandler(wechat);
 
 function getCorsOrigin(): string {
   return (globalThis as any).ALLOWED_ORIGIN || '*';

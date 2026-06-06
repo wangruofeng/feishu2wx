@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { handlePublishDraft } from '../lib/publish-handler';
+import { handlePublishDraft } from '../lib/publish-node';
 
 const router = Router();
 

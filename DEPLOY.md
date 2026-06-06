@@ -239,7 +239,8 @@ npm run cf:dev
 ## 架构说明
 
 - `functions/api/publish/draft.ts` — Cloudflare Function，处理推送到微信草稿箱
-- `server/lib/wechat-worker.ts` — 微信 API 封装（access_token、图片上传、创建草稿），与 Cloudflare Functions 共享
+- `server/lib/wechat-pages.ts` — Cloudflare Function 使用的微信 API 封装，不依赖 Node 原生图片处理库
+- `server/lib/wechat-worker.ts` — Node/CLI 使用的微信 API 封装，支持通过 `sharp` 做 WebP 归一化
 - `server/lib/publish-handler.ts` — HTTP handler，前端提交的凭证（appId/appSecret）直接用于调用微信 API
 - 用户公众号凭证仅保存在浏览器 localStorage，不经过服务端存储
 
@@ -247,4 +248,5 @@ npm run cf:dev
 
 - GitHub Pages 部署的前端（无后端）排版功能不受影响，只是推送功能不可用
 - Cloudflare Pages 部署包含完整的前后端功能，推荐作为主要部署方式
+- Cloudflare Pages Functions 暂不支持正文 WebP 图片归一化；推送前请先将 WebP 转为 PNG/GIF，本地 Node/CLI 模式不受影响
 - 多用户使用：每个用户在前端输入自己的公众号凭证即可，凭证保存在浏览器本地，互不干扰

@@ -62,7 +62,7 @@ function inlineLocalImages(html, baseDir) {
 
 async function publishDraftWithCredentials(params) {
   registerTypeScript();
-  const { handlePublishDraft } = require('../../server/lib/publish-handler.ts');
+  const { handlePublishDraft } = require('../../server/lib/publish-node.ts');
   const response = await handlePublishDraft(params);
   const data = await response.json();
 
