@@ -91,6 +91,7 @@ npm start
 
    - 使用 Markdown 格式：`![图片描述](图片URL)`
    - 图片需要是公开可访问的 URL
+   - 预览层会保留语义化图片结构；复制到公众号时，带说明文字的图片会自动降级为更稳妥的 `section + img + p` 结构，避免依赖 `figure/figcaption`
 
 4. **切换主题**
 
@@ -163,7 +164,7 @@ npm start
 
 本工具支持多用户共用同一个在线版本：
 
-- **访问地址**：直接使用 [blog.wangruofeng007.com/feishu2wx/](https://blog.wangruofeng007.com/feishu2wx/)
+- **访问地址**：直接使用在线版本（替换为你的部署地址）
 - **各自配置**：每个用户可在设置中配置自己的公众号 AppID 和 AppSecret
 - **数据隔离**：凭证仅保存在各自浏览器本地，互不干扰，不经过任何服务器存储
 - **无需部署**：无需克隆项目或部署后端，开箱即用
@@ -174,6 +175,8 @@ npm start
    - 如果**未选中任何内容**，则会复制整篇文章
    - 打开微信公众号编辑器后，按 Ctrl+V (Windows) 或 Cmd+V (Mac) 粘贴
    - 主题、字体、代码高亮等样式会尽可能通过内联样式完整保留
+   - 微信导出默认使用保守标签子集：`p`、`span`、`strong/b`、`em/i`、`u`、`ul/ol/li`、`a`、`img`、`section`、`blockquote`、`h1-h6`、`table/tr/th/td`、`hr`、`sup/sub`
+   - `figure`、`figcaption`、复杂布局标签和脚本标签不作为微信稳定能力依赖，导出链路会优先降级或过滤
 
 ### Markdown 工具栏
 
@@ -336,7 +339,7 @@ npm run build
 3. **查看部署状态**
    - 在 GitHub 仓库中，点击 "Actions" 标签页
    - 查看部署工作流的执行状态
-   - 部署成功后，访问 `https://wangruofeng.github.io/feishu2wx`
+   - 部署成功后，访问 `https://你的用户名.github.io/你的仓库名`
 
 ### 方式二：使用 gh-pages 手动部署
 
@@ -417,6 +420,38 @@ PORT=3001 react-scripts start
 - 如果语言识别失败，会显示为 "CODE" 标签
 - 代码块使用深色主题（Atom One Dark），提供更好的代码阅读体验
 - 行内代码会显示为加粗样式，便于区分
+
+## 🔒 安全说明
+
+### 公众号凭证存储
+
+公众号 AppID 和 AppSecret **仅保存在用户浏览器的 localStorage 中**，不经过任何服务端持久化存储。每次推送草稿箱时，凭证随请求发送到后端，后端仅用于调用微信 API，不做存储。
+
+### 自托管安全建议
+
+如果你计划自托管本项目，请注意以下安全配置：
+
+1. **限制 CORS 来源**：通过环境变量 `ALLOWED_ORIGIN` 设置允许的前端域名，避免使用默认的 `*`（允许所有来源）。例如：
+   ```bash
+   # Cloudflare Pages 环境变量
+   ALLOWED_ORIGIN=https://your-domain.com
+   ```
+
+2. **使用 HTTPS**：确保你的部署地址使用 HTTPS，防止凭证在传输中被截获。
+
+3. **IP 白名单**：在微信公众平台 → 设置与开发 → 基本配置 中，将你的服务器 IP 添加到白名单。
+
+4. **Cloudflare 部署**：推荐使用 Cloudflare Pages 部署，API 请求通过 Cloudflare Functions 代理，无需自建服务器，减少攻击面。
+
+### 前端凭证模型
+
+推送草稿箱流程中，AppSecret 存在于：
+- **浏览器 localStorage**（用户主动输入后保存）
+- **到后端的 HTTPS 请求体**（仅推送时发送）
+
+这意味着你的后端代理会短暂接触到 AppSecret。在自托管场景下，后端是你自己控制的，这是可接受的。但请确保：
+- 不要在公共网络上部署不加密的后端
+- 不要将包含凭证的日志输出到公共位置
 
 ## 📄 许可证
 

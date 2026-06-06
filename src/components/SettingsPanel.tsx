@@ -7,8 +7,8 @@ import './SettingsPanel.css';
 interface Props {
   font: string;
   setFont: (font: string) => void;
-  showH1: boolean;
-  onToggleH1: () => void;
+  showH1Underline: boolean;
+  onToggleH1Underline: () => void;
   invertH1: boolean;
   onToggleInvertH1: () => void;
   alignH1Left: boolean;
@@ -58,8 +58,8 @@ const fonts = [
 const SettingsPanel: React.FC<Props> = ({
   font,
   setFont,
-  showH1,
-  onToggleH1,
+  showH1Underline,
+  onToggleH1Underline,
   invertH1,
   onToggleInvertH1,
   alignH1Left,
@@ -118,8 +118,8 @@ const SettingsPanel: React.FC<Props> = ({
         <label className="settings-label">H1 样式</label>
         <div className="settings-toggles">
           <Button
-            variant="toggle" active={showH1}
-            onClick={onToggleH1}
+            variant="toggle" active={showH1Underline}
+            onClick={onToggleH1Underline}
           >
             H1 底线
           </Button>

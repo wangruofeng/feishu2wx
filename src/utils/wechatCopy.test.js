@@ -210,7 +210,7 @@ test('removes extra vertical spacing around copied images', () => {
   expect(formattedHtml).not.toContain('<img src="https://example.com/a.png" alt="" style="max-width: 100%; width: auto; height: auto; display: block; margin: 16px auto');
 });
 
-test('removes extra vertical spacing around copied image figures', () => {
+test('downgrades image figures to wechat-safe blocks while keeping caption', () => {
   const html = '<figure class="img-figure"><img src="https://example.com/a.png" alt="说明"><figcaption class="img-caption">说明</figcaption></figure>';
 
   const formattedHtml = formatForWeChat(
@@ -227,17 +227,28 @@ test('removes extra vertical spacing around copied image figures', () => {
   const container = document.createElement('div');
   container.innerHTML = formattedHtml;
   const figure = container.querySelector('figure');
+  const figcaption = container.querySelector('figcaption');
+  const wrapper = container.querySelector('.wechat-image-wrapper');
+  const caption = container.querySelector('p.img-caption');
   const img = container.querySelector('img');
 
-  expect(figure).not.toBeNull();
+  expect(figure).toBeNull();
+  expect(figcaption).toBeNull();
+  expect(wrapper).not.toBeNull();
+  expect(wrapper.tagName).toBe('SECTION');
+  expect(caption).not.toBeNull();
+  expect(caption.textContent).toBe('说明');
   expect(img).not.toBeNull();
-  expect(figure.style.margin).toBe('16px 0px');
-  expect(figure.style.padding).toBe('0px');
-  expect(figure.style.fontSize).toBe('0px');
-  expect(figure.style.lineHeight).toBe('0');
+  expect(wrapper.style.margin).toBe('16px 0px');
+  expect(wrapper.style.padding).toBe('0px');
+  expect(wrapper.style.fontSize).toBe('0px');
+  expect(wrapper.style.lineHeight).toBe('0');
   expect(img.style.display).toBe('inline-block');
   expect(img.style.verticalAlign).toBe('top');
   expect(img.style.margin).toBe('0px auto');
+  expect(caption.style.fontSize).toBe('12px');
+  expect(caption.style.color).toBe('rgb(167, 167, 167)');
+  expect(caption.style.marginTop).toBe('6px');
 });
 
 test('removes formatting whitespace from loose lists before wechat publish', () => {

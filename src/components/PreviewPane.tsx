@@ -10,7 +10,7 @@ interface Props {
   device: 'desktop' | 'mobile';
   isFullscreen?: boolean;
   font?: string;
-  showH1?: boolean;
+  showH1Underline?: boolean;
   invertH1?: boolean;
   alignH1Left?: boolean;
   invertH2?: boolean;
@@ -28,7 +28,7 @@ const PreviewPane: React.FC<Props> = ({
   device,
   isFullscreen = false,
   font = 'default',
-  showH1 = true,
+  showH1Underline = true,
   invertH1 = false,
   alignH1Left = false,
   invertH2 = false,
@@ -136,7 +136,7 @@ const PreviewPane: React.FC<Props> = ({
       <div className="preview-content-wrapper">
         <div
           ref={setPreviewRef}
-          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1 ? 'hide-h1' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
+          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
           style={fontStyle}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />

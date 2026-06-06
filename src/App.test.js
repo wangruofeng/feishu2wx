@@ -36,7 +36,7 @@ afterEach(() => {
 
 test('toggles h1 inverted style on preview content', () => {
   localStorage.setItem('feishu2wx_markdown', '# 标题');
-  localStorage.setItem('feishu2wx_showH1', 'true');
+  localStorage.setItem('feishu2wx_showH1Underline', 'true');
   localStorage.setItem('feishu2wx_showHorizontalRule', 'true');
 
   act(() => {

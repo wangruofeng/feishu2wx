@@ -1,5 +1,6 @@
 import { CodeBlockStyle } from './markdownRenderer';
 import { modernCodeBlockStyles } from './codeBlockStyles';
+import { WECHAT_IMAGE_CAPTION_TAG, WECHAT_IMAGE_WRAPPER_TAG } from './wechatTagWhitelist';
 
 /**
  * 获取主题相关的样式配置
@@ -227,6 +228,31 @@ function applyCompactImageWrapperStyles(wrapper: HTMLElement): void {
   wrapper.style.clear = 'both';
 }
 
+function downgradeImageFiguresForWechat(container: HTMLElement): void {
+  const figures = Array.from(container.querySelectorAll('figure.img-figure'));
+
+  figures.forEach((figure) => {
+    const wrapper = document.createElement(WECHAT_IMAGE_WRAPPER_TAG);
+    wrapper.className = 'wechat-image-wrapper';
+
+    Array.from(figure.childNodes).forEach((child) => {
+      if (child instanceof HTMLElement && child.tagName === 'FIGCAPTION') {
+        const caption = document.createElement(WECHAT_IMAGE_CAPTION_TAG);
+        caption.className = 'img-caption';
+        while (child.firstChild) {
+          caption.appendChild(child.firstChild);
+        }
+        wrapper.appendChild(caption);
+        return;
+      }
+
+      wrapper.appendChild(child);
+    });
+
+    figure.parentNode?.replaceChild(wrapper, figure);
+  });
+}
+
 function wrapStandaloneImages(container: HTMLElement): void {
   const images = Array.from(container.querySelectorAll('img'));
 
@@ -438,7 +464,7 @@ export function formatForWeChat(
   html: string,
   theme: string = 'classic',
   font: string = 'default',
-  showH1: boolean = true,
+  showH1Underline: boolean = true,
   imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
   imageBorderRadius: boolean = false,
   codeBlockStyle: CodeBlockStyle = 'classic',
@@ -454,7 +480,8 @@ export function formatForWeChat(
   tempDiv.innerHTML = html;
 
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+  downgradeImageFiguresForWechat(tempDiv);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
 
   return tempDiv.innerHTML;
 }
@@ -649,7 +676,7 @@ function applyThemeStyles(
   theme: string,
   themeStyles: ReturnType<typeof getThemeStyles>,
   fontFamily: string,
-  showH1: boolean,
+  showH1Underline: boolean,
   imageBorderStyle: 'border' | 'shadow' | 'default',
   imageBorderRadius: boolean,
   codeBlockStyle: CodeBlockStyle,
@@ -700,7 +727,7 @@ function applyThemeStyles(
     captionEl.style.fontSize = '12px';
     captionEl.style.color = 'rgb(167, 167, 167)';
     captionEl.style.textAlign = 'center';
-    captionEl.style.marginTop = '6px';
+    captionEl.style.margin = '6px 0 0';
     captionEl.style.lineHeight = '1.5';
   });
 
@@ -713,6 +740,11 @@ function applyThemeStyles(
     figureEl.style.textAlign = 'center';
     figureEl.style.fontSize = '0';
     figureEl.style.lineHeight = '0';
+  });
+
+  const imageWrappers = container.querySelectorAll('.wechat-image-wrapper');
+  imageWrappers.forEach((wrapper) => {
+    applyCompactImageWrapperStyles(wrapper as HTMLElement);
   });
 
   // 处理行内代码
@@ -954,6 +986,9 @@ function applyThemeStyles(
   const paragraphs = container.querySelectorAll('p');
   paragraphs.forEach((p) => {
     const pEl = p as HTMLElement;
+    if (pEl.classList.contains('img-caption')) {
+      return;
+    }
     if (pEl.textContent?.trim()) {
       pEl.style.fontSize = '16px';
       // 检查 p 后面是否跟着列表，如果是则减少下间距
@@ -995,8 +1030,8 @@ function applyThemeStyles(
     h1El.style.marginRight = '0';
     h1El.style.fontWeight = 'bold';
     h1El.style.lineHeight = '1.25';
-    // 根据 showH1 和 invertH1 决定是否显示底部横线
-    h1El.style.borderBottom = showH1 && !invertH1 ? `1px solid ${themeStyles.headingColor}` : 'none';
+    // 根据 showH1Underline 和 invertH1 决定是否显示底部横线
+    h1El.style.borderBottom = showH1Underline && !invertH1 ? `1px solid ${themeStyles.headingColor}` : 'none';
     h1El.style.borderTop = 'none';
     h1El.style.borderLeft = 'none';
     h1El.style.borderRight = 'none';
@@ -1454,7 +1489,7 @@ function getSelectedHtmlFromPreview(): string | null {
 export async function copySelectedToWeChat(
   theme: string = 'classic',
   font: string = 'default',
-  showH1: boolean = true,
+  showH1Underline: boolean = true,
   imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
   imageBorderRadius: boolean = false,
   codeBlockStyle: CodeBlockStyle = 'classic',
@@ -1471,7 +1506,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
 }
 
 /**
@@ -1482,7 +1517,7 @@ export async function copyHtmlToWeChat(
   html: string,
   theme: string = 'classic',
   font: string = 'default',
-  showH1: boolean = true,
+  showH1Underline: boolean = true,
   imageBorderStyle: 'border' | 'shadow' | 'default' = 'border',
   imageBorderRadius: boolean = false,
   codeBlockStyle: CodeBlockStyle = 'classic',
@@ -1495,7 +1530,7 @@ export async function copyHtmlToWeChat(
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

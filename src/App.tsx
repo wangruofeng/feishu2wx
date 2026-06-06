@@ -21,7 +21,8 @@ const App: React.FC = () => {
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
   const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' | 'default' || 'border';
   const savedImageBorderRadius = localStorage.getItem('feishu2wx_imageBorderRadius') === 'true';
-  const savedShowH1 = localStorage.getItem('feishu2wx_showH1') === 'true';
+  const savedShowH1Underline = (localStorage.getItem('feishu2wx_showH1Underline')
+    ?? localStorage.getItem('feishu2wx_showH1')) === 'true';
   const savedInvertH1 = localStorage.getItem('feishu2wx_invertH1') === 'true';
   const savedAlignH1Left = localStorage.getItem('feishu2wx_alignH1Left') === 'true';
   const savedInvertH2 = localStorage.getItem('feishu2wx_invertH2') === 'true';
@@ -39,7 +40,7 @@ const App: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>(savedFont);
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
-  const [showH1, setShowH1] = useState<boolean>(savedShowH1);
+  const [showH1Underline, setShowH1Underline] = useState<boolean>(savedShowH1Underline);
   const [invertH1, setInvertH1] = useState<boolean>(savedInvertH1);
   const [alignH1Left, setAlignH1Left] = useState<boolean>(savedAlignH1Left);
   const [invertH2, setInvertH2] = useState<boolean>(savedInvertH2);
@@ -158,7 +159,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle); }, [codeBlockStyle]);
   useEffect(() => { localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle); }, [imageBorderStyle]);
   useEffect(() => { localStorage.setItem('feishu2wx_imageBorderRadius', String(imageBorderRadius)); }, [imageBorderRadius]);
-  useEffect(() => { localStorage.setItem('feishu2wx_showH1', String(showH1)); }, [showH1]);
+  useEffect(() => { localStorage.setItem('feishu2wx_showH1Underline', String(showH1Underline)); }, [showH1Underline]);
   useEffect(() => { localStorage.setItem('feishu2wx_invertH1', String(invertH1)); }, [invertH1]);
   useEffect(() => { localStorage.setItem('feishu2wx_alignH1Left', String(alignH1Left)); }, [alignH1Left]);
   useEffect(() => { localStorage.setItem('feishu2wx_invertH2', String(invertH2)); }, [invertH2]);
@@ -270,7 +271,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -281,7 +282,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
       }
 
       setCopyStatus({
@@ -299,7 +300,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left]);
+  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -360,8 +361,8 @@ const App: React.FC = () => {
           <SettingsPanel
             font={font}
             setFont={setFont}
-            showH1={showH1}
-            onToggleH1={() => setShowH1(!showH1)}
+            showH1Underline={showH1Underline}
+            onToggleH1Underline={() => setShowH1Underline(!showH1Underline)}
             invertH1={invertH1}
             onToggleInvertH1={() => setInvertH1(!invertH1)}
             alignH1Left={alignH1Left}
@@ -424,7 +425,7 @@ const App: React.FC = () => {
             variant="outline"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
@@ -469,7 +470,7 @@ const App: React.FC = () => {
           device={device}
           isFullscreen={isFullscreen}
           font={font}
-          showH1={showH1}
+          showH1Underline={showH1Underline}
           invertH1={invertH1}
           alignH1Left={alignH1Left}
           invertH2={invertH2}

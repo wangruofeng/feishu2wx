@@ -286,6 +286,11 @@ export function renderMarkdown(markdown: string): string {
     }
   });
 
+  const images = tempDiv.querySelectorAll('img');
+  images.forEach((img) => {
+    img.setAttribute('referrerpolicy', 'no-referrer');
+  });
+
   // 处理 task list: 将 li 中的 [x] / [ ] 替换为 checkbox
   const listItems = tempDiv.querySelectorAll('li');
   listItems.forEach((li) => {

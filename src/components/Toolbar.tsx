@@ -9,8 +9,8 @@ interface Props {
   setMarkdown: (md: string) => void;
   onCopyToWeChat: () => void;
   isCopying: boolean;
-  showH1: boolean;
-  onToggleH1: () => void;
+  showH1Underline: boolean;
+  onToggleH1Underline: () => void;
   invertH1: boolean;
   onToggleInvertH1: () => void;
   imageBorderStyle: 'border' | 'shadow';
@@ -21,7 +21,7 @@ interface Props {
   onToggleHorizontalRule: () => void;
 }
 
-const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1, onToggleH1, invertH1, onToggleInvertH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
+const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1Underline, onToggleH1Underline, invertH1, onToggleInvertH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
   const handleClear = () => {
     if (window.confirm('确定要清空所有内容吗？')) {
       setMarkdown('');
@@ -43,10 +43,10 @@ const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCop
         </Button>
         <Button
           variant="toolbar"
-          onClick={onToggleH1}
-          title={showH1 ? '隐藏 H1 底部横线' : '显示 H1 底部横线'}
+          onClick={onToggleH1Underline}
+          title={showH1Underline ? '隐藏 H1 底部横线' : '显示 H1 底部横线'}
         >
-          {showH1 ? '👁️ 隐藏 H1 底线' : '📝 显示 H1 底线'}
+          {showH1Underline ? '👁️ 隐藏 H1 底线' : '📝 显示 H1 底线'}
         </Button>
         <Button
           variant="toolbar"

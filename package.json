@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx",
-  "version": "1.18.3",
+  "version": "1.19.0",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
   "homepage": "/feishu2wx",
@@ -12,10 +12,16 @@
   ],
   "author": "",
   "license": "MIT",
+  "bin": {
+    "feishu2wx": "cli/index.js"
+  },
   "dependencies": {
+    "commander": "^13.1.0",
     "highlight.js": "^11.9.0",
+    "jsdom": "^16.7.0",
     "markdown-it": "^13.0.1",
     "markdown-it-footnote": "^4.0.0",
+    "open": "^7.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "^5.0.1",
@@ -34,6 +40,7 @@
     "dev": "concurrently \"PORT=3100 npm start\" \"npm run server\"",
     "cf:dev": "concurrently \"CF_DEV=1 PORT=3100 react-scripts start\" \"sleep 5 && wrangler pages dev --proxy 3100 \"",
     "cf:deploy": "npm run build && npx wrangler pages deploy --branch main",
+    "cli": "node cli/index.js",
     "cf:kv:create": "npx wrangler kv namespace create CONFIG_KV && echo '' && echo '=== 请将输出的 ID 填入 wrangler.toml 中的 id 和 preview_id ==='",
     "pre-commit-check": "node scripts/pre-commit-check.js",
     "prepare": "test -x ./node_modules/.bin/husky && ./node_modules/.bin/husky || true",

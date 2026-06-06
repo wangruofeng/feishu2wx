@@ -17,6 +17,9 @@ npm run deploy
 
 # 提交前检查
 npm run pre-commit-check
+
+# CLI
+npm run cli -- --help
 ```
 
 ## 启动模式
@@ -80,6 +83,35 @@ npm test
 
 - `EditorPane` 支持导入本地 `.md` 文件。
 - 适合导入来自 Cursor、VS Code 等编辑器的 Markdown。
+
+## CLI 功能
+
+仓库内置 `feishu2wx` CLI，用于在命令行完成公众号配置、主题配置、Markdown 渲染和草稿箱推送。
+
+本地运行方式：
+
+```bash
+npm run cli -- init
+npm run cli -- init --project
+npm run cli -- auth set --app-id <appid> --app-secret <secret>
+npm run cli -- auth status
+npm run cli -- theme list
+npm run cli -- theme set blue
+npm run cli -- render article.md --out article.html
+npm run cli -- publish article.md --title "文章标题" --cover cover.jpg
+```
+
+配置默认优先读取当前项目的 `.feishu2wx/config.json`；如果不存在，则回退到用户级 `~/.feishu2wx/config.json`。项目级配置可通过 `init --project` 初始化，敏感配置目录 `.feishu2wx/` 已加入 `.gitignore`。也可以通过全局参数覆盖：
+
+```bash
+npm run cli -- --config /tmp/feishu2wx-config.json theme status
+npm run cli -- --project theme status
+npm run cli -- --user theme status
+```
+
+`render` 默认把微信公众号兼容 HTML 输出到 stdout；指定 `--out` 会写入文件，`--copy` 会把 HTML 字符串写入系统剪贴板，`--preview` 会生成临时预览页并打开浏览器。
+
+`theme status` 的输出项已对齐网页端会影响渲染/导出的本地持久化配置：`theme`、`font`、`codeBlockStyle`、`imageBorderStyle`、`imageBorderRadius`、`showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`、`tableShadow`。
 
 ## 智能粘贴检测
 

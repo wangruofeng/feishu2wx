@@ -35,7 +35,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 在渲染前移除 YAML front matter（`---...---`）。
 - `.md` 文件名链接会被还原为纯文本，避免被 linkify 错误处理。
 - 链接自动添加 `target="_blank"`。
-- 图片带 alt 文本时渲染为 `<figure class="img-figure">` + `<figcaption>`，无 alt 时渲染为裸 `<img>`。
+- 图片带 alt 文本时，预览层渲染为 `<figure class="img-figure">` + `<figcaption>`；导出到微信时会降级为更稳妥的 `section.wechat-image-wrapper + img + p.img-caption`。无 alt 时预览层仍渲染为裸 `<img>`。
 - 水平分割线渲染受 `showHorizontalRule` 控制：关闭时 `<hr>` 渲染为空字符串，开启时渲染为 `<hr class="custom-hr">`。通过导出的 `setShowHorizontalRule()` / `getShowHorizontalRule()` 控制。
 - Task List 后处理：检测 `<li>` 中的 `[x]` / `[ ]` 前缀，替换为 `<span class="task-checkbox">`（☑/☐）和 `task-list-item` 类。支持 `<li>text` 和 `<li><p>text</p>` 两种 DOM 结构。
 - 脚注由 `markdown-it-footnote` 插件处理，生成 `sup.footnote-ref`（正文引用）、`hr.footnotes-sep`（分隔线）、`section.footnotes > ol.footnotes-list > li.footnote-item`（脚注区块）、`a.footnote-backref`（返回链接）。
@@ -78,7 +78,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `markdown`、`html`
 - `theme`、`font`
 - `showEditor`、`isFullscreen`、`device`
-- `showH1`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`
+- `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`
 - `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
 - `isSystemDark`、`isDarkMode`（手动深色/浅色主题切换）
 - `copyStatus`（复制结果弹窗）
@@ -109,7 +109,9 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 优先使用 `px`，不要依赖 `em` 或 `rem`。
 - 避免复杂布局结构。
 - 表格需要 `border-collapse: collapse`。
-- 图片需要 `max-width: 100%`，上下间距由外层块（`figure` 或 `section.wechat-image-wrapper`）统一控制，避免与 `<p>` 的默认 margin 叠加产生额外空行。
+- 建议只依赖保守标签子集：`p`、`br`、`strong/b`、`em/i`、`u`、`span`、`ul/ol/li`、`a`、`img`、`section`、`blockquote`、`h1-h6`、`table/tr/th/td`、`hr`、`sup/sub`。
+- `figure` / `figcaption` 在微信里不作为稳定标签依赖，导出链路会自动降级成 `section + p.img-caption`。
+- 图片需要 `max-width: 100%`，上下间距由外层块（`figure` 仅限预览层，微信导出统一为 `section.wechat-image-wrapper`）控制，避免与 `<p>` 的默认 margin 叠加产生额外空行。
 
 ### 代码块样式
 
