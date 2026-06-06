@@ -1,5 +1,6 @@
 import React, { useRef, useCallback } from 'react';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
+import { shouldConvertPastedHtml } from '../utils/pasteDetection';
 import { Button } from './ui';
 import './EditorPane.css';
 
@@ -42,15 +43,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const htmlData = e.clipboardData.getData('text/html');
     const textData = e.clipboardData.getData('text/plain');
-    const hasHtmlTable = /<table[\s>]/i.test(htmlData);
-
-    const shouldConvertHtml = htmlData && htmlData.trim() && (
-      htmlData.includes('feishu') ||
-      htmlData.includes('larksuite') ||
-      htmlData.includes('feishu.cn') ||
-      htmlData.includes('lark') ||
-      hasHtmlTable
-    );
+    const shouldConvertHtml = shouldConvertPastedHtml(htmlData, textData);
 
     if (shouldConvertHtml) {
       e.preventDefault();

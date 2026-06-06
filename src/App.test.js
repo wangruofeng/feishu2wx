@@ -99,3 +99,35 @@ test('syncs preview scroll by editor scroll ratio in side-by-side layout', async
 
   expect(previewContent.scrollTop).toBe(1200);
 });
+
+test('converts rendered markdown html back to markdown when pasted into editor', async () => {
+  act(() => {
+    root.render(<App />);
+  });
+
+  const editor = container.querySelector('.markdown-editor');
+  const pasteEvent = new Event('paste', { bubbles: true, cancelable: true });
+
+  Object.defineProperty(pasteEvent, 'clipboardData', {
+    value: {
+      getData: (type) => {
+        if (type === 'text/html') {
+          return '<h1>标题</h1><p>正文</p><ul><li>列表项</li></ul><pre><code>npm run cli -- auth set --app-id &lt;appid&gt;</code></pre>';
+        }
+        if (type === 'text/plain') {
+          return '标题\n\n正文\n\n列表项\n\nnpm run cli -- auth set --app-id <appid>';
+        }
+        return '';
+      },
+    },
+  });
+
+  await act(async () => {
+    editor.dispatchEvent(pasteEvent);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(editor.value).toContain('# 标题');
+  expect(editor.value).toContain('-   列表项');
+  expect(editor.value).toContain('```');
+});
