@@ -1,15 +1,21 @@
 import { handlePublishDraft } from '../../../server/lib/publish-handler';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+function getCorsOrigin(): string {
+  return (globalThis as any).ALLOWED_ORIGIN || '*';
+}
+
+function getCorsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': getCorsOrigin(),
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
 
 export const onRequestOptions: PagesFunction = async () => {
   return new Response(null, {
     status: 204,
-    headers: CORS_HEADERS,
+    headers: getCorsHeaders(),
   });
 };
 

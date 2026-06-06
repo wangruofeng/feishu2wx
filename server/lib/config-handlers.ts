@@ -1,17 +1,23 @@
 import { ConfigStore, maskSecret } from './config-store';
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+function getCorsOrigin(): string {
+  return (globalThis as any).ALLOWED_ORIGIN || '*';
+}
+
+function getCorsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': getCorsOrigin(),
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
 
 export function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json',
-      ...CORS_HEADERS,
+      ...getCorsHeaders(),
     },
   });
 }

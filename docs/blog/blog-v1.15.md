@@ -8,7 +8,7 @@
 
 项目地址：[github.com/wangruofeng/feishu2wx](https://github.com/wangruofeng/feishu2wx)
 
-在线体验：[blog.wangruofeng007.com/feishu2wx](https://blog.wangruofeng007.com/feishu2wx/)
+在线体验：[feishu2wx 在线版本](https://你的域名/feishu2wx/)
 
 ![feishu2wx 整体界面](images/01-overview.jpg)
 
@@ -170,7 +170,7 @@ UI 框架层使用 CSS 自定义属性作为设计 token，定义在 `tokens.css
 构建：npm run build
 部署：wrangler pages deploy
 后端：functions/api/publish/draft.ts（Cloudflare Functions）
-地址：feishu2wx-b4h.pages.dev
+地址：your-project.pages.dev
 ```
 
 Cloudflare Functions 处理微信 API 的代理请求（获取 access_token、上传图片、创建草稿）。两个部署通道共享同一个前端代码，GitHub Pages 版本通过构建时注入的环境变量访问 Cloudflare 上的后端 API。

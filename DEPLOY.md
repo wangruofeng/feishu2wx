@@ -42,7 +42,7 @@ git push origin main
 部署成功后，您的网站将可以通过以下地址访问：
 
 ```
-https://wangruofeng.github.io/feishu2wx
+https://你的用户名.github.io/你的仓库名
 ```
 
 > **注意**：如果您的 GitHub 用户名或仓库名不同，请修改 `package.json` 中的 `homepage` 字段。
@@ -81,7 +81,7 @@ npm run deploy
 等待几分钟后，访问：
 
 ```
-https://wangruofeng.github.io/feishu2wx
+https://你的用户名.github.io/你的仓库名
 ```
 
 ## ⚙️ 自定义配置
@@ -223,7 +223,7 @@ GitHub Pages 构建时需要知道后端 API 地址，已在 `.github/workflows/
 
 ```yaml
 env:
-  REACT_APP_API_URL: https://feishu2wx-b4h.pages.dev
+  REACT_APP_API_URL: https://your-project.pages.dev
 ```
 
 如果使用自己的 Cloudflare 项目，将域名替换为自己的。
