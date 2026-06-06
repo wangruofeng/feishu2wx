@@ -7,6 +7,7 @@ import './EditorPane.css';
 interface Props {
   markdown: string;
   setMarkdown: (md: string) => void;
+  shouldConvertPastedHtml: boolean;
   onScroll?: (e: React.UIEvent<HTMLTextAreaElement>) => void;
   onLoadExample: () => void;
 }
@@ -19,7 +20,7 @@ interface HistoryEntry {
 
 const MAX_HISTORY = 50;
 
-const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadExample }) => {
+const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
@@ -43,7 +44,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const htmlData = e.clipboardData.getData('text/html');
     const textData = e.clipboardData.getData('text/plain');
-    const shouldConvertHtml = shouldConvertPastedHtml(htmlData, textData);
+    const shouldConvertHtml = shouldConvertPastedHtmlEnabled && shouldConvertPastedHtml(htmlData, textData);
 
     if (shouldConvertHtml) {
       e.preventDefault();
@@ -83,7 +84,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, onScroll, onLoadEx
         }, 0);
       }
     }
-  }, [markdown, setMarkdown, pushHistory]);
+  }, [markdown, setMarkdown, pushHistory, shouldConvertPastedHtmlEnabled]);
 
   // 插入Markdown语法
   const insertMarkdown = useCallback((before: string, after: string = '') => {

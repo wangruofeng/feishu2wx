@@ -9,6 +9,9 @@
   box-shadow: var(--shadow-lg);
   padding: var(--space-6);
   width: 300px;
+  max-height: min(560px, calc(100vh - 96px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   z-index: 1100;
   animation: settings-panel-in 150ms ease-out;
 }

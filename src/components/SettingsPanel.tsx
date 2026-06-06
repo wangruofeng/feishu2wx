@@ -7,6 +7,8 @@ import './SettingsPanel.css';
 interface Props {
   font: string;
   setFont: (font: string) => void;
+  shouldConvertPastedHtml: boolean;
+  onToggleShouldConvertPastedHtml: () => void;
   showH1Underline: boolean;
   onToggleH1Underline: () => void;
   invertH1: boolean;
@@ -58,6 +60,8 @@ const fonts = [
 const SettingsPanel: React.FC<Props> = ({
   font,
   setFont,
+  shouldConvertPastedHtml,
+  onToggleShouldConvertPastedHtml,
   showH1Underline,
   onToggleH1Underline,
   invertH1,
@@ -113,6 +117,16 @@ const SettingsPanel: React.FC<Props> = ({
 
   return (
     <div className="settings-panel" ref={panelRef}>
+
+      <div className="settings-section">
+        <label className="settings-label">粘贴转换</label>
+        <Button
+          variant="toggle" active={shouldConvertPastedHtml}
+          onClick={onToggleShouldConvertPastedHtml}
+        >
+          {shouldConvertPastedHtml ? '智能 HTML 转 Markdown' : '仅粘贴纯文本'}
+        </Button>
+      </div>
 
       <div className="settings-section">
         <label className="settings-label">H1 样式</label>

@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const savedMarkdown = localStorage.getItem('feishu2wx_markdown') || '';
   const savedTheme = localStorage.getItem('feishu2wx_theme') || 'classic';
   const savedFont = localStorage.getItem('feishu2wx_font') || 'default';
+  const savedShouldConvertPastedHtml = localStorage.getItem('feishu2wx_shouldConvertPastedHtml') !== 'false';
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
   const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' | 'default' || 'border';
   const savedImageBorderRadius = localStorage.getItem('feishu2wx_imageBorderRadius') === 'true';
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>(savedFont);
+  const [shouldConvertPastedHtml, setShouldConvertPastedHtml] = useState<boolean>(savedShouldConvertPastedHtml);
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
   const [showH1Underline, setShowH1Underline] = useState<boolean>(savedShowH1Underline);
   const [invertH1, setInvertH1] = useState<boolean>(savedInvertH1);
@@ -156,6 +158,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_markdown', markdown); }, [markdown]);
   useEffect(() => { localStorage.setItem('feishu2wx_theme', theme); }, [theme]);
   useEffect(() => { localStorage.setItem('feishu2wx_font', font); }, [font]);
+  useEffect(() => { localStorage.setItem('feishu2wx_shouldConvertPastedHtml', String(shouldConvertPastedHtml)); }, [shouldConvertPastedHtml]);
   useEffect(() => { localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle); }, [codeBlockStyle]);
   useEffect(() => { localStorage.setItem('feishu2wx_imageBorderStyle', imageBorderStyle); }, [imageBorderStyle]);
   useEffect(() => { localStorage.setItem('feishu2wx_imageBorderRadius', String(imageBorderRadius)); }, [imageBorderRadius]);
@@ -361,6 +364,8 @@ const App: React.FC = () => {
           <SettingsPanel
             font={font}
             setFont={setFont}
+            shouldConvertPastedHtml={shouldConvertPastedHtml}
+            onToggleShouldConvertPastedHtml={() => setShouldConvertPastedHtml(!shouldConvertPastedHtml)}
             showH1Underline={showH1Underline}
             onToggleH1Underline={() => setShowH1Underline(!showH1Underline)}
             invertH1={invertH1}
@@ -462,6 +467,7 @@ const App: React.FC = () => {
         <EditorPane
           markdown={markdown}
           setMarkdown={setMarkdown}
+          shouldConvertPastedHtml={shouldConvertPastedHtml}
           onScroll={handleEditorScroll}
           onLoadExample={handleLoadExample}
         />

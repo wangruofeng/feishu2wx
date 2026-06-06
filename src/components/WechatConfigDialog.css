@@ -21,6 +21,9 @@
   border-radius: var(--radius-xl);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
   animation: wc-dialog-in 200ms ease-out;
   overflow: hidden;
 }
@@ -77,6 +80,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 /* 提示框 */
