@@ -66,12 +66,12 @@ npm install
 3. **启动应用**
 
 ```bash
-npm start
+npm run dev
 ```
 
-应用将在 `http://localhost:3000` 启动，并自动在浏览器中打开
+应用将在 `http://localhost:3100` 启动，并同时启动后端服务 `http://localhost:3101`
 
-> 💡 **提示**：本项目为纯前端应用，无需启动后端服务。
+> 💡 **提示**：如果只使用排版和预览功能，可以运行 `npm start` 仅启动前端。推送到微信草稿箱必须使用 `npm run dev` 或部署到 Cloudflare。
 
 ## 📖 使用说明
 
@@ -302,8 +302,10 @@ feishu2wx/
 开发模式（热重载）：
 
 ```bash
-npm start
+npm run dev
 ```
+
+只开发排版/预览等纯前端功能时，也可以运行 `npm start`。
 
 ### 构建生产版本
 

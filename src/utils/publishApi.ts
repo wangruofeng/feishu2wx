@@ -68,6 +68,6 @@ export async function publishToDraft(params: PublishParams): Promise<{
     if (!res.ok) return { success: false, error: data.error || '推送失败' };
     return data;
   } catch {
-    return { success: false, error: '网络错误，请检查后端服务是否启动' };
+    return { success: false, error: '网络错误，请确认已使用 npm run dev 启动后端服务（localhost:3101）' };
   }
 }
