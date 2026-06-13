@@ -137,6 +137,25 @@ test('formats classic code blocks left-aligned for wechat copy', () => {
   expect(formattedHtml).toContain('text-align: left');
 });
 
+test('removes preview-only frontmatter before wechat copy', () => {
+  const html = '<section class="frontmatter-preview" data-preview-only="true"><h2>元数据</h2><dl><div><dt>title</dt><dd>测试标题</dd></div></dl></section><h1>正文标题</h1>';
+
+  const formattedHtml = formatForWeChat(
+    html,
+    'green',
+    'default',
+    true,
+    'border',
+    false,
+    'classic',
+    false
+  );
+
+  expect(formattedHtml).not.toContain('frontmatter-preview');
+  expect(formattedHtml).not.toContain('元数据');
+  expect(formattedHtml).toContain('正文标题');
+});
+
 test('keeps normal code blocks as preformatted html for wechat copy', () => {
   const html = '<pre><code>const answer = 42;\nconsole.log(answer);</code></pre>';
 

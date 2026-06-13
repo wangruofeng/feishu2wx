@@ -236,36 +236,145 @@ function renderImage(tokens: any, idx: number): string {
 md.renderer.rules.image = renderImage;
 mdModern.renderer.rules.image = renderImage;
 
-// 移除 Markdown 源码顶部的 Front Matter（YAML 块）
-function removeFrontMatter(markdown: string): string {
-  // 检查是否以 --- 开头（Front Matter 开始）
-  if (!markdown.startsWith('---')) {
-    return markdown;
-  }
-
-  // 找到第二个 --- 的位置（Front Matter 结束）
-  const firstNewline = markdown.indexOf('\n');
-  if (firstNewline === -1) return markdown;
-
-  // 从第二行开始查找结束标记
-  let contentAfterFirst = markdown.slice(firstNewline + 1);
-  const endIndex = contentAfterFirst.indexOf('\n---');
-
-  if (endIndex === -1) {
-    // 没有找到结束标记，可能不是有效的 Front Matter
-    return markdown;
-  }
-
-  // 返回 Front Matter 后面的内容
-  return contentAfterFirst.slice(endIndex + 4).trim();
+interface FrontMatterField {
+  key: string;
+  value: string | string[];
 }
 
-export function renderMarkdown(markdown: string): string {
-  // 移除 Front Matter
-  const markdownWithoutFrontMatter = removeFrontMatter(markdown);
+interface FrontMatterResult {
+  content: string;
+  fields: FrontMatterField[];
+}
+
+interface RenderMarkdownOptions {
+  showFrontMatter?: boolean;
+}
+
+function cleanYamlValue(value: string): string {
+  const trimmed = value.trim();
+  const quoted = trimmed.match(/^(['"])(.*)\1$/);
+  return quoted ? quoted[2] : trimmed;
+}
+
+function parseInlineArray(value: string): string[] | null {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('[') || !trimmed.endsWith(']')) {
+    return null;
+  }
+
+  const body = trimmed.slice(1, -1).trim();
+  if (!body) {
+    return [];
+  }
+
+  return body.split(',').map(cleanYamlValue).filter(Boolean);
+}
+
+function parseFrontMatterFields(source: string): FrontMatterField[] {
+  const lines = source.split(/\r?\n/);
+  const fields: FrontMatterField[] = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    const match = line.match(/^([A-Za-z0-9_-]+):(?:\s*(.*))?$/);
+    if (!match) {
+      continue;
+    }
+
+    const key = match[1];
+    const rawValue = match[2] || '';
+    const inlineArray = parseInlineArray(rawValue);
+    if (inlineArray) {
+      fields.push({ key, value: inlineArray });
+      continue;
+    }
+
+    if (rawValue === '|' || rawValue === '>') {
+      const blockLines: string[] = [];
+      let j = i + 1;
+      while (j < lines.length && (/^\s+/.test(lines[j]) || !lines[j].trim())) {
+        blockLines.push(lines[j].replace(/^\s{2,}/, ''));
+        j += 1;
+      }
+      fields.push({
+        key,
+        value: rawValue === '>' ? blockLines.join(' ').trim() : blockLines.join('\n').trim(),
+      });
+      i = j - 1;
+      continue;
+    }
+
+    if (rawValue === '') {
+      const listValues: string[] = [];
+      let j = i + 1;
+      while (j < lines.length) {
+        const itemMatch = lines[j].match(/^\s*-\s+(.+)$/);
+        if (!itemMatch) {
+          break;
+        }
+        listValues.push(cleanYamlValue(itemMatch[1]));
+        j += 1;
+      }
+
+      fields.push({ key, value: listValues.length > 0 ? listValues : '' });
+      i = j - 1;
+      continue;
+    }
+
+    fields.push({ key, value: cleanYamlValue(rawValue) });
+  }
+
+  return fields;
+}
+
+// 解析 Markdown 源码顶部的 Front Matter（YAML 块）
+function parseFrontMatter(markdown: string): FrontMatterResult {
+  const lines = markdown.split(/\r?\n/);
+  if (lines[0]?.trim() !== '---') {
+    return { content: markdown, fields: [] };
+  }
+
+  const endLineIndex = lines.findIndex((line, index) => index > 0 && line.trim() === '---');
+  if (endLineIndex === -1) {
+    return { content: markdown, fields: [] };
+  }
+
+  const frontMatterSource = lines.slice(1, endLineIndex).join('\n');
+  const content = lines.slice(endLineIndex + 1).join('\n').trim();
+
+  return {
+    content,
+    fields: parseFrontMatterFields(frontMatterSource),
+  };
+}
+
+function renderFrontMatterPreview(fields: FrontMatterField[]): string {
+  if (fields.length === 0) {
+    return '';
+  }
+
+  const rows = fields.map((field) => {
+    const key = tempMd.utils.escapeHtml(field.key);
+    const value = Array.isArray(field.value)
+      ? `<div class="frontmatter-tags">${field.value.map((item) => `<span>${tempMd.utils.escapeHtml(item)}</span>`).join('')}</div>`
+      : tempMd.utils.escapeHtml(field.value);
+
+    return `<div class="frontmatter-row"><dt>${key}</dt><dd>${value}</dd></div>`;
+  }).join('');
+
+  return `<section class="frontmatter-preview" data-preview-only="true" aria-label="元数据"><h2>元数据</h2><dl>${rows}</dl></section>`;
+}
+
+export function renderMarkdown(markdown: string, options: RenderMarkdownOptions = {}): string {
+  const { content, fields } = parseFrontMatter(markdown);
 
   const selectedMd = currentCodeBlockStyle === 'modern' ? mdModern : md;
-  let html = selectedMd.render(markdownWithoutFrontMatter);
+  let html = selectedMd.render(content);
 
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
@@ -364,5 +473,5 @@ export function renderMarkdown(markdown: string): string {
     h2.appendChild(wrapper);
   });
 
-  return tempDiv.innerHTML;
+  return `${options.showFrontMatter ? renderFrontMatterPreview(fields) : ''}${tempDiv.innerHTML}`;
 }

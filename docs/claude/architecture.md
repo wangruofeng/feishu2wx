@@ -32,7 +32,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 使用 markdown-it 将 Markdown 渲染为 HTML，维护两个实例（classic / modern 代码块样式），均加载 `markdown-it-footnote` 脚注插件。
 - 使用 highlight.js 和 Atom One Dark 主题做语法高亮。
 - 自动检测语言，失败时回退到默认语言。
-- 在渲染前移除 YAML front matter（`---...---`）。
+- 在网页预览中将 YAML front matter（`---...---`）展示为元数据卡片，复制和推送到公众号时会剥离该预览专用节点。
 - `.md` 文件名链接会被还原为纯文本，避免被 linkify 错误处理。
 - 链接自动添加 `target="_blank"`。
 - 图片带 alt 文本时，预览层渲染为 `<figure class="img-figure">` + `<figcaption>`；导出到微信时会降级为更稳妥的 `section.wechat-image-wrapper + img + p.img-caption`。无 alt 时预览层仍渲染为裸 `<img>`。

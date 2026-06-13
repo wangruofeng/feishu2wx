@@ -470,7 +470,8 @@ export function formatForWeChat(
   codeBlockStyle: CodeBlockStyle = 'classic',
   invertH1: boolean = false,
   invertH2: boolean = false,
-  alignH2Left: boolean = false
+  alignH2Left: boolean = false,
+  showBlockquoteBg: boolean = true
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
@@ -480,10 +481,17 @@ export function formatForWeChat(
   tempDiv.innerHTML = html;
 
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
+  removePreviewOnlyElements(tempDiv);
   downgradeImageFiguresForWechat(tempDiv);
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
 
   return tempDiv.innerHTML;
+}
+
+function removePreviewOnlyElements(container: HTMLElement): void {
+  container.querySelectorAll('[data-preview-only="true"]').forEach((element) => {
+    element.remove();
+  });
 }
 
 /**
@@ -682,7 +690,8 @@ function applyThemeStyles(
   codeBlockStyle: CodeBlockStyle,
   invertH1: boolean,
   invertH2: boolean,
-  alignH2Left: boolean
+  alignH2Left: boolean,
+  showBlockquoteBg: boolean = true
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -1288,7 +1297,7 @@ function applyThemeStyles(
     bqEl.style.margin = '16px 0';
     bqEl.style.padding = '12px 16px';
     bqEl.style.borderLeft = `4px solid ${themeStyles.blockquoteBorderColor}`;
-    bqEl.style.backgroundColor = themeStyles.blockquoteBgColor;
+    bqEl.style.backgroundColor = showBlockquoteBg ? themeStyles.blockquoteBgColor : 'transparent';
     bqEl.style.color = '#333';
     bqEl.style.borderRadius = '0 4px 4px 0';
     bqEl.style.fontFamily = fontFamily;
@@ -1495,7 +1504,8 @@ export async function copySelectedToWeChat(
   codeBlockStyle: CodeBlockStyle = 'classic',
   invertH1: boolean = false,
   invertH2: boolean = false,
-  alignH2Left: boolean = false
+  alignH2Left: boolean = false,
+  showBlockquoteBg: boolean = true
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
 
@@ -1506,7 +1516,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
 }
 
 /**
@@ -1523,14 +1533,15 @@ export async function copyHtmlToWeChat(
   codeBlockStyle: CodeBlockStyle = 'classic',
   invertH1: boolean = false,
   invertH2: boolean = false,
-  alignH2Left: boolean = false
+  alignH2Left: boolean = false,
+  showBlockquoteBg: boolean = true
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

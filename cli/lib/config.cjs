@@ -18,6 +18,7 @@ const DEFAULT_THEME_CONFIG = {
   codeBlockStyle: 'modern',
   imageBorderStyle: 'border',
   imageBorderRadius: false,
+  showBlockquoteBg: true,
   showH1Underline: false,
   invertH1: false,
   alignH1Left: false,
@@ -86,6 +87,7 @@ function normalizeThemeConfig(theme = {}) {
       ? theme.imageBorderStyle
       : DEFAULT_THEME_CONFIG.imageBorderStyle,
     imageBorderRadius: Boolean(theme.imageBorderRadius),
+    showBlockquoteBg: theme.showBlockquoteBg !== false,
     showH1Underline: Boolean(theme.showH1Underline ?? theme.showH1),
     invertH1: Boolean(theme.invertH1),
     alignH1Left: Boolean(theme.alignH1Left),
@@ -195,6 +197,7 @@ function mergeThemeOptions(config, options = {}) {
   if (options.codeBlockStyle) patch.codeBlockStyle = options.codeBlockStyle;
   if (options.imageBorderStyle) patch.imageBorderStyle = options.imageBorderStyle;
   if (typeof options.imageBorderRadius === 'boolean') patch.imageBorderRadius = options.imageBorderRadius;
+  if (typeof options.showBlockquoteBg === 'boolean') patch.showBlockquoteBg = options.showBlockquoteBg;
   if (typeof options.showH1Underline === 'boolean') patch.showH1Underline = options.showH1Underline;
   if (typeof options.invertH1 === 'boolean') patch.invertH1 = options.invertH1;
   if (typeof options.alignH1Left === 'boolean') patch.alignH1Left = options.alignH1Left;

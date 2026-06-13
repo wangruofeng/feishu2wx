@@ -48,7 +48,9 @@ function addThemeOptions(command) {
     .option('--show-horizontal-rule', '显示分割线')
     .option('--no-show-horizontal-rule', '隐藏分割线')
     .option('--table-shadow', '显示表格阴影')
-    .option('--no-table-shadow', '隐藏表格阴影');
+    .option('--no-table-shadow', '隐藏表格阴影')
+    .option('--show-blockquote-bg', '显示引用块背景')
+    .option('--no-show-blockquote-bg', '隐藏引用块背景');
 }
 
 function resolveActiveConfigPath(options) {

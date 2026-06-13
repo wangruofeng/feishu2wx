@@ -277,6 +277,11 @@
   background-color: #f0f7ff;
 }
 
+/* 引用块背景隐藏 */
+.preview-content.hide-blockquote-bg blockquote {
+  background-color: transparent !important;
+}
+
 .theme-blue .preview-content a {
   color: #0F4C81;
 }

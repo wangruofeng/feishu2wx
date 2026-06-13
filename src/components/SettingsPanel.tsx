@@ -19,6 +19,8 @@ interface Props {
   onToggleInvertH2: () => void;
   alignH2Left: boolean;
   onToggleAlignH2Left: () => void;
+  showBlockquoteBg: boolean;
+  onToggleShowBlockquoteBg: () => void;
   showHorizontalRule: boolean;
   onToggleHorizontalRule: () => void;
   tableShadow: boolean;
@@ -74,6 +76,8 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleAlignH2Left,
   showHorizontalRule,
   onToggleHorizontalRule,
+  showBlockquoteBg,
+  onToggleShowBlockquoteBg,
   tableShadow,
   onToggleTableShadow,
   imageBorderStyle,
@@ -177,6 +181,16 @@ const SettingsPanel: React.FC<Props> = ({
           onClick={onToggleHorizontalRule}
         >
           {showHorizontalRule ? '显示' : '隐藏'}
+        </Button>
+      </div>
+
+      <div className="settings-section">
+        <label className="settings-label">引用块背景</label>
+        <Button
+          variant="toggle" active={showBlockquoteBg}
+          onClick={onToggleShowBlockquoteBg}
+        >
+          {showBlockquoteBg ? '显示' : '隐藏'}
         </Button>
       </div>
 
