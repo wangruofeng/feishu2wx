@@ -100,6 +100,208 @@ test('syncs preview scroll by editor scroll ratio in side-by-side layout', async
   expect(previewContent.scrollTop).toBe(1200);
 });
 
+test('disables outline button when the article has no headings', () => {
+  localStorage.setItem('feishu2wx_markdown', '这里只有正文，没有 Markdown 标题。');
+
+  act(() => {
+    root.render(<App />);
+  });
+
+  const outlineButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.getAttribute('aria-label') === '文章大纲'
+  );
+
+  expect(outlineButton.disabled).toBe(true);
+});
+
+test('jumps to outline heading using measured textarea position', () => {
+  localStorage.setItem('feishu2wx_markdown', [
+    '# 开头',
+    '这是一段很长的内容，用来模拟在编辑器里发生自动换行后的滚动测量。',
+    '## 目标标题',
+  ].join('\n'));
+
+  act(() => {
+    root.render(<App />);
+  });
+
+  const editor = container.querySelector('.markdown-editor');
+  const outlineButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.getAttribute('aria-label') === '文章大纲'
+  );
+
+  Object.defineProperty(editor, 'clientWidth', { configurable: true, value: 320 });
+  Object.defineProperty(editor, 'clientHeight', { configurable: true, value: 200 });
+  Object.defineProperty(editor, 'scrollHeight', { configurable: true, value: 1000 });
+  editor.style.paddingTop = '24px';
+  editor.style.lineHeight = '24px';
+  editor.scrollTo = jest.fn(({ top }) => {
+    editor.scrollTop = top;
+  });
+
+  const offsetTopSpy = jest.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockImplementation(function () {
+    if (this.getAttribute('data-outline-marker') === 'true') return 240;
+    return 0;
+  });
+
+  act(() => {
+    outlineButton.click();
+  });
+
+  const targetButton = Array.from(document.body.querySelectorAll('.editor-outline-item button')).find((button) =>
+    button.textContent.includes('目标标题')
+  );
+
+  act(() => {
+    targetButton.click();
+  });
+
+  expect(editor.scrollTo).toHaveBeenCalledWith({ top: 216, behavior: 'smooth' });
+
+  offsetTopSpy.mockRestore();
+});
+
+test('aligns outline popover with editor footer right edge', () => {
+  localStorage.setItem('feishu2wx_markdown', '# 开头\n\n## 目标标题');
+
+  act(() => {
+    root.render(<App />);
+  });
+
+  const outlineButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.getAttribute('aria-label') === '文章大纲'
+  );
+  const editorFooter = container.querySelector('.editor-footer');
+
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 });
+  outlineButton.getBoundingClientRect = jest.fn(() => ({ top: 400, right: 500 }));
+  editorFooter.getBoundingClientRect = jest.fn(() => ({ right: 560 }));
+
+  act(() => {
+    outlineButton.click();
+  });
+
+  const popover = document.body.querySelector('.editor-outline-pop');
+  expect(popover.style.left).toBe('280px');
+  expect(popover.style.top).toBe('400px');
+});
+
+test('shows frontmatter metadata by default and hides it from settings', async () => {
+  localStorage.setItem('feishu2wx_markdown', '---\ntitle: 测试标题\ntags: [A, B]\n---\n# 正文标题');
+
+  await act(async () => {
+    root.render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(container.querySelector('.frontmatter-preview').textContent).toContain('测试标题');
+
+  const settingsButton = container.querySelector('.settings-trigger');
+  act(() => {
+    settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  const metadataToggle = container.querySelector('button[aria-label="元数据"]');
+
+  expect(metadataToggle.getAttribute('aria-checked')).toBe('true');
+
+  await act(async () => {
+    metadataToggle.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(container.querySelector('.frontmatter-preview')).toBeNull();
+  expect(localStorage.getItem('feishu2wx_showFrontMatter')).toBe('false');
+});
+
+test('applies article start and end markdown templates to preview without changing editor content', async () => {
+  localStorage.setItem('feishu2wx_markdown', '正文内容');
+
+  await act(async () => {
+    root.render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const settingsButton = container.querySelector('.settings-trigger');
+  act(() => {
+    settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  const findTextareaByLabel = (labelText) => {
+    const rows = Array.from(container.querySelectorAll('.settings-row'));
+    const row = rows.find((r) => r.querySelector('.settings-row-label')?.textContent === labelText);
+    return row.querySelector('textarea');
+  };
+  const startTextarea = findTextareaByLabel('文章首部片段');
+  const endTextarea = findTextareaByLabel('文章尾部片段');
+  const setTextareaValue = (textarea, value) => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(textarea, value);
+  };
+
+  await act(async () => {
+    setTextareaValue(startTextarea, '开头固定内容');
+    startTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    setTextareaValue(endTextarea, '结尾固定内容');
+    endTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const editor = container.querySelector('.markdown-editor');
+  const previewContent = container.querySelector('.preview-content');
+
+  expect(editor.value).toBe('正文内容');
+  expect(previewContent.textContent).toContain('开头固定内容');
+  expect(previewContent.textContent).toContain('正文内容');
+  expect(previewContent.textContent).toContain('结尾固定内容');
+  expect(localStorage.getItem('feishu2wx_headerTemplate')).toBe('开头固定内容');
+  expect(localStorage.getItem('feishu2wx_footerTemplate')).toBe('结尾固定内容');
+});
+
+test('renders article start template below frontmatter preview', async () => {
+  localStorage.setItem('feishu2wx_markdown', '---\ntitle: 测试标题\ntags: [A, B]\n---\n# 正文标题');
+  localStorage.setItem('feishu2wx_headerTemplate', '开头固定内容');
+
+  await act(async () => {
+    root.render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const previewContent = container.querySelector('.preview-content');
+  const frontmatterPreview = container.querySelector('.frontmatter-preview');
+
+  expect(frontmatterPreview.textContent).toContain('测试标题');
+  expect(previewContent.textContent).toContain('开头固定内容');
+  expect(previewContent.innerHTML.indexOf('frontmatter-preview')).toBeLessThan(
+    previewContent.innerHTML.indexOf('开头固定内容')
+  );
+});
+
+test('renders article end template with standard markdown syntax', async () => {
+  localStorage.setItem('feishu2wx_markdown', '正文内容');
+  localStorage.setItem('feishu2wx_footerTemplate', [
+    '## 结尾标题',
+    '',
+    '- 第一项',
+    '- 第二项',
+    '',
+    '```js',
+    'console.log(1)',
+    '```',
+  ].join('\n'));
+
+  await act(async () => {
+    root.render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const previewContent = container.querySelector('.preview-content');
+
+  expect(previewContent.querySelector('h2').textContent).toContain('结尾标题');
+  expect(Array.from(previewContent.querySelectorAll('li')).map((li) => li.textContent.trim())).toEqual(['第一项', '第二项']);
+  expect(previewContent.querySelector('pre').textContent).toContain('console.log(1)');
+});
+
 test('converts rendered markdown html back to markdown when pasted into editor', async () => {
   act(() => {
     root.render(<App />);

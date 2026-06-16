@@ -1,4 +1,5 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import { shouldConvertPastedHtml } from '../utils/pasteDetection';
 import { Button } from './ui';
@@ -18,7 +19,82 @@ interface HistoryEntry {
   cursorEnd: number;
 }
 
+interface OutlineItem {
+  level: number;
+  text: string;
+  pos: number;
+}
+
 const MAX_HISTORY = 50;
+const OUTLINE_POPOVER_WIDTH = 280;
+const OUTLINE_POPOVER_VIEWPORT_MARGIN = 8;
+const TEXTAREA_MIRROR_STYLE_PROPS = [
+  'font-family',
+  'font-size',
+  'font-weight',
+  'font-style',
+  'letter-spacing',
+  'line-height',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'text-transform',
+  'text-indent',
+  'text-rendering',
+  'word-spacing',
+  'tab-size',
+];
+
+const getLineHeight = (textarea: HTMLTextAreaElement): number => {
+  const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight);
+  if (!Number.isNaN(lineHeight)) return lineHeight;
+  const fontSize = parseFloat(getComputedStyle(textarea).fontSize);
+  return Number.isNaN(fontSize) ? 24 : fontSize * 1.6;
+};
+
+const getOutlineScrollTop = (textarea: HTMLTextAreaElement, markdown: string, pos: number): number => {
+  const width = textarea.clientWidth || textarea.getBoundingClientRect().width;
+  if (!width) {
+    const lineNumber = markdown.slice(0, pos).split('\n').length - 1;
+    return Math.max(0, lineNumber * getLineHeight(textarea));
+  }
+
+  const computedStyle = getComputedStyle(textarea);
+  const mirror = document.createElement('div');
+  const marker = document.createElement('span');
+
+  marker.textContent = '\u200b';
+  marker.setAttribute('data-outline-marker', 'true');
+
+  mirror.textContent = markdown.slice(0, pos);
+  mirror.appendChild(marker);
+  mirror.style.position = 'absolute';
+  mirror.style.visibility = 'hidden';
+  mirror.style.pointerEvents = 'none';
+  mirror.style.left = '-9999px';
+  mirror.style.top = '0';
+  mirror.style.width = `${width}px`;
+  mirror.style.boxSizing = 'border-box';
+  mirror.style.whiteSpace = 'pre-wrap';
+  mirror.style.overflowWrap = 'break-word';
+  mirror.style.wordWrap = 'break-word';
+  mirror.style.border = '0';
+
+  TEXTAREA_MIRROR_STYLE_PROPS.forEach((prop) => {
+    mirror.style.setProperty(prop, computedStyle.getPropertyValue(prop));
+  });
+
+  document.body.appendChild(mirror);
+  const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+  const measuredTop = Math.max(0, marker.offsetTop - paddingTop);
+  mirror.remove();
+
+  if (textarea.scrollHeight > textarea.clientHeight) {
+    return Math.min(measuredTop, textarea.scrollHeight - textarea.clientHeight);
+  }
+  return measuredTop;
+};
 
 const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -26,6 +102,10 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
   const historyRef = useRef<HistoryEntry[]>([]);
   const redoStackRef = useRef<HistoryEntry[]>([]);
   const isUndoRef = useRef(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
+  const [outlinePos, setOutlinePos] = useState({ top: 0, left: 0 });
+  const outlineBtnRef = useRef<HTMLButtonElement>(null);
+  const outlinePopRef = useRef<HTMLDivElement>(null);
 
   // 保存当前状态到历史
   const pushHistory = useCallback(() => {
@@ -287,6 +367,89 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
     }
   }, [setMarkdown]);
 
+  // 解析文章大纲（H1-H3），跳过 frontmatter 与代码块
+  const outlineItems = useMemo<OutlineItem[]>(() => {
+    const items: OutlineItem[] = [];
+    const lines = markdown.split('\n');
+    let pos = 0;
+    let inFrontmatter = false;
+    let inCodeBlock = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      if (i === 0 && trimmed === '---') {
+        inFrontmatter = true;
+        pos += line.length + 1;
+        continue;
+      }
+      if (inFrontmatter && trimmed === '---') {
+        inFrontmatter = false;
+        pos += line.length + 1;
+        continue;
+      }
+      if (trimmed.startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        pos += line.length + 1;
+        continue;
+      }
+      if (!inFrontmatter && !inCodeBlock) {
+        const m = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
+        if (m) {
+          items.push({ level: m[1].length, text: m[2], pos });
+        }
+      }
+      pos += line.length + 1;
+    }
+    return items;
+  }, [markdown]);
+
+  // 点击大纲项，滚动 textarea 到对应标题
+  const handleOutlineJump = useCallback((pos: number) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.focus();
+    textarea.setSelectionRange(pos, pos);
+    const top = getOutlineScrollTop(textarea, markdown, pos);
+    if (typeof textarea.scrollTo === 'function') {
+      textarea.scrollTo({ top, behavior: 'smooth' });
+    } else {
+      textarea.scrollTop = top;
+    }
+    setOutlineOpen(false);
+  }, [markdown]);
+
+  // 切换大纲：先算按钮在视口内的位置
+  const handleToggleOutline = useCallback(() => {
+    if (!outlineOpen && outlineBtnRef.current) {
+      const rect = outlineBtnRef.current.getBoundingClientRect();
+      const footerRect = outlineBtnRef.current.closest('.editor-footer')?.getBoundingClientRect();
+      const anchorRight = footerRect?.right ?? rect.right;
+      const maxLeft = Math.max(OUTLINE_POPOVER_VIEWPORT_MARGIN, window.innerWidth - OUTLINE_POPOVER_WIDTH - OUTLINE_POPOVER_VIEWPORT_MARGIN);
+      const left = Math.min(Math.max(anchorRight - OUTLINE_POPOVER_WIDTH, OUTLINE_POPOVER_VIEWPORT_MARGIN), maxLeft);
+      setOutlinePos({ top: rect.top, left });
+    }
+    setOutlineOpen((v) => !v);
+  }, [outlineOpen]);
+
+  // 点击浮层外部关闭大纲
+  useEffect(() => {
+    if (!outlineOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (outlinePopRef.current?.contains(target)) return;
+      if (outlineBtnRef.current?.contains(target)) return;
+      setOutlineOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [outlineOpen]);
+
+  useEffect(() => {
+    if (outlineItems.length === 0) {
+      setOutlineOpen(false);
+    }
+  }, [outlineItems.length]);
+
   return (
     <div className="editor-pane">
       {/* 顶部：格式工具栏 */}
@@ -336,7 +499,56 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
         <span className="editor-stats">
           <strong>{markdown.split('\n').length.toLocaleString()}</strong> 行 · <strong>{markdown.length.toLocaleString()}</strong> 字符
         </span>
+        <button
+          ref={outlineBtnRef}
+          type="button"
+          className={`editor-footer-btn editor-outline-btn${outlineOpen ? ' is-active' : ''}`}
+          onClick={handleToggleOutline}
+          title="文章大纲"
+          aria-label="文章大纲"
+          aria-expanded={outlineOpen}
+          disabled={outlineItems.length === 0}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <line x1="3" y1="4" x2="13" y2="4" />
+            <line x1="5" y1="8" x2="13" y2="8" />
+            <line x1="7" y1="12" x2="13" y2="12" />
+          </svg>
+          大纲
+        </button>
       </div>
+
+      {/* 文章大纲浮层（portal 到 body，避免被 overflow:hidden 裁剪） */}
+      {outlineOpen && createPortal(
+        <div
+          ref={outlinePopRef}
+          className="editor-outline-pop"
+          role="dialog"
+          aria-label="文章大纲"
+          style={{ position: 'fixed', top: outlinePos.top, left: outlinePos.left }}
+        >
+          <div className="editor-outline-pop-header">
+            <span>文章大纲</span>
+            <button type="button" className="editor-outline-close" onClick={() => setOutlineOpen(false)} aria-label="关闭">&times;</button>
+          </div>
+          <div className="editor-outline-pop-body">
+            {outlineItems.length === 0 ? (
+              <div className="editor-outline-empty">未发现标题（H1-H3）</div>
+            ) : (
+              <ul className="editor-outline-list">
+                {outlineItems.map((item, idx) => (
+                  <li key={`${item.pos}-${idx}`} className={`editor-outline-item editor-outline-level-${item.level}`}>
+                    <button type="button" onClick={() => handleOutlineJump(item.pos)} title={item.text}>
+                      <span className="editor-outline-text">{item.text}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
 
       <input
         ref={fileInputRef}

@@ -73,6 +73,7 @@
 
 /* 底部文件操作栏 */
 .editor-footer {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -102,12 +103,125 @@
   color: var(--color-brand);
 }
 
+.editor-footer-btn:disabled {
+  cursor: not-allowed;
+  color: var(--color-text-placeholder);
+  border-color: var(--color-border-secondary);
+  opacity: 0.65;
+}
+
+.editor-footer-btn:disabled:hover {
+  color: var(--color-text-placeholder);
+  border-color: var(--color-border-secondary);
+}
+
 .editor-stats {
   margin-left: auto;
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   white-space: nowrap;
   user-select: none;
+}
+
+/* 文章大纲按钮 */
+.editor-outline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.editor-outline-btn.is-active {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+/* 文章大纲浮层 */
+.editor-outline-pop {
+  width: 280px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-white);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  overflow: hidden;
+  transform: translateY(calc(-100% - 6px));
+}
+
+.editor-outline-pop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-surface);
+}
+
+.editor-outline-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-1);
+}
+
+.editor-outline-close:hover {
+  color: var(--color-text-primary);
+}
+
+.editor-outline-pop-body {
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.editor-outline-empty {
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.editor-outline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px;
+}
+
+.editor-outline-item > button {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: var(--transition-fast);
+}
+
+.editor-outline-item > button:hover {
+  background-color: var(--color-bg-hover-transparent);
+  color: var(--color-brand);
+}
+
+.editor-outline-level-1 > button { font-weight: 600; color: var(--color-text-primary); }
+.editor-outline-level-2 > button { padding-left: var(--space-6); }
+.editor-outline-level-3 > button { padding-left: var(--space-8); }
+
+.editor-outline-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 768px) {

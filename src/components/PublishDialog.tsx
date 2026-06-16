@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { publishToDraft } from '../utils/publishApi';
 import { generateCover } from '../utils/coverCanvas';
 import { Button } from './ui';
@@ -19,15 +19,25 @@ interface Props {
   open: boolean;
   onClose: () => void;
   title: string;
+  cover: string;
   htmlContent: string;
 }
 
-const PublishDialog: React.FC<Props> = ({ open, onClose, title, htmlContent }) => {
+const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, htmlContent }) => {
   const [articleTitle, setArticleTitle] = useState(title);
   const [author, setAuthor] = useState(() => localStorage.getItem('feishu2wx_author') || '');
-  const [coverUrl, setCoverUrl] = useState('');
+  const [coverUrl, setCoverUrl] = useState(cover);
   const [publishing, setPublishing] = useState(false);
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; element: React.ReactNode } | null>(null);
+
+  // 每次打开时，从 frontmatter 同步标题与封面
+  useEffect(() => {
+    if (open) {
+      setArticleTitle(title);
+      setCoverUrl(cover);
+      setMsg(null);
+    }
+  }, [open, title, cover]);
 
   if (!open) return null;
 

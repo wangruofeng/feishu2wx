@@ -1010,6 +1010,7 @@ function applyThemeStyles(
       pEl.style.lineHeight = '1.8';
       pEl.style.color = '#333';
       pEl.style.fontFamily = fontFamily;
+      pEl.style.textAlign = 'left';
     }
   });
 

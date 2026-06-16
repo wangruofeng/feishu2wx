@@ -6,13 +6,30 @@ import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import { Button } from './components/ui';
-import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, extractFrontMatterTitle } from './utils/markdownRenderer';
+import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng } from './utils/wechatCopy';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
 import './App.css';
 import './styles/themes.css';
 import 'highlight.js/styles/atom-one-dark.css';
+
+function splitMarkdownFrontMatter(markdown: string): { frontMatter: string; body: string } {
+  const lines = markdown.split(/\r?\n/);
+  if (lines[0]?.trim() !== '---') {
+    return { frontMatter: '', body: markdown };
+  }
+
+  const endLineIndex = lines.findIndex((line, index) => index > 0 && line.trim() === '---');
+  if (endLineIndex === -1) {
+    return { frontMatter: '', body: markdown };
+  }
+
+  return {
+    frontMatter: lines.slice(0, endLineIndex + 1).join('\n'),
+    body: lines.slice(endLineIndex + 1).join('\n'),
+  };
+}
 
 const App: React.FC = () => {
   const savedMarkdown = localStorage.getItem('feishu2wx_markdown') || '';
@@ -29,6 +46,7 @@ const App: React.FC = () => {
   const savedInvertH2 = localStorage.getItem('feishu2wx_invertH2') === 'true';
   const savedAlignH2Left = localStorage.getItem('feishu2wx_alignH2Left') === 'true';
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
+  const savedShowFrontMatter = localStorage.getItem('feishu2wx_showFrontMatter') !== 'false';
   const savedTableShadow = localStorage.getItem('feishu2wx_tableShadow') !== 'false';
   const savedShowBlockquoteBg = localStorage.getItem('feishu2wx_showBlockquoteBg') !== 'false';
   const savedHeaderTemplate = localStorage.getItem('feishu2wx_headerTemplate') || '';
@@ -54,6 +72,7 @@ const App: React.FC = () => {
   const [imageBorderRadius, setImageBorderRadius] = useState<boolean>(savedImageBorderRadius);
   const [codeBlockStyle, setCodeBlockStyleState] = useState<CodeBlockStyle>(savedCodeBlockStyle);
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
+  const [showFrontMatter, setShowFrontMatter] = useState<boolean>(savedShowFrontMatter);
   const [tableShadow, setTableShadow] = useState<boolean>(savedTableShadow);
   const [showBlockquoteBg, setShowBlockquoteBg] = useState<boolean>(savedShowBlockquoteBg);
   const [headerTemplate, setHeaderTemplate] = useState<string>(savedHeaderTemplate);
@@ -129,18 +148,24 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_darkMode', darkMode); }, [darkMode]);
 
   // 文章首/尾固定模板：预览、复制、推送均基于组合后的 Markdown，编辑器仍只编辑正文
+  // front matter 始终置顶，首尾模板拼接到 front matter 之后 / 正文之后
   const composedMarkdown = useMemo(() => {
-    const parts = [headerTemplate.trim(), markdown, footerTemplate.trim()].filter(Boolean);
-    return parts.length > 1 ? parts.join('\n\n') : markdown;
+    const { frontMatter, body } = splitMarkdownFrontMatter(markdown);
+    return [frontMatter, headerTemplate, body, footerTemplate]
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join('\n\n');
   }, [headerTemplate, markdown, footerTemplate]);
 
   // 标题优先取 front matter 的 title 字段，其次从正文（raw markdown）首个 H1 提取
   const articleTitle = useMemo(() => {
-    const fmTitle = extractFrontMatterTitle(markdown);
+    const fmTitle = getFrontMatterField(markdown, 'title');
     if (fmTitle) return fmTitle;
     const h1Match = markdown.match(/^#\s+(.+)$/m);
     return h1Match ? h1Match[1].trim() : '未命名文章';
   }, [markdown]);
+
+  const articleCover = useMemo(() => getFrontMatterField(markdown, 'cover'), [markdown]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -166,9 +191,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter: true });
+    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter });
     setHtml(rendered);
-  }, [composedMarkdown]);
+  }, [composedMarkdown, showFrontMatter]);
 
   useEffect(() => { localStorage.setItem('feishu2wx_markdown', markdown); }, [markdown]);
   useEffect(() => { localStorage.setItem('feishu2wx_theme', theme); }, [theme]);
@@ -182,11 +207,12 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_alignH1Left', String(alignH1Left)); }, [alignH1Left]);
   useEffect(() => { localStorage.setItem('feishu2wx_invertH2', String(invertH2)); }, [invertH2]);
   useEffect(() => { localStorage.setItem('feishu2wx_alignH2Left', String(alignH2Left)); }, [alignH2Left]);
+  useEffect(() => { localStorage.setItem('feishu2wx_showFrontMatter', String(showFrontMatter)); }, [showFrontMatter]);
 
   useEffect(() => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
     setShowHorizontalRule(showHorizontalRule);
-    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter: true });
+    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter });
     setHtml(rendered);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHorizontalRule]);
@@ -226,7 +252,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setCodeBlockStyle(codeBlockStyle);
-    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter: true });
+    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter });
     setHtml(rendered);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeBlockStyle]);
@@ -396,6 +422,8 @@ const App: React.FC = () => {
             onToggleAlignH2Left={() => setAlignH2Left(!alignH2Left)}
             showHorizontalRule={showHorizontalRule}
             onToggleHorizontalRule={() => setShowHorizontalRuleState(!showHorizontalRule)}
+            showFrontMatter={showFrontMatter}
+            onToggleShowFrontMatter={() => setShowFrontMatter(!showFrontMatter)}
             showBlockquoteBg={showBlockquoteBg}
             onToggleShowBlockquoteBg={() => setShowBlockquoteBg(!showBlockquoteBg)}
             tableShadow={tableShadow}
@@ -446,7 +474,7 @@ const App: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleCopyToWeChat}
-            disabled={isCopying || !markdown.trim()}
+            disabled={isCopying || !composedMarkdown.trim()}
           >
             复制
           </Button>
@@ -458,7 +486,7 @@ const App: React.FC = () => {
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
-            disabled={!wechatConfigured || !markdown.trim()}
+            disabled={!wechatConfigured || !composedMarkdown.trim()}
             title={!wechatConfigured ? '请先在设置中配置公众号' : '推送到草稿箱'}
           >
             推送
@@ -532,6 +560,7 @@ const App: React.FC = () => {
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
         title={articleTitle}
+        cover={articleCover}
         htmlContent={publishHtml}
       />
 

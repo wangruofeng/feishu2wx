@@ -23,6 +23,8 @@ interface Props {
   onToggleShowBlockquoteBg: () => void;
   showHorizontalRule: boolean;
   onToggleHorizontalRule: () => void;
+  showFrontMatter: boolean;
+  onToggleShowFrontMatter: () => void;
   tableShadow: boolean;
   onToggleTableShadow: () => void;
   headerTemplate: string;
@@ -123,6 +125,8 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleAlignH2Left,
   showHorizontalRule,
   onToggleHorizontalRule,
+  showFrontMatter,
+  onToggleShowFrontMatter,
   showBlockquoteBg,
   onToggleShowBlockquoteBg,
   tableShadow,
@@ -205,6 +209,7 @@ const SettingsPanel: React.FC<Props> = ({
       <section className="settings-group">
         <h3 className="settings-group-title">元素</h3>
         <ToggleSwitch label="分割线" checked={showHorizontalRule} onClick={onToggleHorizontalRule} />
+        <ToggleSwitch label="元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
         <ToggleSwitch label="引用块背景" checked={showBlockquoteBg} onClick={onToggleShowBlockquoteBg} />
         <ToggleSwitch label="表格阴影" checked={tableShadow} onClick={onToggleTableShadow} />
       </section>

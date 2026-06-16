@@ -101,7 +101,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `markdown`、`html`
 - `theme`、`font`
 - `showEditor`、`isFullscreen`、`device`
-- `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`
+- `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`、`showFrontMatter`
 - `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
 - `isSystemDark`、`darkMode`（`'system' | 'light' | 'dark'` 三态切换）
 - `copyStatus`（复制结果弹窗）
@@ -122,7 +122,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
 - `FontSelector.tsx`：字体下拉选择器（16 种字体）。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换。
-- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、H2 样式（反色/对齐）、分割线、表格阴影、图片模式（默认/边框/阴影）、代码块样式、智能 HTML 转 Markdown 开关的可视化配置。
+- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、H2 样式（反色/对齐）、分割线、元数据显示、表格阴影、图片模式（默认/边框/阴影）、代码块样式、智能 HTML 转 Markdown 开关的可视化配置。
 - `ImageViewer.tsx`：图片查看器，支持键盘左右切换预览区所有图片，底部显示序号。
 - `ShortcutsDrawer.tsx`：快捷键抽屉面板，展示所有键盘快捷键（格式、编辑、视图三组），支持 ESC 关闭和遮罩点击关闭。
 - `PublishDialog.tsx`：推送对话框（标题、作者、封面）。

@@ -295,14 +295,22 @@ function renderImage(tokens: any, idx: number): string {
 md.renderer.rules.image = renderImage;
 mdModern.renderer.rules.image = renderImage;
 
-interface FrontMatterField {
+export interface FrontMatterField {
   key: string;
   value: string | string[];
 }
 
-interface FrontMatterResult {
+export interface FrontMatterResult {
   content: string;
   fields: FrontMatterField[];
+}
+
+/** 从 Markdown 源码中读取 frontmatter 的指定字段（字符串值），不存在时返回空字符串 */
+export function getFrontMatterField(markdown: string, key: string): string {
+  const { fields } = parseFrontMatter(markdown);
+  const field = fields.find((f) => f.key.toLowerCase() === key.toLowerCase());
+  if (!field) return '';
+  return Array.isArray(field.value) ? field.value.join(', ') : field.value;
 }
 
 interface RenderMarkdownOptions {
@@ -392,7 +400,7 @@ function parseFrontMatterFields(source: string): FrontMatterField[] {
 }
 
 // 解析 Markdown 源码顶部的 Front Matter（YAML 块）
-function parseFrontMatter(markdown: string): FrontMatterResult {
+export function parseFrontMatter(markdown: string): FrontMatterResult {
   const lines = markdown.split(/\r?\n/);
   if (lines[0]?.trim() !== '---') {
     return { content: markdown, fields: [] };
