@@ -1,4 +1,4 @@
-import { renderMarkdown, setCodeBlockStyle, setShowHorizontalRule } from './markdownRenderer';
+import { renderMarkdown, setCodeBlockStyle, setShowHorizontalRule, extractFrontMatterTitle } from './markdownRenderer';
 
 beforeEach(() => {
   setCodeBlockStyle('classic');
@@ -54,3 +54,40 @@ test('renders frontmatter preview when enabled', () => {
   expect(tags[1].textContent).toBe('创业');
   expect(container.querySelector('h1').textContent).toBe('SpaceX 上市');
 });
+
+test('extractFrontMatterTitle reads title field from front matter', () => {
+  const md = '---\ntitle: SpaceX 上市\ndescription: 以 135 美元定价\n---\n# SpaceX 上市';
+  expect(extractFrontMatterTitle(md)).toBe('SpaceX 上市');
+});
+
+test('extractFrontMatterTitle strips surrounding quotes from the value', () => {
+  const md = '---\ntitle: "我的标题"\n---\n# 正文';
+  expect(extractFrontMatterTitle(md)).toBe('我的标题');
+});
+
+test('extractFrontMatterTitle returns null when no front matter or no title', () => {
+  expect(extractFrontMatterTitle('# 仅正文标题')).toBeNull();
+  expect(extractFrontMatterTitle('---\ndescription: 无标题\n---\n# 正文')).toBeNull();
+});
+
+test('renders punctuation-ended strong syntax followed by Chinese text', () => {
+  const html = renderMarkdown('**国际大厂卷基础设施和安全，中文项目卷场景落地和数据采集，两边各自在擅长的层面把事情做深。**这其实是生态成熟的表现');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  const strong = container.querySelector('strong');
+
+  expect(strong).not.toBeNull();
+  expect(strong.textContent).toBe('国际大厂卷基础设施和安全，中文项目卷场景落地和数据采集，两边各自在擅长的层面把事情做深。');
+  expect(container.textContent.trim()).toBe('国际大厂卷基础设施和安全，中文项目卷场景落地和数据采集，两边各自在擅长的层面把事情做深。这其实是生态成熟的表现');
+});
+
+test('keeps punctuation-ended strong syntax working in modern code block style', () => {
+  setCodeBlockStyle('modern');
+  const html = renderMarkdown('**做深！**这其实是生态成熟的表现');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  expect(container.querySelector('strong')?.textContent).toBe('做深！');
+  expect(container.textContent.trim()).toBe('做深！这其实是生态成熟的表现');
+});
+

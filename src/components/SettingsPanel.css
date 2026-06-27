@@ -1,3 +1,5 @@
+/* ========== 面板外壳（保留原定位与动画） ========== */
+
 .settings-panel {
   position: absolute;
   top: 100%;
@@ -27,21 +29,211 @@
   }
 }
 
-.settings-section {
-  margin-bottom: 14px;
+@media (max-width: 768px) {
+  .settings-panel {
+    right: -40px;
+    width: 280px;
+  }
 }
 
-.settings-section:last-child {
-  margin-bottom: 0;
+/* ========== 分组结构 ========== */
+
+.settings-group {
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border-primary);
 }
 
-.settings-label {
-  display: block;
+.settings-group:first-of-type {
+  padding-top: 0;
+}
+
+.settings-group:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-group-title {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
-  margin-bottom: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-3);
+}
+
+/* ========== 行：标签 + 控件 ========== */
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 32px;
+}
+
+.settings-row + .settings-row {
+  margin-top: var(--space-2);
+}
+
+.settings-row-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+/* ========== Toggle 开关 ========== */
+
+.settings-switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-bg-subtle);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.settings-switch::-moz-focus-inner {
+  border: 0;
+}
+
+.settings-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-bg-white);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.settings-switch[aria-checked='true'] {
+  background: var(--color-brand);
+}
+
+.settings-switch[aria-checked='true']::after {
+  transform: translateX(16px);
+}
+
+.settings-switch:hover:not([aria-checked='true']) {
+  background: var(--color-border-secondary);
+}
+
+.settings-switch:focus-visible {
+  outline: 2px solid var(--color-brand-focus-ring);
+  outline-offset: 2px;
+}
+
+.settings-switch:active::after {
+  width: 18px;
+}
+
+.settings-switch[aria-checked='true']:active::after {
+  transform: translateX(14px);
+}
+
+/* ========== Segmented control ========== */
+
+/* 外观组内多选一按钮组（图片模式 / 代码块） */
+
+.settings-toggles {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.settings-toggles::-webkit-scrollbar {
+  display: none;
+}
+
+.settings-toggle {
+  padding: 5px var(--space-4);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-white);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  white-space: nowrap;
+}
+
+.settings-toggle:hover:not(:disabled) {
+  border-color: var(--color-brand);
+  color: var(--color-brand);
+}
+
+.settings-toggle.active {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-text-inverse);
+}
+
+.settings-toggle:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.settings-segmented {
+  display: flex;
+  width: 100%;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-lg);
+  padding: 3px;
+  gap: 2px;
+}
+
+.settings-segmented-btn {
+  flex: 1;
+  padding: 5px var(--space-3);
+  border: none;
+  border-radius: calc(var(--radius-lg) - 2px);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.settings-segmented-btn:hover:not(.active) {
+  color: var(--color-text-secondary);
+}
+
+.settings-segmented-btn.active {
+  background: var(--color-bg-white);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
   font-weight: var(--font-weight-medium);
 }
+
+.settings-segmented-btn:focus-visible {
+  outline: 2px solid var(--color-brand-focus-ring);
+  outline-offset: 1px;
+}
+
+/* 外观组内分段控件独占一行 */
+.settings-row--block {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.settings-row--block .settings-row-label {
+  color: var(--color-text-secondary);
+}
+
+/* ========== 字体下拉（保留原样式） ========== */
 
 .settings-select {
   width: 100%;
@@ -70,76 +262,69 @@
   box-shadow: 0 0 0 2px var(--color-brand-focus-ring);
 }
 
-.settings-toggles {
-  display: flex;
-  gap: var(--space-2);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
+/* ========== Markdown 模板 textarea ========== */
 
-.settings-toggles::-webkit-scrollbar {
-  display: none;
-}
-
-.settings-toggle {
-  padding: 5px var(--space-4);
+.settings-textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border-secondary);
   border-radius: var(--radius-lg);
-  background: var(--color-bg-white);
-  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  cursor: pointer;
-  transition: var(--transition-normal);
-  white-space: nowrap;
+  font-family: var(--font-family-mono, inherit);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg-white);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-.settings-toggle:hover {
+.settings-textarea:hover {
   border-color: var(--color-brand);
-  color: var(--color-brand);
 }
 
-.settings-toggle.active {
-  background: var(--color-brand);
+.settings-textarea:focus {
   border-color: var(--color-brand);
-  color: var(--color-text-inverse);
+  box-shadow: 0 0 0 2px var(--color-brand-focus-ring);
 }
 
-@media (max-width: 768px) {
-  .settings-panel {
-    right: -40px;
-    width: 280px;
-  }
-}
+/* ========== 公众号配置 ========== */
 
-/* 公众号配置 */
-.settings-divider {
-  height: 1px;
-  background: var(--color-border-secondary);
-  margin: 14px 0;
-}
-
-.wechat-config-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.wechat-config-status {
+.settings-config-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
-.wechat-config-badge {
-  font-size: var(--font-size-xs);
-  padding: 2px 8px;
-  border-radius: var(--radius-lg);
+.settings-config-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
-.wechat-config-badge--ok {
-  background: #f0fff4;
-  color: #38a169;
+.settings-config-name {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.settings-config-badge {
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  padding: 2px 6px;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+
+.settings-config-badge--ok {
+  background: rgba(7, 193, 96, 0.12);
+  color: var(--color-status-success);
+}
+
+.settings-config-badge--empty {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-tertiary);
 }
 
 .wechat-config-btn {
@@ -151,9 +336,22 @@
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: var(--transition-normal);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .wechat-config-btn:hover {
   border-color: var(--color-brand);
   color: var(--color-brand);
+}
+
+/* ========== 暗黑模式下的开关滑块 ========== */
+/* 面板内其它色值全部经由 token 自动适配，仅需修正关闭态滑块在深底上的对比 */
+
+.theme-dark .settings-switch::after {
+  background: var(--color-bg-hover);
+}
+
+.theme-dark .settings-switch[aria-checked='true']::after {
+  background: var(--color-bg-white);
 }

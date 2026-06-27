@@ -24,6 +24,65 @@ export function getCodeBlockStyle(): CodeBlockStyle {
 // 分割线渲染开关（全局变量）
 let showHorizontalRule = true;
 
+const CJK_STRONG_TRAILING_PUNCTUATION = new Set(['。', '！', '？', '；', '：', '，', '、', '…', '.', ',', '!', '?', ';', ':']);
+
+function getLastChar(value: string): string {
+  return Array.from(value).pop() || '';
+}
+
+function isWhitespace(value: string): boolean {
+  return /\s/.test(value);
+}
+
+function cjkPunctuationStrongRule(state: any, silent: boolean): boolean {
+  const start = state.pos;
+  const source = state.src;
+
+  if (source.charCodeAt(start) !== 0x2A || source.charCodeAt(start + 1) !== 0x2A) {
+    return false;
+  }
+
+  let searchFrom = start + 2;
+  if (searchFrom >= state.posMax || source.charCodeAt(searchFrom) === 0x2A) {
+    return false;
+  }
+
+  while (searchFrom < state.posMax) {
+    const close = source.indexOf('**', searchFrom);
+    if (close === -1) {
+      return false;
+    }
+
+    const content = source.slice(start + 2, close);
+    const nextChar = source.charAt(close + 2);
+
+    if (content && CJK_STRONG_TRAILING_PUNCTUATION.has(getLastChar(content)) && nextChar && !isWhitespace(nextChar)) {
+      if (!silent) {
+        const openToken = state.push('strong_open', 'strong', 1);
+        openToken.markup = '**';
+
+        const textToken = state.push('text', '', 0);
+        textToken.content = content;
+
+        const closeToken = state.push('strong_close', 'strong', -1);
+        closeToken.markup = '**';
+      }
+
+      state.pos = close + 2;
+      return true;
+    }
+
+    searchFrom = close + 2;
+  }
+
+  return false;
+}
+
+function registerCjkPunctuationStrong(markdown: MarkdownIt): MarkdownIt {
+  markdown.inline.ruler.before('emphasis', 'cjk_punctuation_strong', cjkPunctuationStrongRule);
+  return markdown;
+}
+
 // 设置分割线是否显示
 export function setShowHorizontalRule(show: boolean) {
   showHorizontalRule = show;
@@ -83,20 +142,20 @@ function createModernHighlightFunction() {
 }
 
 // 创建 MarkdownIt 实例
-const md: MarkdownIt = new MarkdownIt({
+const md: MarkdownIt = registerCjkPunctuationStrong(new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
   highlight: createHighlightFunction(),
-}).use(footnote);
+}).use(footnote));
 
 // 创建现代风格的 MarkdownIt 实例
-const mdModern: MarkdownIt = new MarkdownIt({
+const mdModern: MarkdownIt = registerCjkPunctuationStrong(new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
   highlight: createModernHighlightFunction(),
-}).use(footnote);
+}).use(footnote));
 
 // 配置链接在新窗口打开（经典风格）
 const defaultRender = md.renderer.rules.link_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
@@ -351,6 +410,19 @@ function parseFrontMatter(markdown: string): FrontMatterResult {
     content,
     fields: parseFrontMatterFields(frontMatterSource),
   };
+}
+
+/**
+ * 从 Markdown 顶部 front matter 中提取标题字段（title / Title）。
+ * 提取失败时返回 null。复用 renderMarkdown 的 front matter 解析逻辑。
+ */
+export function extractFrontMatterTitle(markdown: string): string | null {
+  const { fields } = parseFrontMatter(markdown);
+  const titleField = fields.find((field) => field.key === 'title' || field.key === 'Title');
+  if (!titleField) {
+    return null;
+  }
+  return Array.isArray(titleField.value) ? titleField.value.join(' ').trim() : titleField.value.trim();
 }
 
 function renderFrontMatterPreview(fields: FrontMatterField[]): string {

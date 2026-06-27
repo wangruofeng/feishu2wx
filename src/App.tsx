@@ -6,7 +6,7 @@ import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import { Button } from './components/ui';
-import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule } from './utils/markdownRenderer';
+import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, extractFrontMatterTitle } from './utils/markdownRenderer';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng } from './utils/wechatCopy';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
@@ -31,6 +31,8 @@ const App: React.FC = () => {
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
   const savedTableShadow = localStorage.getItem('feishu2wx_tableShadow') !== 'false';
   const savedShowBlockquoteBg = localStorage.getItem('feishu2wx_showBlockquoteBg') !== 'false';
+  const savedHeaderTemplate = localStorage.getItem('feishu2wx_headerTemplate') || '';
+  const savedFooterTemplate = localStorage.getItem('feishu2wx_footerTemplate') || '';
   const savedDarkMode = localStorage.getItem('feishu2wx_darkMode') as 'system' | 'light' | 'dark' || 'system';
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
@@ -54,6 +56,8 @@ const App: React.FC = () => {
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
   const [tableShadow, setTableShadow] = useState<boolean>(savedTableShadow);
   const [showBlockquoteBg, setShowBlockquoteBg] = useState<boolean>(savedShowBlockquoteBg);
+  const [headerTemplate, setHeaderTemplate] = useState<string>(savedHeaderTemplate);
+  const [footerTemplate, setFooterTemplate] = useState<string>(savedFooterTemplate);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
     visible: false,
     message: '',
@@ -124,7 +128,16 @@ const App: React.FC = () => {
 
   useEffect(() => { localStorage.setItem('feishu2wx_darkMode', darkMode); }, [darkMode]);
 
+  // 文章首/尾固定模板：预览、复制、推送均基于组合后的 Markdown，编辑器仍只编辑正文
+  const composedMarkdown = useMemo(() => {
+    const parts = [headerTemplate.trim(), markdown, footerTemplate.trim()].filter(Boolean);
+    return parts.length > 1 ? parts.join('\n\n') : markdown;
+  }, [headerTemplate, markdown, footerTemplate]);
+
+  // 标题优先取 front matter 的 title 字段，其次从正文（raw markdown）首个 H1 提取
   const articleTitle = useMemo(() => {
+    const fmTitle = extractFrontMatterTitle(markdown);
+    if (fmTitle) return fmTitle;
     const h1Match = markdown.match(/^#\s+(.+)$/m);
     return h1Match ? h1Match[1].trim() : '未命名文章';
   }, [markdown]);
@@ -153,9 +166,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const rendered = renderMarkdown(markdown, { showFrontMatter: true });
+    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter: true });
     setHtml(rendered);
-  }, [markdown]);
+  }, [composedMarkdown]);
 
   useEffect(() => { localStorage.setItem('feishu2wx_markdown', markdown); }, [markdown]);
   useEffect(() => { localStorage.setItem('feishu2wx_theme', theme); }, [theme]);
@@ -173,13 +186,15 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
     setShowHorizontalRule(showHorizontalRule);
-    const rendered = renderMarkdown(markdown, { showFrontMatter: true });
+    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter: true });
     setHtml(rendered);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHorizontalRule]);
 
   useEffect(() => { localStorage.setItem('feishu2wx_tableShadow', String(tableShadow)); }, [tableShadow]);
   useEffect(() => { localStorage.setItem('feishu2wx_showBlockquoteBg', String(showBlockquoteBg)); }, [showBlockquoteBg]);
+  useEffect(() => { localStorage.setItem('feishu2wx_headerTemplate', headerTemplate); }, [headerTemplate]);
+  useEffect(() => { localStorage.setItem('feishu2wx_footerTemplate', footerTemplate); }, [footerTemplate]);
 
   useEffect(() => {
     if (copyStatusTimerRef.current) {
@@ -211,7 +226,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setCodeBlockStyle(codeBlockStyle);
-    const rendered = renderMarkdown(markdown, { showFrontMatter: true });
+    const rendered = renderMarkdown(composedMarkdown, { showFrontMatter: true });
     setHtml(rendered);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeBlockStyle]);
@@ -385,6 +400,10 @@ const App: React.FC = () => {
             onToggleShowBlockquoteBg={() => setShowBlockquoteBg(!showBlockquoteBg)}
             tableShadow={tableShadow}
             onToggleTableShadow={() => setTableShadow(!tableShadow)}
+            headerTemplate={headerTemplate}
+            setHeaderTemplate={setHeaderTemplate}
+            footerTemplate={footerTemplate}
+            setFooterTemplate={setFooterTemplate}
             imageBorderStyle={imageBorderStyle}
             onToggleImageBorder={() => {
               const next = imageBorderStyle === 'default' ? 'border' : imageBorderStyle === 'border' ? 'shadow' : 'default';
