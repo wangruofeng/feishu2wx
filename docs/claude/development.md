@@ -30,7 +30,7 @@ npm run cli -- --help
 npm start
 ```
 
-仅启动 CRA 开发服务器（端口 3100），适合只做排版/预览相关的开发。推送草稿箱等后端 API 不可用。
+仅启动 CRA 开发服务器（默认端口 3000），适合只做排版/预览相关的开发。推送草稿箱等后端 API 不可用。
 
 ### 前后端同时启动（Express 后端）
 
@@ -128,7 +128,7 @@ npm run cli -- --user theme status
 
 ## 配置注意事项
 
-- 主题配置分散在三处：`ThemeSwitcher.tsx`（UI 定义，4 种命名主题：经典、橙色、蓝色、绿意）、`wechatCopy.ts`（导出内联样式映射，含额外 `light` / `dark` 两种内部主题）、`styles/themes.css`（预览样式）。新增或修改主题时三处都要同步。
+- 主题配置分散在三处：`ThemeSwitcher.tsx`（UI 定义，4 种命名主题：经典、橙色、蓝色、青绿）、`wechatCopy.ts`（导出内联样式映射，含额外 `light` / `dark` 两种内部主题）、`styles/themes.css`（预览样式）。新增或修改主题时三处都要同步。
 - 字体配置分散在两处：`FontSelector.tsx`（UI 下拉）和 `wechatCopy.ts`（导出字体映射）。新增字体时两处都要同步。
 - Google Fonts 链接在 `public/index.html` 中预加载，新增 Google Font 需在此添加 `<link>`。
 - `patch-package` 在 `postinstall` 时自动运行，用于修补第三方依赖。

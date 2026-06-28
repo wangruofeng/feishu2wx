@@ -50,6 +50,9 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储
 - 快捷键：`EditorPane.tsx` 管理编辑区快捷键（Cmd+B 加粗切换、Cmd+I 斜体切换、Cmd+U 下划线切换、Cmd+K 链接、Cmd+Z 撤销、Cmd+Shift+Z 重做），`App.tsx` 管理全局快捷键（Option+E 编辑/预览切换）；所有快捷键在 `ShortcutsDrawer` 组件中展示
+- 文章大纲：`EditorPane.tsx` 底部工具栏右侧大纲按钮，解析 Markdown 中的 H1-H3 标题（跳过 frontmatter 与代码块），点击大纲项滚动 textarea 定位到对应标题
+- 文章首尾模板：`App.tsx` 管理 `headerTemplate`/`footerTemplate` 状态（localStorage 键 `feishu2wx_headerTemplate`/`feishu2wx_footerTemplate`），推送/复制时自动拼接到正文前后（frontmatter 之后、正文之前 / 正文之后），设置面板可配置
+- 推送标题/封面自动读取：`App.tsx` 的 `articleTitle` 优先从 frontmatter `title` 字段读取（fallback 到 H1），`articleCover` 从 frontmatter `cover` 字段读取
 - 经典主题主色调为 `#000000e6`（90% 不透明黑），配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`）
 - 提交前会运行 Husky 检查：
   - `package.json` 版本号必须更新
@@ -57,8 +60,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 详细文档
 
-- 架构与渲染细节：[docs/Codex/architecture.md](docs/Codex/architecture.md)
-- 开发命令、测试、部署与提交流程：[docs/Codex/development.md](docs/Codex/development.md)
+- 架构与渲染细节：[docs/claude/architecture.md](docs/claude/architecture.md)
+- 开发命令、测试、部署与提交流程：[docs/claude/development.md](docs/claude/development.md)
 - 部署说明（GitHub Pages + Cloudflare Pages）：[DEPLOY.md](DEPLOY.md)
 
 

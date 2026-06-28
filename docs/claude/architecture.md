@@ -110,13 +110,15 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `showBackTop`（回到顶部按钮）
 - `publishOpen`、`publishHtml`（推送对话框）
 - `wechatConfigured`（公众号凭证状态）
+- `headerTemplate`、`footerTemplate`（文章首尾模板，持久化键 `feishu2wx_headerTemplate`/`feishu2wx_footerTemplate`，推送/复制时拼接到 front matter 之后 / 正文之后）
+- `articleTitle`（推送标题，优先取 front matter `title`，回退正文首个 H1）、`articleCover`（推送封面，取 front matter `cover`）
 
 所有设置都会持久化到 localStorage（键名前缀 `feishu2wx_`）。预览 HTML 由 `markdown` 和渲染选项通过纯函数派生。
 
 ## 组件结构
 
 - `App.tsx`：主容器与状态中心，含顶部控制栏（字体、设备切换、全屏、主题、设置面板）。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
 - `Toolbar.tsx`：底部工具栏（加载示例、清空、H1 底线、H1 反显、水平分割线、图片样式、代码块样式、一键复制）。
 - `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
