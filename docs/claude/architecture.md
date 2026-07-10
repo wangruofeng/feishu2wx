@@ -11,13 +11,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
                                               ↓
                               renderMarkdown() → HTML Preview
                                               ↓
-                              formatForWeChat() → Inline-styled HTML → Clipboard
+                              formatForWeChat() → Inline-styled HTML → Clipboard / 文件下载（导出）
 ```
 
 1. 输入：用户在 `EditorPane` 中粘贴 HTML，或直接输入 Markdown，或导入本地 `.md` 文件。
 2. 转换：`htmlToMarkdown.ts` 使用飞书专用规则将粘贴的 HTML 转为 Markdown。
 3. 渲染：`markdownRenderer.ts` 使用 highlight.js 进行语法高亮，并把 Markdown 渲染成 HTML。
-4. 输出：`wechatCopy.ts` 将预览 HTML 转换为微信公众号兼容的内联样式 HTML，并复制到剪贴板。
+4. 输出：`wechatCopy.ts` 将预览 HTML 转换为微信公众号兼容的内联样式 HTML，复制到剪贴板或通过 `exportHtmlToFile()` 包裹成完整 HTML 文档下载。
 
 ## 核心工具模块
 
@@ -47,6 +47,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 保留 modern 代码块左上角的圆点头部，并用 `<br>` + `&nbsp;` 序列化缩进。
 - 三级剪贴板回退策略：(1) Clipboard API + ClipboardItem → (2) execCommand + contenteditable div → (3) textarea 回退。
 - 智能复制：检测预览区是否有选中内容，有则仅复制选中部分，否则复制全文。
+- 导出 HTML：`exportHtmlToFile()` 把 `formatForWeChat` 产出的 body 片段包裹为完整 HTML 文档（`<!DOCTYPE>` + `<head>` 含 `<meta charset>` 与 `<title>`），用 Blob + `<a download>` 触发浏览器下载；文件名由 `sanitizeFilename()` 从 `articleTitle` 清洗得到。
 - 多项微信编辑器反格式化对策：`<li>` 内容包裹 `<span>`、`<p>` 标签扁平化、列表内粗体标签转为 styled span。
 - 列表空白清理（`removeListFormattingWhitespace`）：推送前移除 `<ul>/<ol>` 和 `<li>` 中的纯换行文本节点，并将 `<li>` 内的 `<p>` 展开为 `<span>`，确保微信编辑器不产生多余空行。
 - Task List checkbox 内联样式处理：为 `.task-checkbox` 添加 `margin-right`、`font-size`、`vertical-align`；为 `li.task-list-item` 移除列表标记并左移。
@@ -104,7 +105,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`、`showFrontMatter`
 - `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
 - `isSystemDark`、`darkMode`（`'system' | 'light' | 'dark'` 三态切换）
-- `copyStatus`（复制结果弹窗）
+- `copyStatus`（复制/导出结果弹窗，复用同一 toast）、`isExporting`（导出中禁用）
 - `shouldConvertPastedHtml`（智能 HTML 转 Markdown 开关）
 - `shortcutsOpen`（快捷键抽屉面板）
 - `showBackTop`（回到顶部按钮）

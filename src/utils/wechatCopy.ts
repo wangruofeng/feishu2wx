@@ -1729,7 +1729,7 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
+
       try {
         const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
@@ -1743,4 +1743,40 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
     console.error('复制文本失败:', err);
     return false;
   }
+}
+
+/**
+ * 去除文件名中的非法字符，空白压缩为单空格
+ */
+export function sanitizeFilename(name: string): string {
+  return name.replace(/[/\\:*?"<>|]/g, '').replace(/\s+/g, ' ').trim() || '未命名文章';
+}
+
+/**
+ * 把格式化后的 HTML（body 片段）包裹成完整 HTML 文档并触发浏览器下载
+ */
+export function exportHtmlToFile(html: string, filename: string): void {
+  const fullHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${filename.replace(/\.html$/i, '')}</title>
+</head>
+<body>
+<div style="margin: 0 32px;">
+${html}
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }

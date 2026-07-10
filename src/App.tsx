@@ -7,7 +7,7 @@ import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import { Button } from './components/ui';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
-import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng } from './utils/wechatCopy';
+import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, sanitizeFilename } from './utils/wechatCopy';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
 import './App.css';
@@ -58,6 +58,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<string>(savedTheme);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>(savedFont);
@@ -349,6 +350,25 @@ const App: React.FC = () => {
     }
   }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg]);
 
+  const handleExportHtml = useCallback(async () => {
+    if (!html.trim()) {
+      setCopyStatus({ visible: true, message: '请先输入或粘贴内容', isError: true });
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
+      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+      exportHtmlToFile(formatted, sanitizeFilename(articleTitle) + '.html');
+      setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
+    } catch (error) {
+      console.error('导出失败:', error);
+      setCopyStatus({ visible: true, message: '导出失败，请刷新页面后重试', isError: true });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg]);
+
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
   }, []);
@@ -477,6 +497,14 @@ const App: React.FC = () => {
             disabled={isCopying || !composedMarkdown.trim()}
           >
             复制
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportHtml}
+            disabled={isExporting || !composedMarkdown.trim()}
+            title="导出公众号 HTML 文件"
+          >
+            导出
           </Button>
           <Button
             variant="outline"

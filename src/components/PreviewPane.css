@@ -133,7 +133,7 @@
 
 .preview-content .frontmatter-row {
   display: grid;
-  grid-template-columns: minmax(80px, 200px) minmax(0, 1fr);
+  grid-template-columns: minmax(60px, 120px) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
   margin-top: 8px;
