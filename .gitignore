@@ -32,6 +32,7 @@ yarn-error.log*
 .claude/
 .omx/
 .playwright-mcp/
+.zcode
 
 # Server data (sensitive)
 server/data/
