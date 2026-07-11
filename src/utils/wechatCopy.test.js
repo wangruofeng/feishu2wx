@@ -113,10 +113,188 @@ test('matches orange preview heading colors for wechat copy and publish', () => 
   const h1Wrapper = container.querySelector('h1 .h1-inline-block');
   const h2Wrapper = container.querySelector('h2 .h2-inline-block');
 
-  expect(h1Wrapper.style.backgroundColor).toBe('rgb(154, 52, 18)');
+  expect(h1Wrapper.style.backgroundColor).toBe('rgb(253, 70, 6)');
   expect(h1Wrapper.style.color).toBe('rgb(255, 255, 255)');
-  expect(h2Wrapper.style.backgroundColor).toBe('rgb(234, 88, 12)');
+  expect(container.querySelector('h1').style.color).toBe('rgb(253, 70, 6)');
+  expect(h2Wrapper.style.backgroundColor).toBe('rgb(253, 70, 6)');
   expect(h2Wrapper.style.color).toBe('rgb(255, 255, 255)');
+});
+
+test('shares generic layout sizes with non-generic themes', () => {
+  const html = '<h1>一级标题</h1><h2>二级标题</h2><h3>三级标题</h3><p>正文内容</p><blockquote><p>重点引用</p></blockquote>';
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(html, 'orange');
+
+  expect(container.querySelector('h1')?.style.margin).toBe('0px 0px 14px 0px');
+  expect(container.querySelector('h1')?.style.padding).toBe('0px 0px 0px 0px');
+  expect(container.querySelector('h1')?.style.fontSize).toBe('22px');
+  expect(container.querySelector('h1')?.style.letterSpacing).toBe('0.544px');
+  expect(container.querySelector('h2')?.style.margin).toBe('65px 0px 27px 0px');
+  expect(container.querySelector('h2')?.style.fontSize).toBe('21px');
+  expect(container.querySelector('h3')?.style.margin).toBe('27px 0px 27px 0px');
+  expect(container.querySelector('h3')?.style.fontSize).toBe('16px');
+  expect(container.querySelector('p')?.style.margin).toBe('27px 0px');
+  expect(container.querySelector('p')?.style.fontSize).toBe('15px');
+  expect(container.querySelector('p')?.style.letterSpacing).toBe('0.544px');
+  expect(container.querySelector('blockquote')?.style.margin).toBe('26px 0px');
+  expect(container.querySelector('blockquote')?.style.fontSize).toBe('15px');
+  expect(container.querySelector('blockquote')?.style.letterSpacing).toBe('0.544px');
+});
+
+test('uses the generic or active theme color for blockquotes', () => {
+  const html = '<blockquote><p>重点引用</p></blockquote>';
+
+  const genericHtml = formatForWeChat(
+    html,
+    'orange',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'default'
+  );
+  const themeHtml = formatForWeChat(
+    html,
+    'orange',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'theme'
+  );
+
+  const genericQuote = document.createElement('div');
+  genericQuote.innerHTML = genericHtml;
+  const themedQuote = document.createElement('div');
+  themedQuote.innerHTML = themeHtml;
+
+  expect(genericQuote.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #D8D8D8');
+  expect(themedQuote.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #FD4606');
+});
+
+test('formats independent blockquote background and height modes', () => {
+  const html = '<blockquote><p>重点引用</p></blockquote>';
+  const compactHtml = formatForWeChat(
+    html,
+    'teal',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'default',
+    'compact',
+    'none'
+  );
+  const looseHtml = formatForWeChat(
+    html,
+    'teal',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'theme',
+    'loose',
+    'theme'
+  );
+
+  const compactContainer = document.createElement('div');
+  compactContainer.innerHTML = compactHtml;
+  const looseContainer = document.createElement('div');
+  looseContainer.innerHTML = looseHtml;
+
+  const compactQuote = compactContainer.querySelector('blockquote');
+  const looseQuote = looseContainer.querySelector('blockquote');
+  expect(compactQuote?.style.backgroundColor).toBe('transparent');
+  expect(compactQuote?.style.paddingTop).toBe('0px');
+  expect(compactQuote?.style.paddingBottom).toBe('0px');
+  expect(looseQuote?.style.backgroundColor).toBe('rgb(240, 253, 250)');
+  expect(looseQuote?.style.paddingTop).toBe('12px');
+  expect(looseQuote?.style.paddingBottom).toBe('12px');
+});
+
+test('applies orange theme blockquote background when following the theme', () => {
+  const html = '<blockquote><p>重点引用</p></blockquote>';
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(
+    html,
+    'orange',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'theme',
+    'loose',
+    'theme',
+    'left'
+  );
+
+  expect(container.querySelector('blockquote')?.style.backgroundColor).toBe('rgb(255, 247, 237)');
+});
+
+test('applies the configured default text alignment to article elements', () => {
+  const html = '<p>正文</p><ul><li>列表</li></ul><blockquote><p>引用</p></blockquote>';
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(
+    html,
+    'blue',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'default',
+    'loose',
+    'none',
+    'justify'
+  );
+
+  expect(container.querySelector('p')?.style.textAlign).toBe('justify');
+  expect(container.querySelector('ul')?.style.textAlign).toBe('justify');
+  expect(container.querySelector('li')?.style.textAlign).toBe('justify');
+  expect(container.querySelector('blockquote')?.style.textAlign).toBe('justify');
+});
+
+test('uses the shared link style for every theme', () => {
+  const html = '<p><a href="https://example.com">链接</a></p>';
+  const expectedColor = 'rgb(87, 107, 149)';
+
+  ['teal', 'classic', 'orange', 'blue'].forEach((theme) => {
+    const container = document.createElement('div');
+    container.innerHTML = formatForWeChat(html, theme);
+    const link = container.querySelector('a');
+
+    expect(link?.style.color).toBe(expectedColor);
+    expect(link?.style.textDecoration).toBe('none');
+  });
 });
 
 test('formats classic code blocks left-aligned for wechat copy', () => {

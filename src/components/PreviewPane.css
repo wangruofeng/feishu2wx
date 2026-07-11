@@ -368,10 +368,6 @@
   color: #333;
 }
 
-.preview-content.hide-blockquote-bg blockquote {
-  background-color: transparent !important;
-}
-
 .preview-content blockquote > *:first-child {
   margin-top: 0;
 }
@@ -572,14 +568,8 @@
 }
 
 .preview-content a {
-  color: #4A7FE0;
+  color: #576B95;
   text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.preview-content a:hover {
-  border-bottom-color: currentColor;
 }
 
 .preview-content table {

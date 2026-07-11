@@ -2,6 +2,45 @@ import { CodeBlockStyle } from './markdownRenderer';
 import { modernCodeBlockStyles } from './codeBlockStyles';
 import { WECHAT_IMAGE_CAPTION_TAG, WECHAT_IMAGE_WRAPPER_TAG } from './wechatTagWhitelist';
 
+/** 共享文章排版配置：所有颜色主题复用这组结构参数。 */
+export const sharedArticleStyleConfig = {
+  bodyColor: '#222222',
+  bodyFontSize: '15px',
+  bodyLineHeight: '25px',
+  bodyMargin: '27px 0',
+  bodyPadding: '0',
+  bodyTextAlign: 'justify',
+  bodyLetterSpacing: '0.544px',
+  h1FontSize: '22px',
+  h1LineHeight: '30.8px',
+  h1FontWeight: '500',
+  h1Margin: '0 0 14px',
+  h1Padding: '0',
+  h1TextAlign: 'left',
+  h2FontSize: '21px',
+  h2LineHeight: '29px',
+  h2FontWeight: '600',
+  h2Margin: '65px 0 27px',
+  h2TextAlign: 'left',
+  h2Padding: '0',
+  h3FontSize: '16px',
+  h3LineHeight: '25px',
+  h3Margin: '27px 0',
+  h3Padding: '0',
+  h4FontSize: '16px',
+  h4LineHeight: '25px',
+  h4Margin: '27px 0',
+  h4Padding: '0',
+  quoteBorderWidth: '4px',
+  quotePadding: '0 15px 0 14px',
+  quoteMargin: '26px 0',
+  quoteFontSize: '15px',
+  quoteLineHeight: '23px',
+  quoteFontWeight: '600',
+  quoteRadius: '0',
+  highlightColor: '#FF4C00',
+};
+
 /**
  * 获取主题相关的样式配置
  */
@@ -17,54 +56,98 @@ function getThemeStyles(theme: string) {
     headingColorH3H6: string;
     linkColor: string;
     blockquoteBorderColor: string;
+    blockquoteThemeColor: string;
     blockquoteBgColor: string;
     tableHeaderBgColor: string;
     tableHeaderColor: string;
+    bodyColor?: string;
+    bodyFontSize?: string;
+    bodyLineHeight?: string;
+    bodyMargin?: string;
+    bodyPadding?: string;
+    bodyTextAlign?: string;
+    bodyLetterSpacing?: string;
+    h1FontSize?: string;
+    h1LineHeight?: string;
+    h1FontWeight?: string;
+    h1Margin?: string;
+    h1Padding?: string;
+    h1TextAlign?: string;
+    h2FontSize?: string;
+    h2LineHeight?: string;
+    h2FontWeight?: string;
+    h2Margin?: string;
+    h2TextAlign?: string;
+    h3FontSize?: string;
+    h3LineHeight?: string;
+    h3Margin?: string;
+    h3Padding?: string;
+    h4FontSize?: string;
+    h4LineHeight?: string;
+    h4Margin?: string;
+    h4Padding?: string;
+    quoteBorderWidth?: string;
+    quotePadding?: string;
+    quoteMargin?: string;
+    quoteFontSize?: string;
+    quoteLineHeight?: string;
+    quoteFontWeight?: string;
+    quoteRadius?: string;
+    h2Padding?: string;
+    highlightColor?: string;
   }> = {
     teal: {
+      ...sharedArticleStyleConfig,
       primaryColor: '#0D9488',
       primaryColorDark: '#0F766E',
       headingColor: '#115E59',
       headingColorH2: '#115E59',
       headingColorH3H6: '#0F766E',
-      linkColor: '#0D9488',
+      linkColor: '#576B95',
       blockquoteBorderColor: '#0D9488',
+      blockquoteThemeColor: '#0D9488',
       blockquoteBgColor: '#F0FDFA',
       tableHeaderBgColor: '#F0FDFA',
       tableHeaderColor: '#115E59',
     },
     classic: {
+      ...sharedArticleStyleConfig,
       primaryColor: '#000000e6',
       primaryColorDark: '#000000cc',
       headingColor: '#000000cc',
       headingColorH2: '#000000cc',
       headingColorH3H6: '#000000e6',
-      linkColor: '#1890ff',
+      linkColor: '#576B95',
       blockquoteBorderColor: '#000000e6',
+      blockquoteThemeColor: '#000000e6',
       blockquoteBgColor: '#f5f5f5',
       tableHeaderBgColor: '#f5f5f5',
       tableHeaderColor: '#000000cc',
     },
     orange: {
-      primaryColor: '#EA580C',
-      primaryColorDark: '#9A3412',
-      headingColor: '#9A3412',
-      headingColorH2: '#9A3412',
-      headingColorH3H6: '#C2410C',
-      linkColor: '#EA580C',
-      blockquoteBorderColor: '#EA580C',
+      ...sharedArticleStyleConfig,
+      primaryColor: '#FD4606',
+      primaryColorDark: '#D93B05',
+      headingColor: '#FD4606',
+      headingColorH2: '#FD4606',
+      headingColorH3H6: '#222222',
+      linkColor: '#576B95',
+      blockquoteBorderColor: '#D8D8D8',
+      blockquoteThemeColor: '#FD4606',
       blockquoteBgColor: '#FFF7ED',
-      tableHeaderBgColor: '#FFF7ED',
-      tableHeaderColor: '#9A3412',
+      tableHeaderBgColor: '#f5f5f5',
+      tableHeaderColor: '#222222',
     },
     blue: {
+      ...sharedArticleStyleConfig,
       primaryColor: '#0F4C81',
       primaryColorDark: '#0a3357',
       headingColor: '#0F4C81',
       headingColorH2: '#0F4C81',
       headingColorH3H6: '#1a5c8f',
-      linkColor: '#0F4C81',
+      linkColor: '#576B95',
       blockquoteBorderColor: '#0F4C81',
+      blockquoteThemeColor: '#0F4C81',
       blockquoteBgColor: '#f0f7ff',
       tableHeaderBgColor: '#f0f7ff',
       tableHeaderColor: '#0F4C81',
@@ -95,6 +178,7 @@ function getFontFamily(fontKey: string): string {
     'montserrat': '"Montserrat", -apple-system, BlinkMacSystemFont, sans-serif',
     'raleway': '"Raleway", -apple-system, BlinkMacSystemFont, sans-serif',
     'poppins': '"Poppins", -apple-system, BlinkMacSystemFont, sans-serif',
+    'pingfang': '"PingFang SC NEW", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif',
   };
   return fonts[fontKey] || fonts['default'];
 }
@@ -471,7 +555,11 @@ export function formatForWeChat(
   invertH1: boolean = false,
   invertH2: boolean = false,
   alignH2Left: boolean = false,
-  showBlockquoteBg: boolean = true
+  legacyShowBlockquoteBg: boolean = true,
+  blockquoteColorMode: 'default' | 'theme' = 'default',
+  blockquoteHeightMode: 'loose' | 'compact' = 'loose',
+  blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
+  textAlignMode: 'left' | 'justify' = 'left'
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
@@ -483,7 +571,7 @@ export function formatForWeChat(
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
   removePreviewOnlyElements(tempDiv);
   downgradeImageFiguresForWechat(tempDiv);
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
 
   return tempDiv.innerHTML;
 }
@@ -691,10 +779,23 @@ function applyThemeStyles(
   invertH1: boolean,
   invertH2: boolean,
   alignH2Left: boolean,
-  showBlockquoteBg: boolean = true
+  legacyShowBlockquoteBg: boolean = true,
+  blockquoteColorMode: 'default' | 'theme' = 'default',
+  blockquoteHeightMode: 'loose' | 'compact' = 'loose',
+  blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
+  textAlignMode: 'left' | 'justify' = 'left'
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
+
+  // 通用主题的字符间距同步到所有主题的正文类 Markdown 元素。
+  const articleLetterSpacing = themeStyles.bodyLetterSpacing || '0.544px';
+  const articleTextElements = container.querySelectorAll(
+    'h1, h2, h3, h4, h5, h6, p, blockquote, ul, ol, li, table, th, td, figcaption'
+  );
+  articleTextElements.forEach((element) => {
+    (element as HTMLElement).style.letterSpacing = articleLetterSpacing;
+  });
 
   // 处理图片：确保图片有完整的样式和URL
   const images = container.querySelectorAll('img');
@@ -999,24 +1100,25 @@ function applyThemeStyles(
       return;
     }
     if (pEl.textContent?.trim()) {
-      pEl.style.fontSize = '16px';
+      pEl.style.fontSize = themeStyles.bodyFontSize || '15px';
       // 检查 p 后面是否跟着列表，如果是则减少下间距
       const nextSibling = pEl.nextElementSibling;
       const isFollowedByList = nextSibling && (
         nextSibling.tagName === 'UL' || nextSibling.tagName === 'OL'
       );
-      pEl.style.marginBottom = isFollowedByList ? '4px' : '24px';
-      pEl.style.marginTop = '0';
-      pEl.style.lineHeight = '1.8';
+      pEl.style.margin = isFollowedByList ? '27px 0 4px' : (themeStyles.bodyMargin || '27px 0');
+      pEl.style.padding = themeStyles.bodyPadding || '0';
+      pEl.style.lineHeight = themeStyles.bodyLineHeight || '25px';
       pEl.style.color = '#333';
       pEl.style.fontFamily = fontFamily;
-      pEl.style.textAlign = 'left';
+      pEl.style.textAlign = textAlignMode;
+      pEl.style.letterSpacing = themeStyles.bodyLetterSpacing || '0.544px';
     }
   });
 
   // 处理标题 - 完整样式（使用主题颜色，使用px单位确保兼容性）
   const h1Elements = container.querySelectorAll('h1');
-  h1Elements.forEach((h1, index) => {
+  h1Elements.forEach((h1) => {
     const h1El = h1 as HTMLElement;
     let inlineWrapper = h1El.querySelector(':scope > .h1-inline-block') as HTMLElement | null;
 
@@ -1032,20 +1134,20 @@ function applyThemeStyles(
     }
 
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
-    h1El.style.fontSize = '22px';
-    // 第一个 h1 的 margin-top 为 8px，后续为 48px
-    h1El.style.marginTop = index === 0 ? '8px' : '48px';
-    h1El.style.marginBottom = '16px';
+    h1El.style.fontSize = themeStyles.h1FontSize || '22px';
+    h1El.style.margin = themeStyles.h1Margin || '0 0 14px';
     h1El.style.marginLeft = '0';
     h1El.style.marginRight = '0';
     h1El.style.fontWeight = 'bold';
-    h1El.style.lineHeight = '1.25';
+    h1El.style.lineHeight = themeStyles.h1LineHeight || '30.8px';
     // 根据 showH1Underline 和 invertH1 决定是否显示底部横线
-    h1El.style.borderBottom = showH1Underline && !invertH1 ? `1px solid ${themeStyles.headingColor}` : 'none';
+    h1El.style.borderBottom = (!showH1Underline || invertH1)
+      ? 'none'
+      : `1px solid ${themeStyles.headingColor}`;
     h1El.style.borderTop = 'none';
     h1El.style.borderLeft = 'none';
     h1El.style.borderRight = 'none';
-    h1El.style.paddingBottom = '8px';
+    h1El.style.paddingBottom = themeStyles.h1Padding || '0';
     h1El.style.paddingTop = '0';
     h1El.style.paddingLeft = '0';
     h1El.style.paddingRight = '0';
@@ -1057,12 +1159,11 @@ function applyThemeStyles(
     inlineWrapper.style.display = invertH1 ? 'table' : 'inline';
     inlineWrapper.style.margin = invertH1 ? '0 auto' : '0';
     inlineWrapper.style.padding = invertH1 ? '6px 14px' : '0';
-    // 橙色主题的反显背景色使用 headingColor（与 H1 文本色一致），其他主题使用 primaryColor
-    const invertH1BgColor = theme === 'orange' ? themeStyles.headingColor : themeStyles.primaryColor;
+    const invertH1BgColor = themeStyles.primaryColor;
     inlineWrapper.style.backgroundColor = invertH1 ? invertH1BgColor : 'transparent';
     inlineWrapper.style.color = invertH1 ? '#ffffff' : themeStyles.headingColor;
     inlineWrapper.style.borderRadius = '0';
-    inlineWrapper.style.lineHeight = '1.25';
+    inlineWrapper.style.lineHeight = themeStyles.h1LineHeight || '30.8px';
     inlineWrapper.style.setProperty('box-decoration-break', invertH1 ? 'clone' : 'slice');
     inlineWrapper.style.setProperty('-webkit-box-decoration-break', invertH1 ? 'clone' : 'slice');
   });
@@ -1081,21 +1182,20 @@ function applyThemeStyles(
       h2El.appendChild(inlineWrapper);
     }
 
-    h2El.style.fontSize = '18px';
-    h2El.style.marginTop = '32px';
-    h2El.style.marginBottom = '16px';
+    h2El.style.fontSize = themeStyles.h2FontSize || '21px';
+    h2El.style.margin = themeStyles.h2Margin || '65px 0 27px';
     h2El.style.marginLeft = '0';
     h2El.style.marginRight = '0';
     h2El.style.fontWeight = 'bold';
-    h2El.style.lineHeight = '1.25';
+    h2El.style.lineHeight = themeStyles.h2LineHeight || '29px';
     h2El.style.borderBottom = 'none';
     h2El.style.borderTop = 'none';
     h2El.style.borderLeft = 'none';
     h2El.style.borderRight = 'none';
     h2El.style.paddingBottom = '0';
     h2El.style.paddingTop = '0';
-    h2El.style.paddingLeft = '0';
-    h2El.style.paddingRight = '0';
+    h2El.style.paddingLeft = themeStyles.h2Padding || '0';
+    h2El.style.paddingRight = themeStyles.h2Padding || '0';
     h2El.style.color = themeStyles.headingColorH2;
     h2El.style.display = 'block';
     h2El.style.textAlign = alignH2Left ? 'left' : 'center';
@@ -1108,20 +1208,20 @@ function applyThemeStyles(
       inlineWrapper.style.backgroundColor = invertH2 ? themeStyles.primaryColor : 'transparent';
       inlineWrapper.style.color = invertH2 ? '#ffffff' : themeStyles.headingColorH2;
       inlineWrapper.style.borderRadius = '0';
-      inlineWrapper.style.lineHeight = '1.25';
+      inlineWrapper.style.lineHeight = themeStyles.h2LineHeight || '29px';
     }
   });
 
   const h3Elements = container.querySelectorAll('h3');
   h3Elements.forEach((h3) => {
     const h3El = h3 as HTMLElement;
-    h3El.style.fontSize = '16px';
-    h3El.style.marginTop = '24px';
-    h3El.style.marginBottom = '16px';
+    h3El.style.fontSize = themeStyles.h3FontSize || '16px';
+    h3El.style.margin = themeStyles.h3Margin || '27px 0';
     h3El.style.marginLeft = '0';
     h3El.style.marginRight = '0';
+    h3El.style.padding = themeStyles.h3Padding || '0';
     h3El.style.fontWeight = 'bold';
-    h3El.style.lineHeight = '1.25';
+    h3El.style.lineHeight = themeStyles.h3LineHeight || '25px';
     h3El.style.color = themeStyles.headingColorH3H6;
     h3El.style.display = 'block';
     h3El.style.fontFamily = fontFamily;
@@ -1130,10 +1230,11 @@ function applyThemeStyles(
   const h4Elements = container.querySelectorAll('h4, h5, h6');
   h4Elements.forEach((h) => {
     const hEl = h as HTMLElement;
-    hEl.style.marginTop = '24px';
-    hEl.style.marginBottom = '16px';
+    hEl.style.margin = themeStyles.h4Margin || '27px 0';
+    hEl.style.padding = themeStyles.h4Padding || '0';
+    hEl.style.fontSize = themeStyles.h4FontSize || '16px';
     hEl.style.fontWeight = '600';
-    hEl.style.lineHeight = '1.25';
+    hEl.style.lineHeight = themeStyles.h4LineHeight || '25px';
     hEl.style.color = themeStyles.headingColorH3H6;
     hEl.style.fontFamily = fontFamily;
   });
@@ -1151,7 +1252,7 @@ function applyThemeStyles(
     listEl.style.paddingLeft = '30px';
     listEl.style.color = '#333';
     listEl.style.fontFamily = fontFamily;
-    listEl.style.textAlign = 'left';
+    listEl.style.textAlign = textAlignMode;
     listEl.style.fontSize = '16px';
   });
 
@@ -1178,6 +1279,7 @@ function applyThemeStyles(
     liEl.style.color = '#333';
     liEl.style.fontFamily = fontFamily;
     liEl.style.fontSize = '16px';
+    liEl.style.textAlign = textAlignMode;
 
     // 处理列表项内的空白字符，确保 strong/b 标签后的文本不会换行
     // 将所有文本节点中的换行符和多余空格替换为单个空格
@@ -1295,13 +1397,22 @@ function applyThemeStyles(
   const blockquotes = container.querySelectorAll('blockquote');
   blockquotes.forEach((blockquote) => {
     const bqEl = blockquote as HTMLElement;
-    bqEl.style.margin = '16px 0';
-    bqEl.style.padding = '12px 16px';
-    bqEl.style.borderLeft = `4px solid ${themeStyles.blockquoteBorderColor}`;
-    bqEl.style.backgroundColor = showBlockquoteBg ? themeStyles.blockquoteBgColor : 'transparent';
+    const blockquoteBorderColor = blockquoteColorMode === 'theme'
+      ? themeStyles.blockquoteThemeColor
+      : '#D8D8D8';
+    bqEl.style.margin = themeStyles.quoteMargin || '26px 0';
+    bqEl.style.padding = themeStyles.quotePadding || '0 15px 0 14px';
+    bqEl.style.borderLeft = `${themeStyles.quoteBorderWidth || '4px'} solid ${blockquoteBorderColor}`;
+    bqEl.style.backgroundColor = blockquoteBackgroundMode === 'theme' ? themeStyles.blockquoteBgColor : 'transparent';
+    bqEl.style.paddingTop = blockquoteHeightMode === 'compact' ? '0' : '12px';
+    bqEl.style.paddingBottom = blockquoteHeightMode === 'compact' ? '0' : '12px';
     bqEl.style.color = '#333';
     bqEl.style.borderRadius = '0 4px 4px 0';
     bqEl.style.fontFamily = fontFamily;
+    bqEl.style.fontSize = themeStyles.quoteFontSize || '15px';
+    bqEl.style.lineHeight = themeStyles.quoteLineHeight || '23px';
+    bqEl.style.letterSpacing = themeStyles.bodyLetterSpacing || '0.544px';
+    bqEl.style.textAlign = textAlignMode;
     
     // 处理 blockquote 内部元素的 margin，确保上下 padding 一致
     const firstChild = bqEl.firstElementChild as HTMLElement;
@@ -1320,7 +1431,6 @@ function applyThemeStyles(
     const linkEl = link as HTMLAnchorElement;
     linkEl.style.color = themeStyles.linkColor;
     linkEl.style.textDecoration = 'none';
-    linkEl.style.borderBottom = '1px solid transparent';
     linkEl.style.fontFamily = fontFamily;
 
     // 微信编辑器会清理 a 标签的颜色，需要给内部元素也设置颜色
@@ -1443,6 +1553,15 @@ function applyThemeStyles(
     }
   });
 
+  const highlightElements = container.querySelectorAll('mark');
+  highlightElements.forEach((mark) => {
+    const markEl = mark as HTMLElement;
+    markEl.style.backgroundColor = 'transparent';
+    markEl.style.color = themeStyles.highlightColor || '#FF4C00';
+    markEl.style.fontWeight = 'bold';
+    markEl.style.fontFamily = fontFamily;
+  });
+
   // 微信公众号会把 li 的「第一个子元素」提到 li 下、其余包进 section 导致换行。将每个 li 的全部内容包进一个 span，使 li 仅有一个直接子节点
   const listItemsToWrap = container.querySelectorAll('ul li, ol li');
   listItemsToWrap.forEach((li) => {
@@ -1506,7 +1625,11 @@ export async function copySelectedToWeChat(
   invertH1: boolean = false,
   invertH2: boolean = false,
   alignH2Left: boolean = false,
-  showBlockquoteBg: boolean = true
+  legacyShowBlockquoteBg: boolean = true,
+  blockquoteColorMode: 'default' | 'theme' = 'default',
+  blockquoteHeightMode: 'loose' | 'compact' = 'loose',
+  blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
+  textAlignMode: 'left' | 'justify' = 'left'
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
 
@@ -1517,7 +1640,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
 }
 
 /**
@@ -1535,14 +1658,18 @@ export async function copyHtmlToWeChat(
   invertH1: boolean = false,
   invertH2: boolean = false,
   alignH2Left: boolean = false,
-  showBlockquoteBg: boolean = true
+  legacyShowBlockquoteBg: boolean = true,
+  blockquoteColorMode: 'default' | 'theme' = 'default',
+  blockquoteHeightMode: 'loose' | 'compact' = 'loose',
+  blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
+  textAlignMode: 'left' | 'justify' = 'left'
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

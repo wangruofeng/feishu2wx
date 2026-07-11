@@ -91,3 +91,12 @@ test('keeps punctuation-ended strong syntax working in modern code block style',
   expect(container.textContent.trim()).toBe('做深！这其实是生态成熟的表现');
 });
 
+test('renders double-equals text as a selective highlight', () => {
+  const html = renderMarkdown('普通文字 ==重点文字== 继续文字');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const mark = container.querySelector('mark');
+  expect(mark).not.toBeNull();
+  expect(mark?.textContent).toBe('重点文字');
+});

@@ -45,6 +45,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - WebP 图片在服务端上传微信 API 前归一化：静态 WebP 转 PNG，动态 WebP 转 GIF，以兼容微信正文图上传并保留动图；前端 `convertWebpToPng()` 保留为备用工具函数
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
+- 编辑器 Markdown 源码语法高亮（textarea overlay 模式）：`src/utils/mdSourceHighlight.ts` 提供行扫描 tokenizer（`tokenizeMarkdown`）与预设配色方案（github/dracula/monokai/none，`getMdSyntaxCssVars` 注入 `--md-tok-*` CSS 变量）；`EditorPane.tsx` 在 `.markdown-editor` 下方叠加 `.md-highlight-layer`（文字透明仅 caret 可见，层随 textarea `onScroll` 的 `transform` 同步位移）；配色方案经 `syntaxTheme` 状态（localStorage 键 `feishu2wx_syntaxTheme`）在「外观」组配置，高亮层字体度量须与 `.markdown-editor` 严格一致
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
 - 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），ThemeSwitcher 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步

@@ -39,7 +39,7 @@
 /* ========== 分组结构 ========== */
 
 .settings-group {
-  padding: var(--space-4) 0;
+  padding: var(--space-6) 0;
   border-bottom: 1px solid var(--color-border-primary);
 }
 
@@ -67,11 +67,11 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  min-height: 32px;
+  min-height: 36px;
 }
 
 .settings-row + .settings-row {
-  margin-top: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 .settings-row-label {
@@ -176,6 +176,13 @@
   background: var(--color-brand);
   border-color: var(--color-brand);
   color: var(--color-text-inverse);
+  font-weight: var(--font-weight-semibold);
+}
+
+.settings-toggle.active:hover:not(:disabled) {
+  background: var(--color-brand-dark);
+  border-color: var(--color-brand-dark);
+  color: var(--color-text-inverse);
 }
 
 .settings-toggle:disabled {
@@ -225,7 +232,7 @@
 .settings-row--block {
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-height: 0;
 }
 

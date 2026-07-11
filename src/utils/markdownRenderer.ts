@@ -34,6 +34,39 @@ function isWhitespace(value: string): boolean {
   return /\s/.test(value);
 }
 
+function markRule(state: any, silent: boolean): boolean {
+  const start = state.pos;
+  const source = state.src;
+
+  if (source.charCodeAt(start) !== 0x3D || source.charCodeAt(start + 1) !== 0x3D) {
+    return false;
+  }
+
+  const close = source.indexOf('==', start + 2);
+  if (close === -1 || close === start + 2) {
+    return false;
+  }
+
+  const content = source.slice(start + 2, close);
+  if (/\r|\n/.test(content)) {
+    return false;
+  }
+
+  if (!silent) {
+    const openToken = state.push('mark_open', 'mark', 1);
+    openToken.markup = '==';
+
+    const textToken = state.push('text', '', 0);
+    textToken.content = content;
+
+    const closeToken = state.push('mark_close', 'mark', -1);
+    closeToken.markup = '==';
+  }
+
+  state.pos = close + 2;
+  return true;
+}
+
 function cjkPunctuationStrongRule(state: any, silent: boolean): boolean {
   const start = state.pos;
   const source = state.src;
@@ -79,6 +112,7 @@ function cjkPunctuationStrongRule(state: any, silent: boolean): boolean {
 }
 
 function registerCjkPunctuationStrong(markdown: MarkdownIt): MarkdownIt {
+  markdown.inline.ruler.before('emphasis', 'mark', markRule);
   markdown.inline.ruler.before('emphasis', 'cjk_punctuation_strong', cjkPunctuationStrongRule);
   return markdown;
 }

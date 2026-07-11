@@ -67,6 +67,53 @@
   overflow-y: auto;
 }
 
+/* 语法高亮：编辑器文字透明，仅 caret 可见，高亮层在下方着色 */
+.md-highlight-active .markdown-editor {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: var(--color-text-primary);
+  background-color: transparent;
+}
+
+.md-highlight-active .markdown-editor::selection {
+  background-color: rgba(13, 148, 136, 0.25);
+}
+
+/* 高亮层：绝对定位覆盖编辑器，不接收事件，内容由 transform 随 textarea 滚动 */
+.md-highlight-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  padding: var(--space-6);
+  box-sizing: border-box;
+}
+
+.md-highlight-content {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  color: var(--color-text-primary);
+  will-change: transform;
+}
+
+/* Markdown 元素 token 着色（颜色由配色方案注入的 CSS 变量控制） */
+.md-tok-heading { color: var(--md-tok-heading, inherit); font-weight: 600; }
+.md-tok-quote { color: var(--md-tok-quote, inherit); }
+.md-tok-codeblock { color: var(--md-tok-codeblock, inherit); }
+.md-tok-code { color: var(--md-tok-code, inherit); }
+.md-tok-list { color: var(--md-tok-list, inherit); }
+.md-tok-bold { color: var(--md-tok-bold, inherit); font-weight: 600; }
+.md-tok-italic { color: var(--md-tok-italic, inherit); font-style: italic; }
+.md-tok-link { color: var(--md-tok-link, inherit); }
+.md-tok-image { color: var(--md-tok-image, inherit); }
+.md-tok-hr { color: var(--md-tok-hr, inherit); }
+.md-tok-frontmatter { color: var(--md-tok-frontmatter, inherit); }
+
 .markdown-editor::placeholder {
   color: var(--color-text-placeholder);
 }

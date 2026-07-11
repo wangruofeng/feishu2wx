@@ -18,7 +18,10 @@ interface Props {
   imageBorderStyle?: 'border' | 'shadow' | 'default';
   imageBorderRadius?: boolean;
   tableShadow?: boolean;
-  showBlockquoteBg?: boolean;
+  blockquoteBackgroundMode?: 'none' | 'theme';
+  blockquoteColorMode?: 'default' | 'theme';
+  blockquoteHeightMode?: 'loose' | 'compact';
+  textAlignMode?: 'left' | 'justify';
   scrollRef?: React.Ref<HTMLDivElement>;
   onDeviceChange?: (device: 'desktop' | 'mobile') => void;
   onToggleFullscreen?: () => void;
@@ -37,7 +40,10 @@ const PreviewPane: React.FC<Props> = ({
   imageBorderStyle = 'border',
   imageBorderRadius = false,
   tableShadow = true,
-  showBlockquoteBg = true,
+  blockquoteBackgroundMode = 'theme',
+  blockquoteColorMode = 'default',
+  blockquoteHeightMode = 'loose',
+  textAlignMode = 'left',
   scrollRef,
   onDeviceChange,
   onToggleFullscreen,
@@ -138,7 +144,7 @@ const PreviewPane: React.FC<Props> = ({
       <div className="preview-content-wrapper">
         <div
           ref={setPreviewRef}
-          className={`preview-content device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} ${!showBlockquoteBg ? 'hide-blockquote-bg' : ''} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
+          className={`preview-content article-layout-generic device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} blockquote-bg-${blockquoteBackgroundMode} blockquote-color-${blockquoteColorMode} blockquote-height-${blockquoteHeightMode} text-align-${textAlignMode} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
           style={fontStyle}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />

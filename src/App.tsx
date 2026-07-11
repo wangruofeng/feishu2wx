@@ -7,6 +7,7 @@ import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import { Button } from './components/ui';
 import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
+import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, sanitizeFilename } from './utils/wechatCopy';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
@@ -33,11 +34,18 @@ function splitMarkdownFrontMatter(markdown: string): { frontMatter: string; body
 
 const App: React.FC = () => {
   const savedMarkdown = localStorage.getItem('feishu2wx_markdown') || '';
-  const savedTheme = localStorage.getItem('feishu2wx_theme') || 'classic';
+  const savedThemeValue = localStorage.getItem('feishu2wx_theme');
+  const supportedThemes = ['classic', 'orange', 'blue', 'teal'];
+  const savedTheme = savedThemeValue && supportedThemes.includes(savedThemeValue) ? savedThemeValue : 'classic';
   const savedFont = localStorage.getItem('feishu2wx_font') || 'default';
   const savedShouldConvertPastedHtml = localStorage.getItem('feishu2wx_shouldConvertPastedHtml') !== 'false';
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
-  const savedImageBorderStyle = localStorage.getItem('feishu2wx_imageBorderStyle') as 'border' | 'shadow' | 'default' || 'border';
+  const savedImageBorderStyleValue = localStorage.getItem('feishu2wx_imageBorderStyle');
+  const savedImageBorderStyle = savedImageBorderStyleValue === 'default'
+    || savedImageBorderStyleValue === 'border'
+    || savedImageBorderStyleValue === 'shadow'
+    ? savedImageBorderStyleValue
+    : 'border';
   const savedImageBorderRadius = localStorage.getItem('feishu2wx_imageBorderRadius') === 'true';
   const savedShowH1Underline = (localStorage.getItem('feishu2wx_showH1Underline')
     ?? localStorage.getItem('feishu2wx_showH1')) === 'true';
@@ -48,10 +56,29 @@ const App: React.FC = () => {
   const savedShowHorizontalRule = localStorage.getItem('feishu2wx_showHorizontalRule') !== 'false';
   const savedShowFrontMatter = localStorage.getItem('feishu2wx_showFrontMatter') !== 'false';
   const savedTableShadow = localStorage.getItem('feishu2wx_tableShadow') !== 'false';
-  const savedShowBlockquoteBg = localStorage.getItem('feishu2wx_showBlockquoteBg') !== 'false';
+  const savedBlockquoteBackgroundMode = localStorage.getItem('feishu2wx_blockquoteBackgroundMode') === 'none'
+    || (!localStorage.getItem('feishu2wx_blockquoteBackgroundMode') && localStorage.getItem('feishu2wx_showBlockquoteBg') === 'false')
+    ? 'none'
+    : 'theme';
+  const savedBlockquoteColorMode = localStorage.getItem('feishu2wx_blockquoteColorMode') === 'theme' ? 'theme' : 'default';
+  const savedBlockquoteHeightMode = localStorage.getItem('feishu2wx_blockquoteHeightMode') === 'compact'
+    ? 'compact'
+    : localStorage.getItem('feishu2wx_blockquoteHeightMode') === 'loose'
+      ? 'loose'
+      : 'loose';
+  const savedTextAlignMode = localStorage.getItem('feishu2wx_textAlignMode') === 'justify'
+    ? 'justify'
+    : localStorage.getItem('feishu2wx_textAlignMode') === 'left'
+      ? 'left'
+      : 'left';
   const savedHeaderTemplate = localStorage.getItem('feishu2wx_headerTemplate') || '';
   const savedFooterTemplate = localStorage.getItem('feishu2wx_footerTemplate') || '';
   const savedDarkMode = localStorage.getItem('feishu2wx_darkMode') as 'system' | 'light' | 'dark' || 'system';
+  const savedSyntaxThemeValue = localStorage.getItem('feishu2wx_syntaxTheme');
+  const supportedSyntaxThemes: MdSyntaxThemeKey[] = ['github', 'dracula', 'monokai', 'none'];
+  const savedSyntaxTheme = supportedSyntaxThemes.includes(savedSyntaxThemeValue as MdSyntaxThemeKey)
+    ? (savedSyntaxThemeValue as MdSyntaxThemeKey)
+    : 'github';
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
@@ -75,7 +102,10 @@ const App: React.FC = () => {
   const [showHorizontalRule, setShowHorizontalRuleState] = useState<boolean>(savedShowHorizontalRule);
   const [showFrontMatter, setShowFrontMatter] = useState<boolean>(savedShowFrontMatter);
   const [tableShadow, setTableShadow] = useState<boolean>(savedTableShadow);
-  const [showBlockquoteBg, setShowBlockquoteBg] = useState<boolean>(savedShowBlockquoteBg);
+  const [blockquoteBackgroundMode, setBlockquoteBackgroundMode] = useState<'none' | 'theme'>(savedBlockquoteBackgroundMode);
+  const [blockquoteColorMode, setBlockquoteColorMode] = useState<'default' | 'theme'>(savedBlockquoteColorMode);
+  const [blockquoteHeightMode, setBlockquoteHeightMode] = useState<'loose' | 'compact'>(savedBlockquoteHeightMode);
+  const [textAlignMode, setTextAlignMode] = useState<'left' | 'justify'>(savedTextAlignMode);
   const [headerTemplate, setHeaderTemplate] = useState<string>(savedHeaderTemplate);
   const [footerTemplate, setFooterTemplate] = useState<string>(savedFooterTemplate);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
@@ -89,6 +119,7 @@ const App: React.FC = () => {
   const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
   const [publishHtml, setPublishHtml] = useState<string>('');
   const [darkMode, setDarkMode] = useState<'system' | 'light' | 'dark'>(savedDarkMode);
+  const [syntaxTheme, setSyntaxTheme] = useState<MdSyntaxThemeKey>(savedSyntaxTheme);
   const [shortcutsOpen, setShortcutsOpen] = useState<boolean>(false);
   const [showBackTop, setShowBackTop] = useState<boolean>(false);
 
@@ -147,6 +178,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => { localStorage.setItem('feishu2wx_darkMode', darkMode); }, [darkMode]);
+  useEffect(() => { localStorage.setItem('feishu2wx_syntaxTheme', syntaxTheme); }, [syntaxTheme]);
 
   // 文章首/尾固定模板：预览、复制、推送均基于组合后的 Markdown，编辑器仍只编辑正文
   // front matter 始终置顶，首尾模板拼接到 front matter 之后 / 正文之后
@@ -219,7 +251,10 @@ const App: React.FC = () => {
   }, [showHorizontalRule]);
 
   useEffect(() => { localStorage.setItem('feishu2wx_tableShadow', String(tableShadow)); }, [tableShadow]);
-  useEffect(() => { localStorage.setItem('feishu2wx_showBlockquoteBg', String(showBlockquoteBg)); }, [showBlockquoteBg]);
+  useEffect(() => { localStorage.setItem('feishu2wx_blockquoteBackgroundMode', blockquoteBackgroundMode); }, [blockquoteBackgroundMode]);
+  useEffect(() => { localStorage.setItem('feishu2wx_blockquoteColorMode', blockquoteColorMode); }, [blockquoteColorMode]);
+  useEffect(() => { localStorage.setItem('feishu2wx_blockquoteHeightMode', blockquoteHeightMode); }, [blockquoteHeightMode]);
+  useEffect(() => { localStorage.setItem('feishu2wx_textAlignMode', textAlignMode); }, [textAlignMode]);
   useEffect(() => { localStorage.setItem('feishu2wx_headerTemplate', headerTemplate); }, [headerTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_footerTemplate', footerTemplate); }, [footerTemplate]);
 
@@ -319,7 +354,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -330,7 +365,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
       }
 
       setCopyStatus({
@@ -348,7 +383,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg]);
+  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode]);
 
   const handleExportHtml = useCallback(async () => {
     if (!html.trim()) {
@@ -358,7 +393,7 @@ const App: React.FC = () => {
     setIsExporting(true);
     try {
       const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
       exportHtmlToFile(formatted, sanitizeFilename(articleTitle) + '.html');
       setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
     } catch (error) {
@@ -367,7 +402,7 @@ const App: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
-  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg]);
+  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -444,8 +479,14 @@ const App: React.FC = () => {
             onToggleHorizontalRule={() => setShowHorizontalRuleState(!showHorizontalRule)}
             showFrontMatter={showFrontMatter}
             onToggleShowFrontMatter={() => setShowFrontMatter(!showFrontMatter)}
-            showBlockquoteBg={showBlockquoteBg}
-            onToggleShowBlockquoteBg={() => setShowBlockquoteBg(!showBlockquoteBg)}
+            textAlignMode={textAlignMode}
+            onChangeTextAlignMode={setTextAlignMode}
+            blockquoteBackgroundMode={blockquoteBackgroundMode}
+            onChangeBlockquoteBackgroundMode={setBlockquoteBackgroundMode}
+            blockquoteColorMode={blockquoteColorMode}
+            onChangeBlockquoteColorMode={setBlockquoteColorMode}
+            blockquoteHeightMode={blockquoteHeightMode}
+            onChangeBlockquoteHeightMode={setBlockquoteHeightMode}
             tableShadow={tableShadow}
             onToggleTableShadow={() => setTableShadow(!tableShadow)}
             headerTemplate={headerTemplate}
@@ -453,10 +494,7 @@ const App: React.FC = () => {
             footerTemplate={footerTemplate}
             setFooterTemplate={setFooterTemplate}
             imageBorderStyle={imageBorderStyle}
-            onToggleImageBorder={() => {
-              const next = imageBorderStyle === 'default' ? 'border' : imageBorderStyle === 'border' ? 'shadow' : 'default';
-              setImageBorderStyle(next);
-            }}
+            onChangeImageBorderStyle={setImageBorderStyle}
             imageBorderRadius={imageBorderRadius}
             onToggleImageBorderRadius={() => setImageBorderRadius(!imageBorderRadius)}
             codeBlockStyle={codeBlockStyle}
@@ -475,6 +513,8 @@ const App: React.FC = () => {
             }}
             darkMode={darkMode}
             onDarkModeChange={setDarkMode}
+            syntaxTheme={syntaxTheme}
+            onChangeSyntaxTheme={setSyntaxTheme}
           />
           {isFullscreen && (
             <Button className="exit-btn" onClick={() => setIsFullscreen(false)}>
@@ -510,7 +550,7 @@ const App: React.FC = () => {
             variant="outline"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showBlockquoteBg);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
@@ -550,6 +590,7 @@ const App: React.FC = () => {
           shouldConvertPastedHtml={shouldConvertPastedHtml}
           onScroll={handleEditorScroll}
           onLoadExample={handleLoadExample}
+          syntaxTheme={syntaxTheme}
         />
         <PreviewPane
           html={html}
@@ -562,7 +603,10 @@ const App: React.FC = () => {
           invertH2={invertH2}
           alignH2Left={alignH2Left}
           tableShadow={tableShadow}
-          showBlockquoteBg={showBlockquoteBg}
+          blockquoteBackgroundMode={blockquoteBackgroundMode}
+          blockquoteColorMode={blockquoteColorMode}
+          blockquoteHeightMode={blockquoteHeightMode}
+          textAlignMode={textAlignMode}
           imageBorderStyle={imageBorderStyle}
           imageBorderRadius={imageBorderRadius}
           scrollRef={previewScrollRef}

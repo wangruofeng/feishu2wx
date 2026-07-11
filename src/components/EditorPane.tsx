@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import { shouldConvertPastedHtml } from '../utils/pasteDetection';
+import { tokenizeMarkdown, getMdSyntaxCssVars, MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { Button } from './ui';
 import './EditorPane.css';
 
@@ -11,6 +12,7 @@ interface Props {
   shouldConvertPastedHtml: boolean;
   onScroll?: (e: React.UIEvent<HTMLTextAreaElement>) => void;
   onLoadExample: () => void;
+  syntaxTheme: MdSyntaxThemeKey;
 }
 
 interface HistoryEntry {
@@ -96,8 +98,9 @@ const getOutlineScrollTop = (textarea: HTMLTextAreaElement, markdown: string, po
   return measuredTop;
 };
 
-const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample }) => {
+const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample, syntaxTheme }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const highlightLayerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const redoStackRef = useRef<HistoryEntry[]>([]);
@@ -450,6 +453,23 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
     }
   }, [outlineItems.length]);
 
+  // 语法高亮：none 时不渲染，仅消费一次 tokenizeMarkdown
+  const highlightEnabled = syntaxTheme !== 'none';
+  const highlightedHtml = useMemo(
+    () => (highlightEnabled ? tokenizeMarkdown(markdown) : ''),
+    [markdown, highlightEnabled]
+  );
+
+  // textarea 滚动时同步高亮层位移，并透传外部 onScroll（保留预览同步）
+  const handleEditorScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
+    const layer = highlightLayerRef.current;
+    if (layer) {
+      const { scrollLeft, scrollTop } = e.currentTarget;
+      layer.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`;
+    }
+    onScroll?.(e);
+  }, [onScroll]);
+
   return (
     <div className="editor-pane">
       {/* 顶部：格式工具栏 */}
@@ -470,8 +490,18 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
         <Button variant="editorToolbar" onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</Button>
       </div>
 
-      {/* 中间：编辑区 */}
-      <div className="editor-container">
+      {/* 中间：编辑区（高亮层在 textarea 下方，文字透明仅 caret 可见） */}
+      <div className={`editor-container${highlightEnabled ? ' md-highlight-active' : ''}`}>
+        {highlightEnabled && (
+          <div className="md-highlight-layer" aria-hidden="true">
+            <div
+              ref={highlightLayerRef}
+              className="md-highlight-content"
+              style={getMdSyntaxCssVars(syntaxTheme) as React.CSSProperties}
+              dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+            />
+          </div>
+        )}
         <textarea
           ref={textareaRef}
           className="markdown-editor"
@@ -479,7 +509,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
           onChange={handleChange}
           onPaste={handlePaste}
           onKeyDown={handleKeyDown}
-          onScroll={onScroll}
+          onScroll={handleEditorScroll}
           placeholder="请粘贴飞书文档内容或直接编写 Markdown..."
           spellCheck={false}
         />

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
+import { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { Button } from './ui';
 import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
@@ -19,12 +20,18 @@ interface Props {
   onToggleInvertH2: () => void;
   alignH2Left: boolean;
   onToggleAlignH2Left: () => void;
-  showBlockquoteBg: boolean;
-  onToggleShowBlockquoteBg: () => void;
+  blockquoteBackgroundMode: 'none' | 'theme';
+  onChangeBlockquoteBackgroundMode: (mode: 'none' | 'theme') => void;
+  blockquoteColorMode: 'default' | 'theme';
+  onChangeBlockquoteColorMode: (mode: 'default' | 'theme') => void;
+  blockquoteHeightMode: 'loose' | 'compact';
+  onChangeBlockquoteHeightMode: (mode: 'loose' | 'compact') => void;
   showHorizontalRule: boolean;
   onToggleHorizontalRule: () => void;
   showFrontMatter: boolean;
   onToggleShowFrontMatter: () => void;
+  textAlignMode: 'left' | 'justify';
+  onChangeTextAlignMode: (mode: 'left' | 'justify') => void;
   tableShadow: boolean;
   onToggleTableShadow: () => void;
   headerTemplate: string;
@@ -32,7 +39,7 @@ interface Props {
   footerTemplate: string;
   setFooterTemplate: (value: string) => void;
   imageBorderStyle: 'border' | 'shadow' | 'default';
-  onToggleImageBorder: () => void;
+  onChangeImageBorderStyle: (style: 'border' | 'shadow' | 'default') => void;
   imageBorderRadius: boolean;
   onToggleImageBorderRadius: () => void;
   codeBlockStyle: CodeBlockStyle;
@@ -44,6 +51,8 @@ interface Props {
   onDeleteWechatConfig: () => Promise<void>;
   darkMode: 'system' | 'light' | 'dark';
   onDarkModeChange: (mode: 'system' | 'light' | 'dark') => void;
+  syntaxTheme: MdSyntaxThemeKey;
+  onChangeSyntaxTheme: (theme: MdSyntaxThemeKey) => void;
 }
 
 const fonts = [
@@ -63,6 +72,7 @@ const fonts = [
   { key: 'montserrat', name: 'Montserrat' },
   { key: 'raleway', name: 'Raleway' },
   { key: 'poppins', name: 'Poppins' },
+  { key: 'pingfang', name: '苹方' },
 ];
 
 /** Toggle 开关：底层为 button，保留文字标签以确保文本可被测试查找 */
@@ -127,8 +137,14 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleHorizontalRule,
   showFrontMatter,
   onToggleShowFrontMatter,
-  showBlockquoteBg,
-  onToggleShowBlockquoteBg,
+  textAlignMode,
+  onChangeTextAlignMode,
+  blockquoteBackgroundMode,
+  onChangeBlockquoteBackgroundMode,
+  blockquoteColorMode,
+  onChangeBlockquoteColorMode,
+  blockquoteHeightMode,
+  onChangeBlockquoteHeightMode,
   tableShadow,
   onToggleTableShadow,
   headerTemplate,
@@ -136,7 +152,7 @@ const SettingsPanel: React.FC<Props> = ({
   footerTemplate,
   setFooterTemplate,
   imageBorderStyle,
-  onToggleImageBorder,
+  onChangeImageBorderStyle,
   imageBorderRadius,
   onToggleImageBorderRadius,
   codeBlockStyle,
@@ -148,6 +164,8 @@ const SettingsPanel: React.FC<Props> = ({
   onDeleteWechatConfig,
   darkMode,
   onDarkModeChange,
+  syntaxTheme,
+  onChangeSyntaxTheme,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
@@ -177,127 +195,49 @@ const SettingsPanel: React.FC<Props> = ({
   return (
     <div className="settings-panel" ref={panelRef}>
 
-      {/* ===== 编辑 ===== */}
+      {/* ===== 通用 ===== */}
       <section className="settings-group">
-        <h3 className="settings-group-title">编辑</h3>
+        <h3 className="settings-group-title">通用</h3>
         <ToggleSwitch
           label="智能粘贴转换"
           checked={shouldConvertPastedHtml}
           onClick={onToggleShouldConvertPastedHtml}
         />
-      </section>
-
-      {/* ===== 标题 ===== */}
-      <section className="settings-group">
-        <h3 className="settings-group-title">标题</h3>
-        <ToggleSwitch label="H1 底线" checked={showH1Underline} onClick={onToggleH1Underline} />
-        <ToggleSwitch label="H1 反色" checked={invertH1} onClick={onToggleInvertH1} />
-        <ToggleSwitch
-          label={alignH1Left ? 'H1 左对齐' : 'H1 居中'}
-          checked={alignH1Left}
-          onClick={onToggleAlignH1Left}
-        />
-        <ToggleSwitch label="H2 反色" checked={invertH2} onClick={onToggleInvertH2} />
-        <ToggleSwitch
-          label={alignH2Left ? 'H2 左对齐' : 'H2 居中'}
-          checked={alignH2Left}
-          onClick={onToggleAlignH2Left}
-        />
-      </section>
-
-      {/* ===== 元素 ===== */}
-      <section className="settings-group">
-        <h3 className="settings-group-title">元素</h3>
-        <ToggleSwitch label="分割线" checked={showHorizontalRule} onClick={onToggleHorizontalRule} />
-        <ToggleSwitch label="元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
-        <ToggleSwitch label="引用块背景" checked={showBlockquoteBg} onClick={onToggleShowBlockquoteBg} />
-        <ToggleSwitch label="表格阴影" checked={tableShadow} onClick={onToggleTableShadow} />
-      </section>
-
-      {/* ===== 模板 ===== */}
-      <section className="settings-group">
-        <h3 className="settings-group-title">模板</h3>
-        <TemplateField
-          label="文章首部片段"
-          value={headerTemplate}
-          onChange={setHeaderTemplate}
-          placeholder="留空则不添加。支持 Markdown，会自动拼接到正文前"
-        />
-        <TemplateField
-          label="文章尾部片段"
-          value={footerTemplate}
-          onChange={setFooterTemplate}
-          placeholder="留空则不添加。支持 Markdown，会自动拼接到正文后"
-        />
-      </section>
-
-      {/* ===== 外观 ===== */}
-      <section className="settings-group">
-        <h3 className="settings-group-title">外观</h3>
-
-        {/* 图片模式：多选一，保留循环 toggle 按钮组 */}
+        {/* 源码配色：编辑器 Markdown 源码语法高亮配色方案 */}
         <div className="settings-row settings-row--block">
-          <span className="settings-row-label">图片模式</span>
+          <span className="settings-row-label">源码配色</span>
           <div className="settings-toggles">
             <Button
-              variant="toggle" active={imageBorderStyle === 'default'}
-              onClick={imageBorderStyle !== 'default' ? onToggleImageBorder : undefined}
+              variant="toggle"
+              active={syntaxTheme === 'github'}
+              onClick={() => onChangeSyntaxTheme('github')}
             >
-              默认
+              GitHub
             </Button>
             <Button
-              variant="toggle" active={imageBorderStyle === 'border'}
-              onClick={imageBorderStyle !== 'border' ? onToggleImageBorder : undefined}
+              variant="toggle"
+              active={syntaxTheme === 'dracula'}
+              onClick={() => onChangeSyntaxTheme('dracula')}
             >
-              边框
+              Dracula
             </Button>
             <Button
-              variant="toggle" active={imageBorderStyle === 'shadow'}
-              onClick={imageBorderStyle !== 'shadow' ? onToggleImageBorder : undefined}
+              variant="toggle"
+              active={syntaxTheme === 'monokai'}
+              onClick={() => onChangeSyntaxTheme('monokai')}
             >
-              阴影
+              Monokai
+            </Button>
+            <Button
+              variant="toggle"
+              active={syntaxTheme === 'none'}
+              onClick={() => onChangeSyntaxTheme('none')}
+            >
+              无
             </Button>
           </div>
         </div>
-
-        <ToggleSwitch label="图片圆角" checked={imageBorderRadius} onClick={onToggleImageBorderRadius} />
-
-        {/* 代码块：二选一，保留循环 toggle */}
-        <div className="settings-row settings-row--block">
-          <span className="settings-row-label">代码块</span>
-          <div className="settings-toggles">
-            <Button
-              variant="toggle" active={codeBlockStyle === 'classic'}
-              onClick={codeBlockStyle === 'modern' ? onToggleCodeBlockStyle : undefined}
-            >
-              极简
-            </Button>
-            <Button
-              variant="toggle" active={codeBlockStyle === 'modern'}
-              onClick={codeBlockStyle === 'classic' ? onToggleCodeBlockStyle : undefined}
-            >
-              现代
-            </Button>
-          </div>
-        </div>
-
-        {/* 字体 */}
-        <div className="settings-row settings-row--block">
-          <span className="settings-row-label">字体</span>
-          <select
-            className="settings-select"
-            value={font}
-            onChange={(e) => setFont(e.target.value)}
-          >
-            {fonts.map((f) => (
-              <option key={f.key} value={f.key}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* 深色模式：三选一 */}
+        {/* 主题模式：三选一 */}
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">主题模式</span>
           <div className="settings-segmented">
@@ -324,6 +264,203 @@ const SettingsPanel: React.FC<Props> = ({
             </button>
           </div>
         </div>
+      </section>
+
+      {/* ===== 标题 ===== */}
+      <section className="settings-group">
+        <h3 className="settings-group-title">标题</h3>
+        <ToggleSwitch label="H1 底线" checked={showH1Underline} onClick={onToggleH1Underline} />
+        <ToggleSwitch label="H1 反色" checked={invertH1} onClick={onToggleInvertH1} />
+        <ToggleSwitch
+          label={alignH1Left ? 'H1 左对齐' : 'H1 居中'}
+          checked={alignH1Left}
+          onClick={onToggleAlignH1Left}
+        />
+        <ToggleSwitch label="H2 反色" checked={invertH2} onClick={onToggleInvertH2} />
+        <ToggleSwitch
+          label={alignH2Left ? 'H2 左对齐' : 'H2 居中'}
+          checked={alignH2Left}
+          onClick={onToggleAlignH2Left}
+        />
+      </section>
+
+      {/* ===== 正文 ===== */}
+      <section className="settings-group">
+        <h3 className="settings-group-title">正文</h3>
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">文本对齐</span>
+          <div className="settings-toggles">
+            <Button
+              variant="toggle"
+              active={textAlignMode === 'left'}
+              onClick={() => onChangeTextAlignMode('left')}
+            >
+              左对齐
+            </Button>
+            <Button
+              variant="toggle"
+              active={textAlignMode === 'justify'}
+              onClick={() => onChangeTextAlignMode('justify')}
+            >
+              两端对齐
+            </Button>
+          </div>
+        </div>
+        {/* 字体 */}
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">字体</span>
+          <select
+            className="settings-select"
+            value={font}
+            onChange={(e) => setFont(e.target.value)}
+          >
+            {fonts.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <ToggleSwitch label="分割线" checked={showHorizontalRule} onClick={onToggleHorizontalRule} />
+        <ToggleSwitch label="元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
+        <ToggleSwitch label="表格阴影" checked={tableShadow} onClick={onToggleTableShadow} />
+      </section>
+
+      {/* ===== 引用块 ===== */}
+      <section className="settings-group">
+        <h3 className="settings-group-title">引用块</h3>
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">背景</span>
+          <div className="settings-toggles">
+            <Button
+              variant="toggle"
+              active={blockquoteBackgroundMode === 'none'}
+              onClick={() => onChangeBlockquoteBackgroundMode('none')}
+            >
+              无
+            </Button>
+            <Button
+              variant="toggle"
+              active={blockquoteBackgroundMode === 'theme'}
+              onClick={() => onChangeBlockquoteBackgroundMode('theme')}
+            >
+              跟随主题
+            </Button>
+          </div>
+        </div>
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">边框色</span>
+          <div className="settings-toggles">
+            <Button
+              variant="toggle"
+              active={blockquoteColorMode === 'default'}
+              onClick={() => onChangeBlockquoteColorMode('default')}
+            >
+              默认
+            </Button>
+            <Button
+              variant="toggle"
+              active={blockquoteColorMode === 'theme'}
+              onClick={() => onChangeBlockquoteColorMode('theme')}
+            >
+              跟随主题
+            </Button>
+          </div>
+        </div>
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">间距</span>
+          <div className="settings-toggles">
+            <Button
+              variant="toggle"
+              active={blockquoteHeightMode === 'loose'}
+              onClick={() => onChangeBlockquoteHeightMode('loose')}
+            >
+              宽松
+            </Button>
+            <Button
+              variant="toggle"
+              active={blockquoteHeightMode === 'compact'}
+              onClick={() => onChangeBlockquoteHeightMode('compact')}
+            >
+              紧凑
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 图片 ===== */}
+      <section className="settings-group">
+        <h3 className="settings-group-title">图片</h3>
+        {/* 图片模式：独立选择 */}
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">样式</span>
+          <div className="settings-toggles">
+            <Button
+              variant="toggle"
+              active={imageBorderStyle === 'default'}
+              onClick={() => onChangeImageBorderStyle('default')}
+            >
+              默认
+            </Button>
+            <Button
+              variant="toggle"
+              active={imageBorderStyle === 'border'}
+              onClick={() => onChangeImageBorderStyle('border')}
+            >
+              边框
+            </Button>
+            <Button
+              variant="toggle"
+              active={imageBorderStyle === 'shadow'}
+              onClick={() => onChangeImageBorderStyle('shadow')}
+            >
+              阴影
+            </Button>
+          </div>
+        </div>
+        <ToggleSwitch label="圆角" checked={imageBorderRadius} onClick={onToggleImageBorderRadius} />
+      </section>
+
+      {/* ===== 代码块 ===== */}
+      <section className="settings-group">
+        <h3 className="settings-group-title">代码块</h3>
+        {/* 二选一，保留循环 toggle */}
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">样式</span>
+          <div className="settings-toggles">
+            <Button
+              variant="toggle"
+              active={codeBlockStyle === 'classic'}
+              onClick={codeBlockStyle === 'modern' ? onToggleCodeBlockStyle : undefined}
+            >
+              极简
+            </Button>
+            <Button
+              variant="toggle"
+              active={codeBlockStyle === 'modern'}
+              onClick={codeBlockStyle === 'classic' ? onToggleCodeBlockStyle : undefined}
+            >
+              现代
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 模板 ===== */}
+      <section className="settings-group">
+        <h3 className="settings-group-title">模板</h3>
+        <TemplateField
+          label="文章首部片段"
+          value={headerTemplate}
+          onChange={setHeaderTemplate}
+          placeholder="留空则不添加。支持 Markdown，会自动拼接到正文前"
+        />
+        <TemplateField
+          label="文章尾部片段"
+          value={footerTemplate}
+          onChange={setFooterTemplate}
+          placeholder="留空则不添加。支持 Markdown，会自动拼接到正文后"
+        />
       </section>
 
       {/* ===== 公众号 ===== */}

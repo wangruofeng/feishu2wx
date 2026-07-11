@@ -24,15 +24,18 @@ const fonts = [
   { key: 'montserrat', name: 'Montserrat', value: `"Montserrat", -apple-system, BlinkMacSystemFont, sans-serif` },
   { key: 'raleway', name: 'Raleway', value: `"Raleway", -apple-system, BlinkMacSystemFont, sans-serif` },
   { key: 'poppins', name: 'Poppins', value: `"Poppins", -apple-system, BlinkMacSystemFont, sans-serif` },
+  { key: 'pingfang', name: '苹方', value: `"PingFang SC NEW", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif` },
 ];
 
 const FontSelector: React.FC<Props> = ({ font, setFont }) => {
+  const selectedFont = fonts.some((item) => item.key === font) ? font : 'default';
+
   return (
     <div className="font-selector">
       <span className="font-label">字体：</span>
       <select
         className="font-select"
-        value={font}
+        value={selectedFont}
         onChange={(e) => setFont(e.target.value)}
         title="选择字体"
       >

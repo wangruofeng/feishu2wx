@@ -13,7 +13,7 @@ interface Props {
   onToggleH1Underline: () => void;
   invertH1: boolean;
   onToggleInvertH1: () => void;
-  imageBorderStyle: 'border' | 'shadow';
+  imageBorderStyle: 'border' | 'shadow' | 'default';
   onToggleImageBorder: () => void;
   codeBlockStyle: CodeBlockStyle;
   onToggleCodeBlockStyle: () => void;
