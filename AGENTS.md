@@ -40,6 +40,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 代码块、列表、图片、表格、视频是高风险区域，改动后要重点验证
 - Task List（`- [x]` / `- [ ]`）通过 DOM 后处理实现（非 markdown-it 插件），在 `markdownRenderer.ts` 的 `renderMarkdown()` 中处理
 - 脚注通过 `markdown-it-footnote` 插件支持，样式分散在 `PreviewPane.css`（预览）和 `wechatCopy.ts`（微信输出）
+- frontmatter 元数据卡片中数组字段默认渲染为标签徽章（`frontmatter-tags`），但 `ai_summary` 字段渲染为无序列表（`frontmatter-summary-list`），均定义在 `markdownRenderer.ts` 的 `renderFrontMatterPreview()` 和 `PreviewPane.css`
 - 图片有 alt 时渲染为 `<figure>`（含 `<figcaption>`），无 alt 时为裸 `<img>`；微信输出的图片上下间距由外层块统一控制，不应在 `<img>` 上设置上下 margin
 - WebP 图片在服务端上传微信 API 前归一化：静态 WebP 转 PNG，动态 WebP 转 GIF，以兼容微信正文图上传并保留动图；前端 `convertWebpToPng()` 保留为备用工具函数
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入

@@ -441,7 +441,9 @@ function renderFrontMatterPreview(fields: FrontMatterField[]): string {
   const rows = fields.map((field) => {
     const key = tempMd.utils.escapeHtml(field.key);
     const value = Array.isArray(field.value)
-      ? `<div class="frontmatter-tags">${field.value.map((item) => `<span>${tempMd.utils.escapeHtml(item)}</span>`).join('')}</div>`
+      ? field.key === 'ai_summary'
+        ? `<ul class="frontmatter-summary-list">${field.value.map((item) => `<li>${tempMd.utils.escapeHtml(item)}</li>`).join('')}</ul>`
+        : `<div class="frontmatter-tags">${field.value.map((item) => `<span>${tempMd.utils.escapeHtml(item)}</span>`).join('')}</div>`
       : tempMd.utils.escapeHtml(field.value);
 
     return `<div class="frontmatter-row"><dt>${key}</dt><dd>${value}</dd></div>`;

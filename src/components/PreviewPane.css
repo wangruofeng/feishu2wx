@@ -172,6 +172,20 @@
   line-height: 1;
 }
 
+.preview-content .frontmatter-summary-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.preview-content .frontmatter-summary-list li {
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+
+.preview-content .frontmatter-summary-list li:last-child {
+  margin-bottom: 0;
+}
+
 /* Markdown 渲染样式 */
 .preview-content h1,
 .preview-content h2,
