@@ -32,6 +32,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 使用 markdown-it 将 Markdown 渲染为 HTML，维护两个实例（classic / modern 代码块样式），均加载 `markdown-it-footnote` 脚注插件。
 - 使用 highlight.js 和 Atom One Dark 主题做语法高亮。
 - 自动检测语言，失败时回退到默认语言。
+- `==text==` 高亮语法：通过自定义 `mark` 规则（`markRule`）解析，渲染为 `<mark>` 标签；与 `htmlToMarkdown.ts` 中飞书高亮标记的输入端配合，形成端到端支持。
 - 在网页预览中将 YAML front matter（`---...---`）展示为元数据卡片，复制和推送到公众号时会剥离该预览专用节点。卡片内数组字段默认渲染为标签徽章（`frontmatter-tags`），但 `ai_summary` 字段渲染为无序列表（`frontmatter-summary-list`）。
 - `.md` 文件名链接会被还原为纯文本，避免被 linkify 错误处理。
 - 链接自动添加 `target="_blank"`。
@@ -102,9 +103,12 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `markdown`、`html`
 - `theme`、`font`
 - `showEditor`、`isFullscreen`、`device`
-- `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`、`showFrontMatter`
-- `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
+- `showH1Underline`、`invertH1`、`alignH1Left`、`invertH2`、`alignH2Left`、`showHorizontalRule`、`showFrontMatter`、`tableShadow`
+- `imageBorderStyle`（`'border' | 'shadow' | 'default'`）、`imageBorderRadius`（圆角）、`codeBlockStyle`（`'classic' | 'modern'`，默认 `'modern'`）
+- `blockquoteBackgroundMode`（`'none' | 'theme'`）、`blockquoteColorMode`（`'default' | 'theme'`）、`blockquoteHeightMode`（`'loose' | 'compact'`）：引用块三项独立配置
+- `textAlignMode`（`'left' | 'justify'`）：正文文本对齐
 - `isSystemDark`、`darkMode`（`'system' | 'light' | 'dark'` 三态切换）
+- `syntaxTheme`（`'github' | 'dracula' | 'monokai' | 'none'`，编辑器源码高亮配色）
 - `copyStatus`（复制/导出结果弹窗，复用同一 toast）、`isExporting`（导出中禁用）
 - `shouldConvertPastedHtml`（智能 HTML 转 Markdown 开关）
 - `shortcutsOpen`（快捷键抽屉面板）
@@ -118,14 +122,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 组件结构
 
-- `App.tsx`：主容器与状态中心，含顶部控制栏（字体、设备切换、全屏、主题、设置面板）。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）。
+- `App.tsx`：主容器与状态中心，含顶部控制栏（主题、设置面板、复制/导出/推送）。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
-- `Toolbar.tsx`：底部工具栏（加载示例、清空、H1 底线、H1 反显、水平分割线、图片样式、代码块样式、一键复制）。
 - `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
-- `FontSelector.tsx`：字体下拉选择器（16 种字体）。
-- `DevicePreviewToggle.tsx`：桌面/手机双按钮切换。
-- `SettingsPanel.tsx`：排版设置面板，提供字体、H1 样式（底线/反色/对齐）、H2 样式（反色/对齐）、分割线、元数据显示、表格阴影、图片模式（默认/边框/阴影）、代码块样式、智能 HTML 转 Markdown 开关的可视化配置。
+- `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。
+- `DevicePreviewToggle.tsx`：桌面/手机双按钮切换（当前由 `PreviewPane` 内联渲染，此组件已不再被外部 import）。
+- `SettingsPanel.tsx`：排版设置弹出面板，按通用 / 标题 / 正文 / 引用块 / 图片 / 代码块 / 模板 / 公众号分组，统一管理智能粘贴转换、源码配色、主题模式、H1/H2 样式、文本对齐、字体、分割线/元数据/表格阴影、引用块（背景/边框色/间距）、图片（样式/圆角）、代码块样式、首尾模板、公众号凭证。
 - `ImageViewer.tsx`：图片查看器，支持键盘左右切换预览区所有图片，底部显示序号。
 - `ShortcutsDrawer.tsx`：快捷键抽屉面板，展示所有键盘快捷键（格式、编辑、视图三组），支持 ESC 关闭和遮罩点击关闭。
 - `PublishDialog.tsx`：推送对话框（标题、作者、封面）。
@@ -170,6 +173,9 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - H2 左对齐 / 居中对齐切换
 - 水平分割线显隐
 - 表格阴影显隐
+- 引用块背景（无 / 跟随主题）、边框色（默认 / 跟随主题）、间距（宽松 / 紧凑）三项独立配置
+- 正文文本对齐（左对齐 / 两端对齐）
+- 图片样式（默认 / 边框 / 阴影）+ 圆角开关
 
 ### UI 组件
 

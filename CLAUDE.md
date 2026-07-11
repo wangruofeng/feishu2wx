@@ -13,7 +13,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
                                               ↓
                               renderMarkdown() → HTML Preview
                                               ↓
-                              formatForWeChat() → Inline-styled HTML → Clipboard
+                              formatForWeChat() → Inline-styled HTML → Clipboard / 文件下载（导出）
 
 推送流程（需后端）：
   前端 localStorage → POST /api/publish/draft { appId, appSecret, ... }
@@ -25,7 +25,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 - `src/utils/htmlToMarkdown.ts`：飞书 HTML 转 Markdown
 - `src/utils/markdownRenderer.ts`：Markdown 转预览 HTML
-- `src/utils/wechatCopy.ts`：将预览 HTML 转为微信公众号兼容的内联样式 HTML 并复制
+- `src/utils/wechatCopy.ts`：将预览 HTML 转为微信公众号兼容的内联样式 HTML 并复制；`exportHtmlToFile()` 将同一份 HTML 包裹为完整文档触发浏览器下载
 - `src/utils/publishApi.ts`：推送草稿箱 API + localStorage 凭证管理
 - `src/utils/helper.ts`：工具函数（内容感知 WebP 检测，检查文件签名 RIFF/WEBP 和 HTTP Content-Type，不依赖 URL 后缀）
 - `src/utils/helper.test.js`：helper 工具函数单元测试
@@ -45,6 +45,9 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - WebP 图片在服务端上传微信 API 前归一化：静态 WebP 转 PNG，动态 WebP 转 GIF，以兼容微信正文图上传并保留动图；前端 `convertWebpToPng()` 保留为备用工具函数
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
+- 编辑器 Markdown 源码语法高亮（textarea overlay 模式）：`src/utils/mdSourceHighlight.ts` 提供行扫描 tokenizer（`tokenizeMarkdown`）与预设配色方案（github/dracula/monokai/none，`getMdSyntaxCssVars` 注入 `--md-tok-*` CSS 变量）；`EditorPane.tsx` 在 `.markdown-editor` 下方叠加 `.md-highlight-layer`（文字透明仅 caret 可见，层随 textarea `onScroll` 的 `transform` 同步位移）；配色方案经 `syntaxTheme` 状态（localStorage 键 `feishu2wx_syntaxTheme`）在「通用」组配置，高亮层字体度量须与 `.markdown-editor` 严格一致
+- `==text==` 高亮语法：`markdownRenderer.ts` 的自定义 `mark` 规则解析为 `<mark>` 标签，与 `htmlToMarkdown.ts` 飞书高亮输入端配合
+- 引用块三项独立配置：背景（`blockquoteBackgroundMode`）、边框色（`blockquoteColorMode`）、间距（`blockquoteHeightMode`），预览层与微信输出层（`wechatCopy.ts`）都要同步处理
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
 - 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），ThemeSwitcher 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
@@ -54,6 +57,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 文章大纲：`EditorPane.tsx` 底部工具栏右侧大纲按钮，解析 Markdown 中的 H1-H3 标题（跳过 frontmatter 与代码块），点击大纲项滚动 textarea 定位到对应标题
 - 文章首尾模板：`App.tsx` 管理 `headerTemplate`/`footerTemplate` 状态（localStorage 键 `feishu2wx_headerTemplate`/`feishu2wx_footerTemplate`），推送/复制时自动拼接到正文前后（frontmatter 之后、正文之前 / 正文之后），设置面板可配置
 - 推送标题/封面自动读取：`App.tsx` 的 `articleTitle` 优先从 frontmatter `title` 字段读取（fallback 到 H1），`articleCover` 从 frontmatter `cover` 字段读取
+- 导出 HTML：`App.tsx` 顶栏「导出」按钮复用复制/推送同款管线（`convertSvgImagesToPng` → `formatForWeChat`），再通过 `wechatCopy.ts` 的 `exportHtmlToFile()` 把内联样式 HTML 包裹成完整文档下载；文件名取 `articleTitle`
 - 经典主题主色调为 `#000000e6`（90% 不透明黑），配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`）
 - 提交前会运行 Husky 检查：
   - `package.json` 版本号必须更新
