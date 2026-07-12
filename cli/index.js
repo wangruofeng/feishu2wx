@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const path = require('node:path');
-const { Command } = require('commander');
+const { Command, Option } = require('commander');
 const {
   THEME_OPTIONS,
   clearWechatConfig,
@@ -28,34 +28,52 @@ process.stdout.on('error', (error) => {
 });
 
 function addThemeOptions(command) {
+  // 这组主题排版覆盖选项在 render/publish/theme set 通用。
+  // 通过 hideHelp() 从 --help 中折叠，避免淹没命令特有选项；仍可正常解析。
+  // 完整列表见下方 THEME_HELP_TEXT。
   return command
-    .option('--theme <theme>', '覆盖主题 classic/orange/blue/teal')
-    .option('--font <font>', '覆盖字体 key')
-    .option('--code-block-style <style>', '代码块样式 classic/modern')
-    .option('--image-border-style <style>', '图片样式 border/shadow/default')
-    .option('--image-border-radius', '启用图片圆角')
-    .option('--no-image-border-radius', '禁用图片圆角')
-    .option('--show-h1-underline', '显示 H1 底部横线')
-    .option('--no-show-h1-underline', '隐藏 H1 底部横线')
-    .option('--invert-h1', '启用 H1 反显')
-    .option('--no-invert-h1', '禁用 H1 反显')
-    .option('--align-h1-left', 'H1 左对齐')
-    .option('--no-align-h1-left', 'H1 居中')
-    .option('--invert-h2', '启用 H2 反显')
-    .option('--no-invert-h2', '禁用 H2 反显')
-    .option('--align-h2-left', 'H2 左对齐')
-    .option('--no-align-h2-left', 'H2 居中')
-    .option('--show-horizontal-rule', '显示分割线')
-    .option('--no-show-horizontal-rule', '隐藏分割线')
-    .option('--table-shadow', '显示表格阴影')
-    .option('--no-table-shadow', '隐藏表格阴影')
-    .option('--show-blockquote-bg', '显示引用块背景（旧选项，等价于 --blockquote-background-mode theme）')
-    .option('--no-show-blockquote-bg', '隐藏引用块背景（旧选项，等价于 --blockquote-background-mode none）')
-    .option('--blockquote-background-mode <mode>', '引用块背景 theme/none')
-    .option('--blockquote-color-mode <mode>', '引用块边框色 theme/default')
-    .option('--blockquote-height-mode <mode>', '引用块间距 loose/compact')
-    .option('--text-align-mode <mode>', '正文对齐 left/justify');
+    .addOption(new Option('--theme <theme>', '覆盖主题 classic/orange/blue/teal').hideHelp())
+    .addOption(new Option('--font <font>', '覆盖字体 key').hideHelp())
+    .addOption(new Option('--code-block-style <style>', '代码块样式 classic/modern').hideHelp())
+    .addOption(new Option('--image-border-style <style>', '图片样式 border/shadow/default').hideHelp())
+    .addOption(new Option('--image-border-radius', '启用图片圆角').hideHelp())
+    .addOption(new Option('--no-image-border-radius', '禁用图片圆角').hideHelp())
+    .addOption(new Option('--show-h1-underline', '显示 H1 底部横线').hideHelp())
+    .addOption(new Option('--no-show-h1-underline', '隐藏 H1 底部横线').hideHelp())
+    .addOption(new Option('--invert-h1', '启用 H1 反显').hideHelp())
+    .addOption(new Option('--no-invert-h1', '禁用 H1 反显').hideHelp())
+    .addOption(new Option('--align-h1-left', 'H1 左对齐').hideHelp())
+    .addOption(new Option('--no-align-h1-left', 'H1 居中').hideHelp())
+    .addOption(new Option('--invert-h2', '启用 H2 反显').hideHelp())
+    .addOption(new Option('--no-invert-h2', '禁用 H2 反显').hideHelp())
+    .addOption(new Option('--align-h2-left', 'H2 左对齐').hideHelp())
+    .addOption(new Option('--no-align-h2-left', 'H2 居中').hideHelp())
+    .addOption(new Option('--show-horizontal-rule', '显示分割线').hideHelp())
+    .addOption(new Option('--no-show-horizontal-rule', '隐藏分割线').hideHelp())
+    .addOption(new Option('--table-shadow', '显示表格阴影').hideHelp())
+    .addOption(new Option('--no-table-shadow', '隐藏表格阴影').hideHelp())
+    .addOption(new Option('--show-blockquote-bg', '显示引用块背景（旧选项，等价于 --blockquote-background-mode theme）').hideHelp())
+    .addOption(new Option('--no-show-blockquote-bg', '隐藏引用块背景（旧选项，等价于 --blockquote-background-mode none）').hideHelp())
+    .addOption(new Option('--blockquote-background-mode <mode>', '引用块背景 theme/none').hideHelp())
+    .addOption(new Option('--blockquote-color-mode <mode>', '引用块边框色 theme/default').hideHelp())
+    .addOption(new Option('--blockquote-height-mode <mode>', '引用块间距 loose/compact').hideHelp())
+    .addOption(new Option('--text-align-mode <mode>', '正文对齐 left/justify').hideHelp());
 }
+
+// render/publish/theme set 通用：主题与排版覆盖选项摘要，追加到各自 --help 末尾。
+const THEME_HELP_TEXT = [
+  '',
+  '排版覆盖选项（本命令与 render/publish/theme set 通用，均支持 --no- 前缀关闭）:',
+  '  主题/字体:   --theme <classic|orange|blue|teal>   --font <key>',
+  '  代码块/图片: --code-block-style <classic|modern>   --image-border-style <border|shadow|default>',
+  '              --image-border-radius / --no-image-border-radius',
+  '  H1/H2:      --invert-h1 / --no-invert-h1   --align-h1-left / --no-align-h1-left   （H2 同理: --invert-h2, --align-h2-left）',
+  '              --show-h1-underline / --no-show-h1-underline',
+  '  其他排版:   --show-horizontal-rule / --no-...   --table-shadow / --no-...',
+  '  引用块/正文:--blockquote-background-mode <theme|none>   --blockquote-color-mode <theme|default>',
+  '              --blockquote-height-mode <loose|compact>   --text-align-mode <left|justify>',
+  '  兼容旧选项: --show-blockquote-bg / --no-show-blockquote-bg （等价于 --blockquote-background-mode theme/none）',
+].join('\n');
 
 function resolveActiveConfigPath(options) {
   return resolveConfigPath({
@@ -165,6 +183,7 @@ async function main() {
     });
 
   addThemeOptions(theme.command('set <theme>'))
+    .addHelpText('after', THEME_HELP_TEXT)
     .action((themeKey, options) => {
       const saved = saveThemeConfig(resolveActiveConfigPath(program.opts()), {
         ...options,
@@ -184,6 +203,7 @@ async function main() {
     .option('--copy', '复制 HTML 到系统剪贴板')
     .option('--out <file>', '导出 HTML 文件')
     .option('--preview', '生成临时文件并打开预览'))
+    .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
       const markdown = readMarkdownInput(file);
       let html = renderWechatHtml(markdown, resolveThemeConfig({ ...program.opts(), ...options }));
@@ -216,6 +236,7 @@ async function main() {
     .requiredOption('--title <title>', '文章标题')
     .option('--author <author>', '作者')
     .option('--cover <file>', '封面图片文件'))
+    .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
       const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
       if (!config.wechat) {

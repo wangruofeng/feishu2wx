@@ -307,6 +307,19 @@ feishu2wx/
 └── DEPLOY.md               # 部署指南
 ```
 
+## 💻 CLI（命令行）
+
+除了网页端，本项目还自带一个命令行工具 `feishu2wx`，可在终端完成凭证配置、主题管理、渲染导出和推送到草稿箱，便于脚本化与 CI 集成。
+
+```bash
+npm run cli -- init --project            # 初始化当前项目的 CLI 配置
+npm run cli -- auth set --app-id <id> --app-secret <secret>  # 配置公众号凭证
+npm run cli -- render article.md --out article.html          # 渲染并导出 HTML
+npm run cli -- publish article.md --title "文章标题"          # 推送到公众号草稿箱
+```
+
+支持单次命令覆盖主题与排版项（如 `--theme blue --invert-h1 --text-align-mode justify`），配置可在项目级 `.feishu2wx/config.json` 与用户级 `~/.feishu2wx/config.json` 之间切换。完整命令速查与各项说明见 [cli/README.md](cli/README.md)。
+
 ## 🛠️ 技术栈
 
 ### 前端

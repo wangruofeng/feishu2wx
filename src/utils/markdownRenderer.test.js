@@ -100,3 +100,36 @@ test('renders double-equals text as a selective highlight', () => {
   expect(mark).not.toBeNull();
   expect(mark?.textContent).toBe('重点文字');
 });
+
+test('renders mermaid code block as placeholder div in classic style', () => {
+  const html = renderMarkdown('```mermaid\ngraph LR\nA-->B\n```');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const mermaidDiv = container.querySelector('.mermaid');
+  expect(mermaidDiv).not.toBeNull();
+  expect(mermaidDiv.getAttribute('data-mermaid-source')).toContain('graph LR');
+  expect(mermaidDiv.textContent).toContain('graph LR');
+  expect(mermaidDiv.closest('pre, code')).toBeNull();
+});
+
+test('renders mermaid code block as placeholder div in modern style', () => {
+  setCodeBlockStyle('modern');
+  const html = renderMarkdown('```mermaid\nsequenceDiagram\nA->>B: Hi\n```');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const mermaidDiv = container.querySelector('.mermaid');
+  expect(mermaidDiv).not.toBeNull();
+  expect(mermaidDiv.getAttribute('data-mermaid-source')).toContain('sequenceDiagram');
+  expect(mermaidDiv.closest('pre, code')).toBeNull();
+});
+
+test('keeps normal code blocks unaffected by mermaid handling', () => {
+  const html = renderMarkdown('```js\nconsole.log("hi")\n```');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  expect(container.querySelector('pre code.hljs')).not.toBeNull();
+  expect(container.querySelector('.mermaid')).toBeNull();
+});

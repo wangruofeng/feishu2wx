@@ -491,6 +491,18 @@
   font-weight: normal;
 }
 
+/* Mermaid 图表 */
+.preview-content .mermaid {
+  text-align: center;
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.preview-content .mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .preview-content img,
 .preview-content video {
   max-width: 100%;

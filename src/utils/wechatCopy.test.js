@@ -2,8 +2,6 @@ import { convertSvgImagesToPng, formatForWeChat } from './wechatCopy';
 
 function mockSvgRasterizer() {
   const originalImage = global.Image;
-  const originalCreateObjectUrl = URL.createObjectURL;
-  const originalRevokeObjectUrl = URL.revokeObjectURL;
   const originalGetContext = HTMLCanvasElement.prototype.getContext;
   const originalToDataUrl = HTMLCanvasElement.prototype.toDataURL;
 
@@ -12,15 +10,11 @@ function mockSvgRasterizer() {
       setTimeout(() => this.onload && this.onload());
     }
   };
-  URL.createObjectURL = jest.fn(() => 'blob:mock-svg');
-  URL.revokeObjectURL = jest.fn();
   HTMLCanvasElement.prototype.getContext = jest.fn(() => ({ drawImage: jest.fn() }));
   HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,mock-png');
 
   return () => {
     global.Image = originalImage;
-    URL.createObjectURL = originalCreateObjectUrl;
-    URL.revokeObjectURL = originalRevokeObjectUrl;
     HTMLCanvasElement.prototype.getContext = originalGetContext;
     HTMLCanvasElement.prototype.toDataURL = originalToDataUrl;
   };
@@ -49,6 +43,36 @@ test('converts inline svg elements to png images before wechat copy', async () =
     expect(html).toContain('<img');
     expect(html).toContain('src="data:image/png;base64,mock-png"');
     expect(html).toContain('alt="图标"');
+    expect(html).not.toContain('<svg');
+  } finally {
+    restore();
+  }
+});
+
+test('converts Mermaid-style svg with foreignObject labels to png images', async () => {
+  const restore = mockSvgRasterizer();
+
+  try {
+    const html = await convertSvgImagesToPng(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 160 80"><foreignObject width="160" height="80"><div xmlns="http://www.w3.org/1999/xhtml">Mermaid 标签</div></foreignObject></svg>'
+    );
+
+    expect(html).toContain('src="data:image/png;base64,mock-png"');
+    expect(html).not.toContain('<svg');
+  } finally {
+    restore();
+  }
+});
+
+test('converts Mermaid-style svg with xlink references to png images', async () => {
+  const restore = mockSvgRasterizer();
+
+  try {
+    const html = await convertSvgImagesToPng(
+      '<svg width="80" height="40"><defs><path id="arrow" d="M0 0h10"/></defs><use xlink:href="#arrow"/></svg>'
+    );
+
+    expect(html).toContain('src="data:image/png;base64,mock-png"');
     expect(html).not.toContain('<svg');
   } finally {
     restore();

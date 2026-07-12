@@ -45,9 +45,11 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - WebP 图片在服务端上传微信 API 前归一化：静态 WebP 转 PNG，动态 WebP 转 GIF，以兼容微信正文图上传并保留动图；前端 `convertWebpToPng()` 保留为备用工具函数
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
+- Mermaid 代码块（` ```mermaid `）通过两阶段渲染：`renderMarkdown()` 同步产出 `<div class="mermaid" data-mermaid-source>` 占位（非 `<pre>`，避免被 `convertSvgImagesToPng` 的 `svg.closest('pre,code')` 跳过和 `applyThemeStyles` 当代码块重建）；`renderMermaidBlocks()` 异步用 `mermaid.render()`（动态 `import('mermaid')`）把占位替换为内联 `<svg>`，在 `App.tsx` 的渲染 effect 中 `await` 后 `setHtml`；复制/导出管线经 `convertSvgImagesToPng` 自动把 SVG 栅格化为 PNG，无需改动 `wechatCopy.ts`
 - 编辑器 Markdown 源码语法高亮（textarea overlay 模式）：`src/utils/mdSourceHighlight.ts` 提供行扫描 tokenizer（`tokenizeMarkdown`）与预设配色方案（github/dracula/monokai/none，`getMdSyntaxCssVars` 注入 `--md-tok-*` CSS 变量）；`EditorPane.tsx` 在 `.markdown-editor` 下方叠加 `.md-highlight-layer`（文字透明仅 caret 可见，层随 textarea `onScroll` 的 `transform` 同步位移）；配色方案经 `syntaxTheme` 状态（localStorage 键 `feishu2wx_syntaxTheme`）在「通用」组配置，高亮层字体度量须与 `.markdown-editor` 严格一致
 - `==text==` 高亮语法：`markdownRenderer.ts` 的自定义 `mark` 规则解析为 `<mark>` 标签，与 `htmlToMarkdown.ts` 飞书高亮输入端配合
 - 引用块三项独立配置：背景（`blockquoteBackgroundMode`）、边框色（`blockquoteColorMode`）、间距（`blockquoteHeightMode`），以及正文对齐（`textAlignMode`），预览层、微信输出层（`wechatCopy.ts`）与 CLI（`cli/lib/config.cjs` + `render-pipeline.cjs`）都要同步处理；CLI 中旧 `showBlockquoteBg` 兼容映射为 `blockquoteBackgroundMode` 的布尔形式，同时传时新选项优先
+- CLI（`cli/index.js`，commander）支持 `init` / `auth` / `theme` / `render` / `publish` 五类命令；一组通用的主题排版覆盖选项由 `addThemeOptions()` 注入到 `render`/`publish`/`theme set`（在 `--help` 中折叠为提示行，仍可解析）。命令速查与配置优先级见 [cli/README.md](cli/README.md)
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
 - 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），ThemeSwitcher 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
@@ -68,6 +70,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 架构与渲染细节：[docs/claude/architecture.md](docs/claude/architecture.md)
 - 开发命令、测试、部署与提交流程：[docs/claude/development.md](docs/claude/development.md)
 - 部署说明（GitHub Pages + Cloudflare Pages）：[DEPLOY.md](DEPLOY.md)
+- CLI 命令速查与配置：[cli/README.md](cli/README.md)
 
 
 ## 行为准则

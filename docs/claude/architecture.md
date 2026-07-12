@@ -164,6 +164,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `modern` 代码块共享样式参数定义在 `src/utils/codeBlockStyles.ts`。
 - 微信输出会显式保留代码块左对齐与缩进，且不依赖当前页面上的预览 DOM。
 
+### Mermaid 图表
+
+- ` ```mermaid ` 代码块通过两阶段渲染：`renderMarkdown()` 同步产出 `<div class="mermaid" data-mermaid-source>` 占位（非 `<pre>`），`renderMermaidBlocks()` 异步用动态 `import('mermaid')` + `mermaid.render()` 把占位替换为内联 `<svg>`。
+- `App.tsx` 的三个渲染 effect（`composedMarkdown`/`showHorizontalRule`/`codeBlockStyle` 变更）均改为 async，`await renderMermaidBlocks()` 后再 `setHtml`，并加 `cancelled` 标志防竞态。
+- 复制/导出/推送管线无需改动：`convertSvgImagesToPng()` 第一阶段自动把不在 `pre`/`code` 内的内联 `<svg>` 栅格化为 PNG `<img>`，mermaid SVG 天然命中。
+- 渲染失败时保留源码文本占位，不阻断其他内容。
+
 ### 渲染开关
 
 - H1 下划线显隐

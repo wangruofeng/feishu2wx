@@ -2,6 +2,20 @@
 
 `feishu2wx` CLI 用于在命令行完成公众号凭证配置、Markdown 主题配置、微信公众号兼容 HTML 渲染、复制/导出/预览，以及推送到微信公众号草稿箱。
 
+## 命令速查
+
+| 命令 | 作用 | 示例 |
+|------|------|------|
+| `init` | 初始化配置文件 | `feishu2wx init --project` |
+| `auth set\|status\|test\|clear` | 管理公众号 AppID/AppSecret | `feishu2wx auth set --app-id <id> --app-secret <s>` |
+| `theme list\|set\|status` | 管理默认主题与排版项 | `feishu2wx theme set blue` |
+| `render [file]` | 渲染微信公众号兼容 HTML | `feishu2wx render a.md --out a.html` |
+| `publish [file]` | 推送文章到公众号草稿箱 | `feishu2wx publish a.md --title "标题"` |
+
+`render` / `publish` / `theme set` 还支持一组通用的**排版覆盖选项**（主题、H1/H2、引用块、正文对齐等，运行 `feishu2wx render --help` 可查看，下文「主题配置」有用法），单次命令临时覆盖默认主题。
+
+**配置来源**（优先级从高到低）：`--config <path>` 与 `--project` / `--user` 开关 → 环境变量 → 项目级 `.feishu2wx/config.json` → 用户级 `~/.feishu2wx/config.json` → 内置默认值。
+
 ## 运行方式
 
 在仓库内运行：

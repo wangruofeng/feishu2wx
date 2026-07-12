@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx",
-  "version": "1.23.0",
+  "version": "1.24.0",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
   "homepage": "/feishu2wx",
@@ -21,6 +21,7 @@
     "jsdom": "^16.7.0",
     "markdown-it": "^13.0.1",
     "markdown-it-footnote": "^4.0.0",
+    "mermaid": "^11.16.0",
     "open": "^7.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

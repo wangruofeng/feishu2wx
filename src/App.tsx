@@ -6,7 +6,7 @@ import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import { Button } from './components/ui';
-import { renderMarkdown, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
+import { renderMarkdown, renderMermaidBlocks, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
 import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, sanitizeFilename } from './utils/wechatCopy';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
@@ -225,7 +225,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const rendered = renderMarkdown(composedMarkdown, { showFrontMatter });
-    setHtml(rendered);
+    if (!rendered.includes('class="mermaid"')) {
+      setHtml(rendered);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const withMermaid = await renderMermaidBlocks(rendered);
+      if (!cancelled) setHtml(withMermaid);
+    })();
+    return () => { cancelled = true; };
   }, [composedMarkdown, showFrontMatter]);
 
   useEffect(() => { localStorage.setItem('feishu2wx_markdown', markdown); }, [markdown]);
@@ -246,7 +255,16 @@ const App: React.FC = () => {
     localStorage.setItem('feishu2wx_showHorizontalRule', String(showHorizontalRule));
     setShowHorizontalRule(showHorizontalRule);
     const rendered = renderMarkdown(composedMarkdown, { showFrontMatter });
-    setHtml(rendered);
+    if (!rendered.includes('class="mermaid"')) {
+      setHtml(rendered);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const withMermaid = await renderMermaidBlocks(rendered);
+      if (!cancelled) setHtml(withMermaid);
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHorizontalRule]);
 
@@ -289,7 +307,16 @@ const App: React.FC = () => {
   useEffect(() => {
     setCodeBlockStyle(codeBlockStyle);
     const rendered = renderMarkdown(composedMarkdown, { showFrontMatter });
-    setHtml(rendered);
+    if (!rendered.includes('class="mermaid"')) {
+      setHtml(rendered);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const withMermaid = await renderMermaidBlocks(rendered);
+      if (!cancelled) setHtml(withMermaid);
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [codeBlockStyle]);
 

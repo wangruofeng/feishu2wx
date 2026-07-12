@@ -191,6 +191,30 @@ const mdModern: MarkdownIt = registerCjkPunctuationStrong(new MarkdownIt({
   highlight: createModernHighlightFunction(),
 }).use(footnote));
 
+function renderMermaidFence(tokens: any, idx: number): string | null {
+  const token = tokens[idx];
+  const lang = token.info.trim().split(/\s+/)[0];
+  if (lang !== 'mermaid') {
+    return null;
+  }
+
+  const escaped = tempMd.utils.escapeHtml(token.content);
+  return `<div class="mermaid" data-mermaid-source="${escaped}">${escaped}</div>\n`;
+}
+
+function registerMermaidFenceRenderer(markdown: MarkdownIt): void {
+  const defaultFence = markdown.renderer.rules.fence || ((tokens: any, idx: number, options: any, env: any, self: any) => (
+    self.renderToken(tokens, idx, options)
+  ));
+
+  markdown.renderer.rules.fence = (tokens: any, idx: number, options: any, env: any, self: any) => (
+    renderMermaidFence(tokens, idx) || defaultFence(tokens, idx, options, env, self)
+  );
+}
+
+registerMermaidFenceRenderer(md);
+registerMermaidFenceRenderer(mdModern);
+
 // 配置链接在新窗口打开（经典风格）
 const defaultRender = md.renderer.rules.link_open || function(tokens: any, idx: number, options: any, env: any, self: any) {
   return self.renderToken(tokens, idx, options);
@@ -590,4 +614,32 @@ export function renderMarkdown(markdown: string, options: RenderMarkdownOptions 
   });
 
   return `${options.showFrontMatter ? renderFrontMatterPreview(fields) : ''}${tempDiv.innerHTML}`;
+}
+
+/**
+ * 异步渲染 mermaid 占位块为 SVG。
+ * renderMarkdown() 同步产出含 <div class="mermaid" data-mermaid-source> 的占位 HTML，
+ * 本函数在离屏 DOM 中用 mermaid.render() 把占位替换为内联 <svg>。
+ * 复制/导出管线随后通过 convertSvgImagesToPng() 自动把 <svg> 栅格化为 PNG。
+ */
+export async function renderMermaidBlocks(html: string): Promise<string> {
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  const mermaidDivs = Array.from(container.querySelectorAll<HTMLElement>('div.mermaid[data-mermaid-source]'));
+  if (mermaidDivs.length === 0) return html;
+
+  const { default: mermaid } = await import('mermaid');
+  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+
+  for (const div of mermaidDivs) {
+    const source = div.getAttribute('data-mermaid-source') || '';
+    try {
+      const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
+      const { svg } = await mermaid.render(id, source);
+      div.outerHTML = svg;
+    } catch (err) {
+      console.warn('Mermaid 渲染失败，保留源码:', err);
+    }
+  }
+  return container.innerHTML;
 }

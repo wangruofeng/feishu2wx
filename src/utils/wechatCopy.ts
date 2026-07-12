@@ -433,11 +433,31 @@ function constrainSvgSize(size: { width: number; height: number }): { width: num
 }
 
 function ensureSvgNamespace(svgText: string): string {
-  if (/^<svg[\s>]/i.test(svgText.trim()) && !/\sxmlns=/.test(svgText)) {
-    return svgText.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  let normalizedSvg = svgText;
+  if (/^<svg[\s>]/i.test(normalizedSvg.trim()) && !/\sxmlns=/.test(normalizedSvg)) {
+    normalizedSvg = normalizedSvg.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   }
 
-  return svgText;
+  if (/\bxlink:/.test(normalizedSvg) && !/\sxmlns:xlink=/.test(normalizedSvg)) {
+    normalizedSvg = normalizedSvg.replace(/^<svg/i, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+  }
+
+  return normalizedSvg;
+}
+
+function normalizeSvgForRasterization(svgText: string): string {
+  const normalizedSvg = ensureSvgNamespace(svgText);
+  const document = new DOMParser().parseFromString(normalizedSvg, 'image/svg+xml');
+  const svg = document.documentElement;
+
+  if (!svg || svg.nodeName.toLowerCase() !== 'svg' || document.querySelector('parsererror')) {
+    return normalizedSvg;
+  }
+
+  const { width, height } = constrainSvgSize(getSvgSize(normalizedSvg));
+  svg.setAttribute('width', String(width));
+  svg.setAttribute('height', String(height));
+  return new XMLSerializer().serializeToString(svg);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -449,28 +469,28 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+function svgTextToDataUrl(svgText: string): string {
+  const utf8 = encodeURIComponent(svgText).replace(/%([0-9A-F]{2})/g, (_match, hex) => (
+    String.fromCharCode(Number.parseInt(hex, 16))
+  ));
+  return `data:image/svg+xml;base64,${btoa(utf8)}`;
+}
+
 async function rasterizeSvgTextToPng(svgText: string): Promise<string> {
-  const normalizedSvg = ensureSvgNamespace(svgText);
-  const { width, height } = constrainSvgSize(getSvgSize(normalizedSvg));
-  const blob = new Blob([normalizedSvg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  const normalizedSvg = normalizeSvgForRasterization(svgText);
+  const { width, height } = getSvgSize(normalizedSvg);
+  const image = await loadImage(svgTextToDataUrl(normalizedSvg));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(width);
+  canvas.height = Math.ceil(height);
 
-  try {
-    const image = await loadImage(url);
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.ceil(width);
-    canvas.height = Math.ceil(height);
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      throw new Error('浏览器不支持 Canvas 渲染');
-    }
-
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/png');
-  } finally {
-    URL.revokeObjectURL(url);
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('浏览器不支持 Canvas 渲染');
   }
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/png');
 }
 
 async function getSvgTextFromImageSource(src: string): Promise<string | null> {
