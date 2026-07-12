@@ -1,9 +1,20 @@
 import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js';
 import footnote from 'markdown-it-footnote';
+import DOMPurify from 'dompurify';
 
 // 创建一个临时的 MarkdownIt 实例用于 escapeHtml
 const tempMd = new MarkdownIt();
+
+const SANITIZE_CONFIG = {
+  ADD_ATTR: ['data-mermaid-source', 'referrerpolicy'],
+  ALLOW_DATA_ATTR: true,
+  FORBID_TAGS: ['base', 'embed', 'form', 'iframe', 'object', 'script', 'style'],
+};
+
+function sanitizeRenderedHtml(html: string): string {
+  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+}
 
 // 代码块样式类型
 export type CodeBlockStyle = 'classic' | 'modern';
@@ -199,7 +210,8 @@ function renderMermaidFence(tokens: any, idx: number): string | null {
   }
 
   const escaped = tempMd.utils.escapeHtml(token.content);
-  return `<div class="mermaid" data-mermaid-source="${escaped}">${escaped}</div>\n`;
+  const encodedSource = encodeURIComponent(token.content);
+  return `<div class="mermaid" data-mermaid-source="${encodedSource}">${escaped}</div>\n`;
 }
 
 function registerMermaidFenceRenderer(markdown: MarkdownIt): void {
@@ -613,7 +625,7 @@ export function renderMarkdown(markdown: string, options: RenderMarkdownOptions 
     h2.appendChild(wrapper);
   });
 
-  return `${options.showFrontMatter ? renderFrontMatterPreview(fields) : ''}${tempDiv.innerHTML}`;
+  return sanitizeRenderedHtml(`${options.showFrontMatter ? renderFrontMatterPreview(fields) : ''}${tempDiv.innerHTML}`);
 }
 
 /**
@@ -629,10 +641,16 @@ export async function renderMermaidBlocks(html: string): Promise<string> {
   if (mermaidDivs.length === 0) return html;
 
   const { default: mermaid } = await import('mermaid');
-  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+  mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict' });
 
   for (const div of mermaidDivs) {
-    const source = div.getAttribute('data-mermaid-source') || '';
+    const encodedSource = div.getAttribute('data-mermaid-source') || '';
+    let source = encodedSource;
+    try {
+      source = decodeURIComponent(encodedSource);
+    } catch {
+      // Keep the encoded value if a malformed placeholder is encountered.
+    }
     try {
       const id = `mermaid-${Math.random().toString(36).slice(2, 10)}`;
       const { svg } = await mermaid.render(id, source);
@@ -641,5 +659,5 @@ export async function renderMermaidBlocks(html: string): Promise<string> {
       console.warn('Mermaid 渲染失败，保留源码:', err);
     }
   }
-  return container.innerHTML;
+  return sanitizeRenderedHtml(container.innerHTML);
 }

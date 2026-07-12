@@ -40,3 +40,4 @@ server/data/
 
 # Cloudflare
 .wrangler/
+_worker.bundle

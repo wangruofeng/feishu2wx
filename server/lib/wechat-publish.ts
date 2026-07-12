@@ -28,6 +28,8 @@ export type NormalizeWechatUploadImage = (
   ext: SupportedImageExtension
 ) => Promise<WechatUploadImage>;
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
 export function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -200,8 +202,14 @@ export function createProcessContentImages(normalizeWechatUploadImage: Normalize
         try {
           const dataMatch = originalUrl.match(/^data:image\/(\w+);base64,(.+)$/);
           if (dataMatch) {
+            if (dataMatch[2].length > MAX_IMAGE_BYTES * 2) {
+              return { originalUrl, wechatUrl: null };
+            }
             const ext = normalizeImageExtension(dataMatch[1]) || 'jpg';
             const imgData = base64ToUint8Array(dataMatch[2]);
+            if (imgData.byteLength > MAX_IMAGE_BYTES) {
+              return { originalUrl, wechatUrl: null };
+            }
             const uploadImage = await normalizeWechatUploadImage(imgData, ext);
             const wechatUrl = await uploadContentImage(
               uploadImage.data,
@@ -219,10 +227,21 @@ export function createProcessContentImages(normalizeWechatUploadImage: Normalize
 
       // 处理外部 URL
       try {
+        const urlObj = new URL(originalUrl);
+        if (!['http:', 'https:'].includes(urlObj.protocol) || urlObj.username || urlObj.password) {
+          return { originalUrl, wechatUrl: null };
+        }
+
         const imgRes = await fetch(originalUrl);
         if (!imgRes.ok) return { originalUrl, wechatUrl: null };
+        const contentLength = Number(imgRes.headers.get('content-length') || 0);
+        if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES) {
+          return { originalUrl, wechatUrl: null };
+        }
         const imgData = new Uint8Array(await imgRes.arrayBuffer());
-        const urlObj = new URL(originalUrl);
+        if (imgData.byteLength > MAX_IMAGE_BYTES) {
+          return { originalUrl, wechatUrl: null };
+        }
         const extFromUrl = urlObj.pathname.split('.').pop();
         const ext = normalizeImageExtension(imgRes.headers.get('content-type'))
           || normalizeImageExtension(extFromUrl)

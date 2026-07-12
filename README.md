@@ -474,10 +474,10 @@ PORT=3001 react-scripts start
 
 如果你计划自托管本项目，请注意以下安全配置：
 
-1. **限制 CORS 来源**：通过环境变量 `ALLOWED_ORIGIN` 设置允许的前端域名，避免使用默认的 `*`（允许所有来源）。例如：
+1. **限制 CORS 来源**：通过 Cloudflare Pages 环境变量 `ALLOWED_ORIGINS` 设置允许的前端域名，多个域名用逗号分隔，避免使用默认的 `*`（允许所有来源）。例如：
    ```bash
    # Cloudflare Pages 环境变量
-   ALLOWED_ORIGIN=https://your-domain.com
+   ALLOWED_ORIGINS=https://feishu2wx.wangruofeng007.com,https://wangruofeng.github.io
    ```
 
 2. **使用 HTTPS**：确保你的部署地址使用 HTTPS，防止凭证在传输中被截获。

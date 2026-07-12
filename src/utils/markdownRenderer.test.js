@@ -25,6 +25,15 @@ test('adds no-referrer policy to inline html image urls in preview html', () => 
   expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
 });
 
+test('sanitizes executable html from preview output', () => {
+  const html = renderMarkdown('<img src="x" onerror="alert(document.domain)"><script>alert(1)</script>');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  expect(container.querySelector('img')?.getAttribute('onerror')).toBeNull();
+  expect(container.querySelector('script')).toBeNull();
+});
+
 test('keeps frontmatter hidden by default while rendering markdown body', () => {
   const html = renderMarkdown('---\ntitle: 测试标题\ntags: [趋势洞察, 创业]\n---\n# 正文标题');
 
@@ -108,7 +117,7 @@ test('renders mermaid code block as placeholder div in classic style', () => {
 
   const mermaidDiv = container.querySelector('.mermaid');
   expect(mermaidDiv).not.toBeNull();
-  expect(mermaidDiv.getAttribute('data-mermaid-source')).toContain('graph LR');
+  expect(decodeURIComponent(mermaidDiv.getAttribute('data-mermaid-source'))).toContain('graph LR');
   expect(mermaidDiv.textContent).toContain('graph LR');
   expect(mermaidDiv.closest('pre, code')).toBeNull();
 });

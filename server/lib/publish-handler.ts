@@ -25,16 +25,38 @@ interface PublishWechatService {
   }, token: string): Promise<string>;
 }
 
+const MAX_TITLE_LENGTH = 200;
+const MAX_AUTHOR_LENGTH = 200;
+const MAX_CONTENT_LENGTH = 5_000_000;
+const MAX_COVER_DATA_URL_LENGTH = 12_000_000;
+const MAX_CREDENTIAL_LENGTH = 256;
+
 export function createPublishDraftHandler(wechat: PublishWechatService) {
   return async function handlePublishDraft(body: PublishBody): Promise<Response> {
     try {
       const { title, content, author, coverDataUrl, appId, appSecret } = body;
 
-      if (!title || !content) {
+      if (
+        typeof title !== 'string'
+        || typeof content !== 'string'
+        || !title.trim()
+        || !content.trim()
+        || title.length > MAX_TITLE_LENGTH
+        || content.length > MAX_CONTENT_LENGTH
+        || (author !== undefined && (typeof author !== 'string' || author.length > MAX_AUTHOR_LENGTH))
+        || (coverDataUrl !== undefined && (typeof coverDataUrl !== 'string' || coverDataUrl.length > MAX_COVER_DATA_URL_LENGTH))
+      ) {
         return jsonResponse({ error: '标题和内容不能为空' }, 400);
       }
 
-      if (!appId || !appSecret) {
+      if (
+        typeof appId !== 'string'
+        || typeof appSecret !== 'string'
+        || !appId
+        || !appSecret
+        || appId.length > MAX_CREDENTIAL_LENGTH
+        || appSecret.length > MAX_CREDENTIAL_LENGTH
+      ) {
         return jsonResponse({ error: '请先配置公众号 AppID 和 AppSecret' }, 400);
       }
 

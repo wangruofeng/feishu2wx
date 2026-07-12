@@ -1,6 +1,6 @@
-# GitHub Pages 部署指南
+# GitHub Pages + Cloudflare Pages 部署指南
 
-本指南将帮助您将项目部署到 GitHub Pages。
+本指南将帮助您将项目部署到 GitHub Pages 和 Cloudflare Pages。
 
 ## 📋 前置条件
 
@@ -217,16 +217,56 @@ npm run deploy
 npm run cf:deploy
 ```
 
+Cloudflare Pages 项目名为 `feishu2wx`，生产访问地址为：
+
+```
+https://feishu2wx.wangruofeng007.com/
+```
+
+Cloudflare 专用构建必须从域名根路径 `/` 加载静态资源；请在 Cloudflare Pages 的环境变量中设置
+`PUBLIC_URL=/`。
+
+由于项目使用 CRA 5 和 TypeScript 5，建议关闭 Cloudflare 的自动依赖安装，并使用仓库中的兼容安装配置：
+
+```text
+Build command: npm install --legacy-peer-deps && npm run build
+Build output directory: build
+SKIP_DEPENDENCY_INSTALL=1
+NODE_VERSION=22
+PUBLIC_URL=/
+ALLOWED_ORIGINS=https://feishu2wx.wangruofeng007.com,https://wangruofeng.github.io
+```
+
+仓库根目录的 `functions/` 会由 Cloudflare Pages Git 集成部署为 Pages Functions。
+
+当前使用 Cloudflare 控制台的 Git 集成自动部署，不需要在 GitHub 仓库中保存 Cloudflare API Token。
+请不要同时启用仓库内的 Cloudflare Direct Upload workflow，避免一次推送产生两次部署。
+`npm run cf:deploy` 仅作为本地手动发布备用入口，不要与 Cloudflare Git 集成同时使用。
+
 ### 2. 配置 GitHub Actions 环境变量
 
 GitHub Pages 构建时需要知道后端 API 地址，已在 `.github/workflows/deploy.yml` 中配置：
 
 ```yaml
 env:
-  REACT_APP_API_URL: https://your-project.pages.dev
+  REACT_APP_API_URL: https://feishu2wx.wangruofeng007.com
 ```
 
-如果使用自己的 Cloudflare 项目，将域名替换为自己的。
+GitHub Pages 前端会通过该地址访问 Cloudflare Pages Function：
+`https://feishu2wx.wangruofeng007.com/api/publish/draft`。
+
+如果更换 Cloudflare 自定义域名，需要同步修改 `.github/workflows/deploy.yml` 中的
+`REACT_APP_API_URL`。
+
+### 3. 绑定 Cloudflare 自定义域名
+
+在 Cloudflare 控制台进入 **Workers & Pages → feishu2wx → Custom domains → Set up a domain**，添加：
+
+```
+feishu2wx.wangruofeng007.com
+```
+
+由于该域名已托管在 Cloudflare，确认后 Cloudflare 会自动创建或更新对应的 DNS 记录。
 
 ## 本地测试 Cloudflare 模式
 
