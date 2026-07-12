@@ -125,6 +125,21 @@ turndownService.addRule('horizontalRule', {
   },
 });
 
+// 自定义规则：避免行内代码被多余的加粗包裹
+// 飞书粘贴的行内代码常以 <strong><code>xxx</code></strong> 形式出现，
+// 默认转换会得到 **`xxx`**，这里去掉多余的加粗
+turndownService.addRule('strong', {
+  filter: ['strong', 'b'],
+  replacement: function (content, _node, options) {
+    if (!content.trim()) return '';
+    // 内容已经是纯行内代码（如 `xxx`）时，不再加粗
+    if (/^`[^`]+`$/.test(content.trim())) {
+      return content;
+    }
+    return options.strongDelimiter + content + options.strongDelimiter;
+  },
+});
+
 /**
  * 将 HTML 转换为 Markdown
  * @param html HTML 字符串

@@ -35,3 +35,15 @@ test('keeps table cell pipes and line breaks valid in markdown table cells', () 
     '| A \\| B | 第一行<br>第二行 |',
   ].join('\n'));
 });
+
+test('does not wrap inline code in bold when pasted from Feishu', () => {
+  const html = '<div>也支持导入本地 <strong><code>.md</code></strong> 文件</div>';
+
+  expect(convertHtmlToMarkdown(html)).toBe('也支持导入本地 `.md` 文件');
+});
+
+test('keeps bold for non-code text', () => {
+  const html = '<div>这是 <strong>重点</strong> 内容</div>';
+
+  expect(convertHtmlToMarkdown(html)).toBe('这是 **重点** 内容');
+});
