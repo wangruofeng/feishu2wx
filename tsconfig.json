@@ -24,6 +24,7 @@
     "src"
   ],
   "exclude": [
+    "functions/**/*",
     "node_modules"
   ]
 }

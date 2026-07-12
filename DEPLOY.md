@@ -238,6 +238,7 @@ ALLOWED_ORIGINS=https://feishu2wx.wangruofeng007.com,https://wangruofeng.github.
 ```
 
 仓库根目录的 `functions/` 会由 Cloudflare Pages Git 集成部署为 Pages Functions。
+Functions 使用独立的 `functions/tsconfig.json`，避免受到前端 CRA 的 ES5 TypeScript 配置影响。
 
 当前使用 Cloudflare 控制台的 Git 集成自动部署，不需要在 GitHub 仓库中保存 Cloudflare API Token。
 请不要同时启用仓库内的 Cloudflare Direct Upload workflow，避免一次推送产生两次部署。
