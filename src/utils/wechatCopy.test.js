@@ -127,7 +127,7 @@ test('shares generic layout sizes with non-generic themes', () => {
 
   expect(container.querySelector('h1')?.style.margin).toBe('0px 0px 14px 0px');
   expect(container.querySelector('h1')?.style.padding).toBe('0px 0px 0px 0px');
-  expect(container.querySelector('h1')?.style.fontSize).toBe('22px');
+  expect(container.querySelector('h1')?.style.fontSize).toBe('24px');
   expect(container.querySelector('h1')?.style.letterSpacing).toBe('0.544px');
   expect(container.querySelector('h2')?.style.margin).toBe('65px 0px 27px 0px');
   expect(container.querySelector('h2')?.style.fontSize).toBe('21px');

@@ -68,7 +68,11 @@ function renderWechatHtml(markdown, config) {
     config.invertH1,
     config.invertH2,
     config.alignH2Left,
-    config.showBlockquoteBg
+    config.showBlockquoteBg,
+    config.blockquoteColorMode,
+    config.blockquoteHeightMode,
+    config.blockquoteBackgroundMode,
+    config.textAlignMode
   );
 }
 

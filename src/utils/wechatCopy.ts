@@ -11,7 +11,7 @@ export const sharedArticleStyleConfig = {
   bodyPadding: '0',
   bodyTextAlign: 'justify',
   bodyLetterSpacing: '0.544px',
-  h1FontSize: '22px',
+  h1FontSize: '24px',
   h1LineHeight: '30.8px',
   h1FontWeight: '500',
   h1Margin: '0 0 14px',
@@ -1134,7 +1134,7 @@ function applyThemeStyles(
     }
 
     // 使用px单位，微信公众号编辑器对em单位支持可能不好
-    h1El.style.fontSize = themeStyles.h1FontSize || '22px';
+    h1El.style.fontSize = themeStyles.h1FontSize || '24px';
     h1El.style.margin = themeStyles.h1Margin || '0 0 14px';
     h1El.style.marginLeft = '0';
     h1El.style.marginRight = '0';

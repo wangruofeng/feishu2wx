@@ -114,6 +114,11 @@ FEISHU2WX_THEME
 - `codeBlockStyle`
 - `imageBorderStyle`
 - `imageBorderRadius`
+- `showBlockquoteBg`（旧字段，等价于 `blockquoteBackgroundMode` 的布尔映射）
+- `blockquoteBackgroundMode`
+- `blockquoteColorMode`
+- `blockquoteHeightMode`
+- `textAlignMode`
 - `showH1Underline`
 - `invertH1`
 - `alignH1Left`
@@ -174,6 +179,18 @@ npm run cli -- theme set blue
 ```bash
 npm run cli -- theme set blue --show-h1-underline --align-h1-left --no-table-shadow
 ```
+
+引用块三项独立配置和正文对齐也能在命令行设置：
+
+```bash
+npm run cli -- theme set blue \
+  --blockquote-background-mode theme \
+  --blockquote-color-mode theme \
+  --blockquote-height-mode compact \
+  --text-align-mode justify
+```
+
+旧的 `--show-blockquote-bg` / `--no-show-blockquote-bg` 仍然兼容，等价于 `--blockquote-background-mode theme` / `none`；同时传时新选项优先。
 
 查看当前主题配置：
 

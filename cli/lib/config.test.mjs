@@ -45,19 +45,28 @@ test('default theme config matches persisted web theme fields', () => {
   assert.deepEqual(Object.keys(DEFAULT_THEME_CONFIG).sort(), [
     'alignH1Left',
     'alignH2Left',
+    'blockquoteBackgroundMode',
+    'blockquoteColorMode',
+    'blockquoteHeightMode',
     'codeBlockStyle',
     'font',
     'imageBorderRadius',
     'imageBorderStyle',
     'invertH1',
     'invertH2',
+    'showBlockquoteBg',
     'showH1Underline',
     'showHorizontalRule',
     'tableShadow',
+    'textAlignMode',
     'theme',
   ]);
   assert.equal(DEFAULT_THEME_CONFIG.alignH1Left, false);
   assert.equal(DEFAULT_THEME_CONFIG.tableShadow, true);
+  assert.equal(DEFAULT_THEME_CONFIG.blockquoteBackgroundMode, 'theme');
+  assert.equal(DEFAULT_THEME_CONFIG.blockquoteColorMode, 'default');
+  assert.equal(DEFAULT_THEME_CONFIG.blockquoteHeightMode, 'loose');
+  assert.equal(DEFAULT_THEME_CONFIG.textAlignMode, 'left');
 });
 
 test('maskAppId hides the middle of a configured AppID', () => {
@@ -176,4 +185,65 @@ test('normalizeThemeConfig drops web-only or unknown fields from old configs', (
   assert.equal(theme.showH1Underline, true);
   assert.equal('darkMode' in theme, false);
   assert.equal('unknownField' in theme, false);
+});
+
+test('normalizeThemeConfig derives blockquoteBackgroundMode from legacy showBlockquoteBg', () => {
+  const { normalizeThemeConfig } = require('./config.cjs');
+
+  assert.equal(normalizeThemeConfig({ showBlockquoteBg: false }).blockquoteBackgroundMode, 'none');
+  assert.equal(normalizeThemeConfig({ showBlockquoteBg: true }).blockquoteBackgroundMode, 'theme');
+  assert.equal(normalizeThemeConfig({ showBlockquoteBg: false }).showBlockquoteBg, false);
+});
+
+test('normalizeThemeConfig lets blockquoteBackgroundMode override legacy showBlockquoteBg', () => {
+  const { normalizeThemeConfig } = require('./config.cjs');
+
+  const theme = normalizeThemeConfig({
+    showBlockquoteBg: false,
+    blockquoteBackgroundMode: 'theme',
+  });
+
+  assert.equal(theme.blockquoteBackgroundMode, 'theme');
+  assert.equal(theme.showBlockquoteBg, true);
+});
+
+test('mergeThemeOptions applies new blockquote and text-align options', () => {
+  const { DEFAULT_THEME_CONFIG, mergeThemeOptions } = require('./config.cjs');
+
+  const theme = mergeThemeOptions({ theme: DEFAULT_THEME_CONFIG }, {
+    blockquoteBackgroundMode: 'none',
+    blockquoteColorMode: 'theme',
+    blockquoteHeightMode: 'compact',
+    textAlignMode: 'justify',
+  });
+
+  assert.equal(theme.blockquoteBackgroundMode, 'none');
+  assert.equal(theme.blockquoteColorMode, 'theme');
+  assert.equal(theme.blockquoteHeightMode, 'compact');
+  assert.equal(theme.textAlignMode, 'justify');
+  assert.equal(theme.showBlockquoteBg, false);
+});
+
+test('mergeThemeOptions lets legacy showBlockquoteBg control background when new mode is absent', () => {
+  const { DEFAULT_THEME_CONFIG, mergeThemeOptions } = require('./config.cjs');
+
+  const off = mergeThemeOptions({ theme: DEFAULT_THEME_CONFIG }, { showBlockquoteBg: false });
+  assert.equal(off.blockquoteBackgroundMode, 'none');
+  assert.equal(off.showBlockquoteBg, false);
+
+  const on = mergeThemeOptions({ theme: DEFAULT_THEME_CONFIG }, { showBlockquoteBg: true });
+  assert.equal(on.blockquoteBackgroundMode, 'theme');
+  assert.equal(on.showBlockquoteBg, true);
+});
+
+test('mergeThemeOptions prefers blockquoteBackgroundMode over legacy showBlockquoteBg', () => {
+  const { DEFAULT_THEME_CONFIG, mergeThemeOptions } = require('./config.cjs');
+
+  const theme = mergeThemeOptions({ theme: DEFAULT_THEME_CONFIG }, {
+    showBlockquoteBg: false,
+    blockquoteBackgroundMode: 'theme',
+  });
+
+  assert.equal(theme.blockquoteBackgroundMode, 'theme');
+  assert.equal(theme.showBlockquoteBg, true);
 });

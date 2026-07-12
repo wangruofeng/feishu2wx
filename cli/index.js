@@ -49,8 +49,12 @@ function addThemeOptions(command) {
     .option('--no-show-horizontal-rule', '隐藏分割线')
     .option('--table-shadow', '显示表格阴影')
     .option('--no-table-shadow', '隐藏表格阴影')
-    .option('--show-blockquote-bg', '显示引用块背景')
-    .option('--no-show-blockquote-bg', '隐藏引用块背景');
+    .option('--show-blockquote-bg', '显示引用块背景（旧选项，等价于 --blockquote-background-mode theme）')
+    .option('--no-show-blockquote-bg', '隐藏引用块背景（旧选项，等价于 --blockquote-background-mode none）')
+    .option('--blockquote-background-mode <mode>', '引用块背景 theme/none')
+    .option('--blockquote-color-mode <mode>', '引用块边框色 theme/default')
+    .option('--blockquote-height-mode <mode>', '引用块间距 loose/compact')
+    .option('--text-align-mode <mode>', '正文对齐 left/justify');
 }
 
 function resolveActiveConfigPath(options) {

@@ -116,15 +116,15 @@
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
-.preview-content .frontmatter-preview h2 {
+.preview-content.article-layout-generic .frontmatter-preview h2 {
   margin: 0 0 8px;
   padding: 0;
   border: 0;
   text-align: left;
-  color: #666;
+  color: var(--preview-primary-color, #666);
   font-size: 14px;
   line-height: 1.35;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .preview-content .frontmatter-preview dl {
@@ -200,7 +200,7 @@
 }
 
 .preview-content h1 {
-  font-size: 22px;
+  font-size: 24px;
   border-bottom: 1px solid #e8e8e8;
   padding-bottom: 8px;
   text-align: center;
@@ -240,7 +240,7 @@
 }
 
 .preview-content h2 {
-  font-size: 18px;
+  font-size: 21px;
   margin-top: 32px;
   color: #333;
   text-align: center;
@@ -263,6 +263,13 @@
 }
 
 .preview-content h3 {
+  font-size: 16px;
+  color: #333;
+}
+
+.preview-content h4,
+.preview-content h5,
+.preview-content h6 {
   font-size: 16px;
   color: #333;
 }

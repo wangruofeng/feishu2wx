@@ -19,6 +19,10 @@ const DEFAULT_THEME_CONFIG = {
   imageBorderStyle: 'border',
   imageBorderRadius: false,
   showBlockquoteBg: true,
+  blockquoteBackgroundMode: 'theme',
+  blockquoteColorMode: 'default',
+  blockquoteHeightMode: 'loose',
+  textAlignMode: 'left',
   showH1Underline: false,
   invertH1: false,
   alignH1Left: false,
@@ -79,6 +83,16 @@ function resolveConfigPath(options = {}) {
 }
 
 function normalizeThemeConfig(theme = {}) {
+  // blockquoteBackgroundMode 优先，未显式提供时从旧字段 showBlockquoteBg 推导，保持向后兼容
+  let blockquoteBackgroundMode;
+  if (theme.blockquoteBackgroundMode === 'none' || theme.blockquoteBackgroundMode === 'theme') {
+    blockquoteBackgroundMode = theme.blockquoteBackgroundMode;
+  } else if (typeof theme.showBlockquoteBg === 'boolean') {
+    blockquoteBackgroundMode = theme.showBlockquoteBg ? 'theme' : 'none';
+  } else {
+    blockquoteBackgroundMode = DEFAULT_THEME_CONFIG.blockquoteBackgroundMode;
+  }
+
   return {
     theme: normalizeThemeKey(theme.theme),
     font: theme.font || DEFAULT_THEME_CONFIG.font,
@@ -87,7 +101,11 @@ function normalizeThemeConfig(theme = {}) {
       ? theme.imageBorderStyle
       : DEFAULT_THEME_CONFIG.imageBorderStyle,
     imageBorderRadius: Boolean(theme.imageBorderRadius),
-    showBlockquoteBg: theme.showBlockquoteBg !== false,
+    showBlockquoteBg: blockquoteBackgroundMode !== 'none',
+    blockquoteBackgroundMode,
+    blockquoteColorMode: theme.blockquoteColorMode === 'theme' ? 'theme' : 'default',
+    blockquoteHeightMode: theme.blockquoteHeightMode === 'compact' ? 'compact' : 'loose',
+    textAlignMode: theme.textAlignMode === 'justify' ? 'justify' : 'left',
     showH1Underline: Boolean(theme.showH1Underline ?? theme.showH1),
     invertH1: Boolean(theme.invertH1),
     alignH1Left: Boolean(theme.alignH1Left),
@@ -197,7 +215,16 @@ function mergeThemeOptions(config, options = {}) {
   if (options.codeBlockStyle) patch.codeBlockStyle = options.codeBlockStyle;
   if (options.imageBorderStyle) patch.imageBorderStyle = options.imageBorderStyle;
   if (typeof options.imageBorderRadius === 'boolean') patch.imageBorderRadius = options.imageBorderRadius;
-  if (typeof options.showBlockquoteBg === 'boolean') patch.showBlockquoteBg = options.showBlockquoteBg;
+  // 旧选项 showBlockquoteBg 与新选项 blockquoteBackgroundMode 冲突时，新选项优先；
+  // 仅传旧选项时推导出新字段，避免被 config.theme 里已有的 blockquoteBackgroundMode 覆盖
+  if (options.blockquoteBackgroundMode) {
+    patch.blockquoteBackgroundMode = options.blockquoteBackgroundMode;
+  } else if (typeof options.showBlockquoteBg === 'boolean') {
+    patch.blockquoteBackgroundMode = options.showBlockquoteBg ? 'theme' : 'none';
+  }
+  if (options.blockquoteColorMode) patch.blockquoteColorMode = options.blockquoteColorMode;
+  if (options.blockquoteHeightMode) patch.blockquoteHeightMode = options.blockquoteHeightMode;
+  if (options.textAlignMode) patch.textAlignMode = options.textAlignMode;
   if (typeof options.showH1Underline === 'boolean') patch.showH1Underline = options.showH1Underline;
   if (typeof options.invertH1 === 'boolean') patch.invertH1 = options.invertH1;
   if (typeof options.alignH1Left === 'boolean') patch.alignH1Left = options.alignH1Left;
