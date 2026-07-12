@@ -158,10 +158,10 @@ test('shares generic layout sizes with non-generic themes', () => {
   expect(container.querySelector('h3')?.style.margin).toBe('27px 0px 27px 0px');
   expect(container.querySelector('h3')?.style.fontSize).toBe('16px');
   expect(container.querySelector('p')?.style.margin).toBe('27px 0px');
-  expect(container.querySelector('p')?.style.fontSize).toBe('15px');
+  expect(container.querySelector('p')?.style.fontSize).toBe('16px');
   expect(container.querySelector('p')?.style.letterSpacing).toBe('0.544px');
   expect(container.querySelector('blockquote')?.style.margin).toBe('26px 0px');
-  expect(container.querySelector('blockquote')?.style.fontSize).toBe('15px');
+  expect(container.querySelector('blockquote')?.style.fontSize).toBe('16px');
   expect(container.querySelector('blockquote')?.style.letterSpacing).toBe('0.544px');
 });
 
@@ -252,8 +252,8 @@ test('formats independent blockquote background and height modes', () => {
   expect(compactQuote?.style.paddingTop).toBe('0px');
   expect(compactQuote?.style.paddingBottom).toBe('0px');
   expect(looseQuote?.style.backgroundColor).toBe('rgb(240, 253, 250)');
-  expect(looseQuote?.style.paddingTop).toBe('12px');
-  expect(looseQuote?.style.paddingBottom).toBe('12px');
+  expect(looseQuote?.style.paddingTop).toBe('6px');
+  expect(looseQuote?.style.paddingBottom).toBe('6px');
 });
 
 test('applies orange theme blockquote background when following the theme', () => {
@@ -278,6 +278,21 @@ test('applies orange theme blockquote background when following the theme', () =
   );
 
   expect(container.querySelector('blockquote')?.style.backgroundColor).toBe('rgb(255, 247, 237)');
+});
+
+test('keeps table header backgrounds aligned with preview themes', () => {
+  const html = '<table><thead><tr><th>表头</th></tr></thead></table>';
+  const expectedBackgroundColor = 'rgb(245, 245, 245)';
+  const expectedTextColor = 'rgb(51, 51, 51)';
+
+  ['teal', 'classic', 'orange', 'blue'].forEach((theme) => {
+    const container = document.createElement('div');
+    container.innerHTML = formatForWeChat(html, theme);
+    const header = container.querySelector('th');
+
+    expect(header?.style.backgroundColor).toBe(expectedBackgroundColor);
+    expect(header?.style.color).toBe(expectedTextColor);
+  });
 });
 
 test('applies the configured default text alignment to article elements', () => {

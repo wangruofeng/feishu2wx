@@ -35,8 +35,8 @@
 }
 
 .theme-teal .preview-content table th {
-  background-color: #F0FDFA;
-  color: #115E59;
+  background-color: #f5f5f5;
+  color: #333;
 }
 
 .theme-teal .preview-content hr.custom-hr,
@@ -168,7 +168,7 @@
 
 .theme-classic .preview-content table th {
   background-color: #f5f5f5;
-  color: #000000cc;
+  color: #333;
 }
 
 .theme-classic .preview-content hr.custom-hr,
@@ -236,7 +236,7 @@
 
 .theme-orange .preview-content table th {
   background-color: #f5f5f5;
-  color: #222222;
+  color: #333;
 }
 
 .theme-orange .preview-content hr.custom-hr,
@@ -305,8 +305,8 @@
 }
 
 .theme-blue .preview-content table th {
-  background-color: #f0f7ff;
-  color: #0F4C81;
+  background-color: #f5f5f5;
+  color: #333;
 }
 
 .theme-blue .preview-content hr.custom-hr,
@@ -372,6 +372,14 @@
   letter-spacing: 0.544px;
 }
 
+.preview-content.article-layout-generic > :first-child {
+  margin-top: 0;
+}
+
+.preview-content.article-layout-generic > :last-child {
+  margin-bottom: 0;
+}
+
 .preview-content.article-layout-generic h1 {
   margin: 0 0 14px;
   padding: 0;
@@ -399,15 +407,15 @@
 .preview-content.article-layout-generic p {
   margin: 27px 0;
   padding: 0;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 25px;
 }
 
 .preview-content.article-layout-generic blockquote {
   margin: 26px 0;
   padding: 0 15px 0 14px;
-  font-size: 15px;
-  line-height: 23px;
+  font-size: 16px;
+  line-height: 25px;
 }
 
 .preview-content.text-align-left p,

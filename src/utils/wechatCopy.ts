@@ -5,7 +5,7 @@ import { WECHAT_IMAGE_CAPTION_TAG, WECHAT_IMAGE_WRAPPER_TAG } from './wechatTagW
 /** 共享文章排版配置：所有颜色主题复用这组结构参数。 */
 export const sharedArticleStyleConfig = {
   bodyColor: '#222222',
-  bodyFontSize: '15px',
+  bodyFontSize: '16px',
   bodyLineHeight: '25px',
   bodyMargin: '27px 0',
   bodyPadding: '0',
@@ -34,7 +34,7 @@ export const sharedArticleStyleConfig = {
   quoteBorderWidth: '4px',
   quotePadding: '0 15px 0 14px',
   quoteMargin: '26px 0',
-  quoteFontSize: '15px',
+  quoteFontSize: '16px',
   quoteLineHeight: '23px',
   quoteFontWeight: '600',
   quoteRadius: '0',
@@ -107,8 +107,8 @@ function getThemeStyles(theme: string) {
       blockquoteBorderColor: '#0D9488',
       blockquoteThemeColor: '#0D9488',
       blockquoteBgColor: '#F0FDFA',
-      tableHeaderBgColor: '#F0FDFA',
-      tableHeaderColor: '#115E59',
+      tableHeaderBgColor: '#f5f5f5',
+      tableHeaderColor: '#333',
     },
     classic: {
       ...sharedArticleStyleConfig,
@@ -122,7 +122,7 @@ function getThemeStyles(theme: string) {
       blockquoteThemeColor: '#000000e6',
       blockquoteBgColor: '#f5f5f5',
       tableHeaderBgColor: '#f5f5f5',
-      tableHeaderColor: '#000000cc',
+      tableHeaderColor: '#333',
     },
     orange: {
       ...sharedArticleStyleConfig,
@@ -136,7 +136,7 @@ function getThemeStyles(theme: string) {
       blockquoteThemeColor: '#FD4606',
       blockquoteBgColor: '#FFF7ED',
       tableHeaderBgColor: '#f5f5f5',
-      tableHeaderColor: '#222222',
+      tableHeaderColor: '#333',
     },
     blue: {
       ...sharedArticleStyleConfig,
@@ -149,8 +149,8 @@ function getThemeStyles(theme: string) {
       blockquoteBorderColor: '#0F4C81',
       blockquoteThemeColor: '#0F4C81',
       blockquoteBgColor: '#f0f7ff',
-      tableHeaderBgColor: '#f0f7ff',
-      tableHeaderColor: '#0F4C81',
+      tableHeaderBgColor: '#f5f5f5',
+      tableHeaderColor: '#333',
     },
   };
 
@@ -162,7 +162,7 @@ function getThemeStyles(theme: string) {
  */
 function getFontFamily(fontKey: string): string {
   const fonts: Record<string, string> = {
-    'default': '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif',
+    'default': '"PingFang SC NEW", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif',
     'microsoft-yahei': '"Microsoft YaHei", "微软雅黑", Arial, sans-serif',
     'simsun': 'SimSun, "宋体", serif',
     'simhei': 'SimHei, "黑体", sans-serif',
@@ -1120,7 +1120,7 @@ function applyThemeStyles(
       return;
     }
     if (pEl.textContent?.trim()) {
-      pEl.style.fontSize = themeStyles.bodyFontSize || '15px';
+      pEl.style.fontSize = themeStyles.bodyFontSize || '16px';
       // 检查 p 后面是否跟着列表，如果是则减少下间距
       const nextSibling = pEl.nextElementSibling;
       const isFollowedByList = nextSibling && (

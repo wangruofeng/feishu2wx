@@ -55,6 +55,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 设计 token 定义在 `src/styles/tokens.css`，UI 框架层的颜色、字体、间距、圆角等应使用 `var(--*)` 引用；暗黑主题通过 `.theme-dark` 覆盖 token 值实现
 - 主题配置分散在三处（`ThemeSwitcher.tsx`、`wechatCopy.ts`、`styles/themes.css`），ThemeSwitcher 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
+- 正文/引用块基础字号为 `16px`（`sharedArticleStyleConfig.bodyFontSize` / `quoteFontSize`），预览层（`themes.css`）与微信输出层（`wechatCopy.ts`）须保持一致；默认字体栈以 `PingFang SC NEW` 为首选项
+- 表头样式跨主题统一：背景 `#f5f5f5`、文字 `#333`（不再使用主题强调色），改表头时 `themes.css` 各主题块与 `wechatCopy.ts` 的 `tableHeaderBgColor`/`tableHeaderColor` 都要同步
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储
 - 快捷键：`EditorPane.tsx` 管理编辑区快捷键（Cmd+B 加粗切换、Cmd+I 斜体切换、Cmd+U 下划线切换、Cmd+K 链接、Cmd+Z 撤销、Cmd+Shift+Z 重做），`App.tsx` 管理全局快捷键（Option+E 编辑/预览切换）；所有快捷键在 `ShortcutsDrawer` 组件中展示
