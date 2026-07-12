@@ -99,10 +99,13 @@
 }
 
 .empty-preview {
-  color: #bfbfbf;
-  text-align: center;
-  padding: 40px;
-  font-style: italic;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: var(--color-text-placeholder);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  font-style: normal;
 }
 
 .preview-content .frontmatter-preview {
