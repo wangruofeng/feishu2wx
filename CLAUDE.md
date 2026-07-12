@@ -43,6 +43,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - frontmatter 元数据卡片中数组字段默认渲染为标签徽章（`frontmatter-tags`），但 `ai_summary` 字段渲染为无序列表（`frontmatter-summary-list`），均定义在 `markdownRenderer.ts` 的 `renderFrontMatterPreview()` 和 `PreviewPane.css`
 - 图片有 alt 时渲染为 `<figure>`（含 `<figcaption>`），无 alt 时为裸 `<img>`；微信输出的图片上下间距由外层块统一控制，不应在 `<img>` 上设置上下 margin
 - WebP 图片在服务端上传微信 API 前归一化：静态 WebP 转 PNG，动态 WebP 转 GIF，以兼容微信正文图上传并保留动图；前端 `convertWebpToPng()` 保留为备用工具函数
+- `src/data/example.ts` 为默认示例文档，其中演示图片应使用自托管链接（如 `img.wangruofeng007.com`）避免外链失效
 - 图片查看器（`ImageViewer`）支持点击放大预览，键盘左右切换所有图片，通过 `PreviewPane` 收集预览区图片列表传入
 - `modern` 代码块样式的共享参数在 `src/utils/codeBlockStyles.ts`
 - Mermaid 代码块（` ```mermaid `）通过两阶段渲染：`renderMarkdown()` 同步产出 `<div class="mermaid" data-mermaid-source>` 占位（非 `<pre>`，避免被 `convertSvgImagesToPng` 的 `svg.closest('pre,code')` 跳过和 `applyThemeStyles` 当代码块重建）；`renderMermaidBlocks()` 异步用 `mermaid.render()`（动态 `import('mermaid')`）把占位替换为内联 `<svg>`，在 `App.tsx` 的渲染 effect 中 `await` 后 `setHtml`；复制/导出管线经 `convertSvgImagesToPng` 自动把 SVG 栅格化为 PNG，无需改动 `wechatCopy.ts`

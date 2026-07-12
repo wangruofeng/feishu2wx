@@ -49,7 +49,7 @@ function greet(name) {
 
 ![gif 图片](https://img.soogif.com/4Gqn7FD7yosx2oaLbxp4zz7VyuwHpxhL.gif)
 
-![webp 动图](https://upload.wikimedia.org/wikipedia/commons/0/0b/AnimatedWebPSample.webp)
+![webp 动图](https://img.wangruofeng007.com/feishu2wx/animated-webp-demo.webp)
 
 ![webp 静图](https://www.gstatic.com/webp/gallery/1.webp)
 
