@@ -348,13 +348,23 @@
 }
 
 .preview-content.blockquote-height-loose blockquote {
-  padding-top: 12px !important;
-  padding-bottom: 12px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+.preview-content.blockquote-height-loose blockquote p {
+  margin-bottom: 6px !important;
+  margin-top: 6px !important;
 }
 
 .preview-content.blockquote-height-compact blockquote {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+
+.preview-content.blockquote-height-compact blockquote p {
+  margin-bottom: 0 !important;
+  margin-top: 0 !important;
 }
 
 /* 通用文章排版尺寸：所有主题共享，颜色和装饰仍由主题控制。 */

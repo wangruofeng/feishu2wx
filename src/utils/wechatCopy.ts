@@ -1424,8 +1424,8 @@ function applyThemeStyles(
     bqEl.style.padding = themeStyles.quotePadding || '0 15px 0 14px';
     bqEl.style.borderLeft = `${themeStyles.quoteBorderWidth || '4px'} solid ${blockquoteBorderColor}`;
     bqEl.style.backgroundColor = blockquoteBackgroundMode === 'theme' ? themeStyles.blockquoteBgColor : 'transparent';
-    bqEl.style.paddingTop = blockquoteHeightMode === 'compact' ? '0' : '12px';
-    bqEl.style.paddingBottom = blockquoteHeightMode === 'compact' ? '0' : '12px';
+    bqEl.style.paddingTop = blockquoteHeightMode === 'compact' ? '0' : '6px';
+    bqEl.style.paddingBottom = blockquoteHeightMode === 'compact' ? '0' : '6px';
     bqEl.style.color = '#333';
     bqEl.style.borderRadius = '0 4px 4px 0';
     bqEl.style.fontFamily = fontFamily;
@@ -1434,7 +1434,15 @@ function applyThemeStyles(
     bqEl.style.letterSpacing = themeStyles.bodyLetterSpacing || '0.544px';
     bqEl.style.textAlign = textAlignMode;
     
-    // 处理 blockquote 内部元素的 margin，确保上下 padding 一致
+    // 处理 blockquote 内部所有段落的 margin
+    const bqParagraphs = bqEl.querySelectorAll('p');
+    bqParagraphs.forEach((p) => {
+      const pEl = p as HTMLElement;
+      pEl.style.marginTop = blockquoteHeightMode === 'compact' ? '0' : '6px';
+      pEl.style.marginBottom = blockquoteHeightMode === 'compact' ? '0' : '6px';
+    });
+    
+    // 确保第一个/最后一个子元素的 margin 为 0，避免与 padding 叠加
     const firstChild = bqEl.firstElementChild as HTMLElement;
     const lastChild = bqEl.lastElementChild as HTMLElement;
     if (firstChild) {
