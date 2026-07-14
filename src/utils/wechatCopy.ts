@@ -992,7 +992,7 @@ function applyThemeStyles(
       preEl.style.marginBottom = '16px';
       preEl.style.fontSize = modernCodeBlockStyles.fontSize;
       preEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
-      preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      preEl.style.fontFamily = modernCodeBlockStyles.fontFamily;
       preEl.style.display = 'flex';
       preEl.style.flexDirection = 'column';
       preEl.style.overflow = 'hidden';
@@ -1015,7 +1015,7 @@ function applyThemeStyles(
       newCodeEl.style.borderRadius = '0';
       newCodeEl.style.fontSize = modernCodeBlockStyles.fontSize;
       newCodeEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
-      newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
+      newCodeEl.style.fontFamily = modernCodeBlockStyles.fontFamily;
       newCodeEl.style.minWidth = 'fit-content';
       newCodeEl.style.whiteSpace = 'pre';
       newCodeEl.style.wordBreak = 'keep-all';

@@ -414,6 +414,72 @@
   color: #333;
 }
 
+/* 极简代码块使用适配浅背景的高对比语法色，避免复用深色主题后文字发浅 */
+.preview-content pre:not(.modern-code-block) code.hljs {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #1f2937;
+  background-color: transparent;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-comment,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-quote {
+  color: #5b6472;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-doctag,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-keyword,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-formula {
+  color: #7c3aed;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-section,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-name,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-tag,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-deletion,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-subst {
+  color: #b42318;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-literal {
+  color: #0f766e;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-string,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-regexp,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-addition,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-attribute,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-meta .hljs-string {
+  color: #166534;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-attr,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-variable,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-template-variable,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-type,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-class,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-attr,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-pseudo,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-number {
+  color: #92400e;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-symbol,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-bullet,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-link,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-meta,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-id,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-title {
+  color: #1d4ed8;
+}
+
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-built_in,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-title.class_,
+.preview-content pre:not(.modern-code-block) code.hljs .hljs-class .hljs-title {
+  color: #854d0e;
+}
+
 /* 现代代码块样式 - 带语言标签 */
 .preview-content pre.modern-code-block {
   background-color: var(--modern-code-block-bg);
@@ -452,7 +518,7 @@
   display: block;
   min-width: fit-content;
   white-space: pre;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: var(--modern-code-block-font-family);
   padding: var(--modern-code-block-code-padding);
   background-color: transparent;
   font-size: var(--modern-code-block-font-size);
@@ -488,7 +554,7 @@
   padding: var(--modern-code-block-code-padding);
   font-size: var(--modern-code-block-font-size);
   line-height: var(--modern-code-block-line-height);
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: var(--modern-code-block-font-family);
   color: var(--modern-code-block-text-color);
   background-color: transparent;
   font-weight: normal;
