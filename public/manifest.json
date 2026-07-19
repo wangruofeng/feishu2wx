@@ -1,0 +1,31 @@
+{
+  "short_name": "feishu2wx",
+  "name": "飞书文档转微信公众号排版工具",
+  "description": "粘贴飞书 HTML 或编写 Markdown，实时预览，一键复制到公众号编辑器或推送草稿箱。",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "lang": "zh-CN"
+}

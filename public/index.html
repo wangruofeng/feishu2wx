@@ -7,23 +7,91 @@
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="飞书文档转微信公众号排版工具"
+      content="飞书文档一键转微信公众号排版工具。粘贴飞书 HTML 或编写 Markdown，实时预览，支持 4 种主题、代码高亮、Mermaid 图表、脚注、任务列表，一键复制到公众号编辑器或推送草稿箱。"
     />
+
+    <!--
+      Open Graph / Twitter Card：社交平台分享时的预览卡片。
+      og:url / og:image 用主域绝对 URL（与 canonical 一致），
+      保证无论从哪个部署分享，抓取器都拿到统一的预览。
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="feishu2wx" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:url" content="https://feishu2wx.wangruofeng007.com/" />
+    <meta property="og:title" content="飞书文档转微信公众号排版工具" />
+    <meta property="og:description" content="粘贴飞书 HTML 或编写 Markdown，实时预览，支持 4 种主题、代码高亮、Mermaid 图表、脚注、任务列表，一键复制到公众号编辑器或推送草稿箱。" />
+    <meta property="og:image" content="https://feishu2wx.wangruofeng007.com/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="feishu2wx — 飞书文档转微信公众号排版工具" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="飞书文档转微信公众号排版工具" />
+    <meta name="twitter:description" content="粘贴飞书 HTML 或编写 Markdown，实时预览，4 种主题、代码高亮、Mermaid 图表、脚注、任务列表，一键复制 / 推送草稿箱。" />
+    <meta name="twitter:image" content="https://feishu2wx.wangruofeng007.com/og-cover.png" />
+    <!--
+      Canonical：项目部署在两处（feishu2wx.wangruofeng007.com 根路径 与
+      blog.wangruofeng007.com/feishu2wx/ 子路径），声明主域为权威 URL，
+      避免 Google 自行挑选 canonical 导致重复内容惩罚。
+    -->
+    <link rel="canonical" href="https://feishu2wx.wangruofeng007.com/" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    
-    <!-- Google Fonts - 预加载常用字体 -->
+
+    <!--
+      Google Fonts：这些字体是 FontSelector 的可选导出字体（非首屏必需），
+      改为非阻塞加载（media="print" + onload 切回 all），避免阻塞首屏 LCP。
+      noscript 兜底保证 JS 关闭时仍能加载。
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;600;700&family=Raleway:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap">
+    </noscript>
 
     <title>飞书文档 → 微信公众号排版神器</title>
+
+    <!--
+      结构化数据 JSON-LD：声明为 WebApplication，提升富媒体搜索结果资格。
+      https://schema.org/WebApplication
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "feishu2wx",
+      "alternateName": "飞书文档转微信公众号排版工具",
+      "url": "https://feishu2wx.wangruofeng007.com/",
+      "description": "飞书文档一键转微信公众号排版工具。粘贴飞书 HTML 或编写 Markdown，实时预览，支持 4 种主题、代码高亮、Mermaid 图表、脚注、任务列表，一键复制到公众号编辑器或推送草稿箱。",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "Web",
+      "inLanguage": "zh-CN",
+      "image": "https://feishu2wx.wangruofeng007.com/og-cover.png",
+      "logo": "https://feishu2wx.wangruofeng007.com/favicon.svg",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY"
+      },
+      "featureList": [
+        "飞书文档粘贴转 Markdown",
+        "Markdown 实时预览",
+        "4 种主题与浅色/深色模式",
+        "代码语法高亮",
+        "Mermaid 图表",
+        "脚注与任务列表",
+        "一键复制到公众号编辑器",
+        "推送到微信公众号草稿箱"
+      ]
+    }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
