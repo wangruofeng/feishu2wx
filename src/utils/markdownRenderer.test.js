@@ -100,6 +100,19 @@ test('keeps punctuation-ended strong syntax working in modern code block style',
   expect(container.textContent.trim()).toBe('做深！这其实是生态成熟的表现');
 });
 
+test('does not let multiple strong spans consume each other', () => {
+  const markdown = '**姚顺雨**：他是研究员，但主要做产品方向。Anthropic 后来有了独立的产品部门，但以前不是这么分的。Anthropic 的产品经理似乎真的很懂 AI——这也是为什么我开头说，AI 短期内还替代不了好的产品经理。**好的产品经理知道怎么和 AI 协作。**这跟上一代靠花哨展示的产品经理完全不同。';
+  const html = renderMarkdown(markdown);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  const strongs = container.querySelectorAll('strong');
+
+  expect(strongs).toHaveLength(2);
+  expect(strongs[0].textContent).toBe('姚顺雨');
+  expect(strongs[1].textContent).toBe('好的产品经理知道怎么和 AI 协作。');
+  expect(container.textContent).not.toContain('**');
+});
+
 test('renders double-equals text as a selective highlight', () => {
   const html = renderMarkdown('普通文字 ==重点文字== 继续文字');
   const container = document.createElement('div');

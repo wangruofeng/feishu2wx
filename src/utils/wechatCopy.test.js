@@ -328,12 +328,47 @@ test('uses the shared link style for every theme', () => {
 
   ['teal', 'classic', 'orange', 'blue'].forEach((theme) => {
     const container = document.createElement('div');
-    container.innerHTML = formatForWeChat(html, theme);
+    container.innerHTML = formatForWeChat(html, theme, 'default', true, 'border', false, 'classic', false, false, false, true, 'default', 'loose', 'theme', 'left', false);
     const link = container.querySelector('a');
 
     expect(link?.style.color).toBe(expectedColor);
     expect(link?.style.textDecoration).toBe('none');
   });
+});
+
+test('auto adapts WeChat links to plain text with their urls', () => {
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(
+    '<p><a href="https://www.youtube.com/watch?v=ttkd0t5qTD4">访谈原视频</a></p>'
+  );
+
+  expect(container.querySelector('a')).toBeNull();
+  expect(container.querySelector('p')?.textContent).toBe('访谈原视频: https://www.youtube.com/watch?v=ttkd0t5qTD4');
+});
+
+test('can disable automatic WeChat link adaptation and keep the link', () => {
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(
+    '<p><a href="https://example.com" target="_blank">链接</a></p>',
+    'classic',
+    'default',
+    true,
+    'border',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'default',
+    'loose',
+    'theme',
+    'left',
+    false
+  );
+
+  expect(container.querySelector('a')?.getAttribute('href')).toBe('https://example.com');
+  expect(container.querySelector('a')?.getAttribute('target')).toBe('_blank');
 });
 
 test('formats classic code blocks left-aligned for wechat copy', () => {

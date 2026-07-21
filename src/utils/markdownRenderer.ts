@@ -86,37 +86,36 @@ function cjkPunctuationStrongRule(state: any, silent: boolean): boolean {
     return false;
   }
 
-  let searchFrom = start + 2;
+  const searchFrom = start + 2;
   if (searchFrom >= state.posMax || source.charCodeAt(searchFrom) === 0x2A) {
     return false;
   }
 
-  while (searchFrom < state.posMax) {
-    const close = source.indexOf('**', searchFrom);
-    if (close === -1) {
-      return false;
+  const close = source.indexOf('**', searchFrom);
+  if (close === -1) {
+    return false;
+  }
+
+  const content = source.slice(start + 2, close);
+  const nextChar = source.charAt(close + 2);
+
+  const contentEndsWithCjkPunctuation = CJK_STRONG_TRAILING_PUNCTUATION.has(getLastChar(content));
+  const nextCharIsCjkPunctuation = CJK_STRONG_TRAILING_PUNCTUATION.has(nextChar);
+
+  if (content && nextChar && !isWhitespace(nextChar) && (contentEndsWithCjkPunctuation || nextCharIsCjkPunctuation)) {
+    if (!silent) {
+      const openToken = state.push('strong_open', 'strong', 1);
+      openToken.markup = '**';
+
+      const textToken = state.push('text', '', 0);
+      textToken.content = content;
+
+      const closeToken = state.push('strong_close', 'strong', -1);
+      closeToken.markup = '**';
     }
 
-    const content = source.slice(start + 2, close);
-    const nextChar = source.charAt(close + 2);
-
-    if (content && CJK_STRONG_TRAILING_PUNCTUATION.has(getLastChar(content)) && nextChar && !isWhitespace(nextChar)) {
-      if (!silent) {
-        const openToken = state.push('strong_open', 'strong', 1);
-        openToken.markup = '**';
-
-        const textToken = state.push('text', '', 0);
-        textToken.content = content;
-
-        const closeToken = state.push('strong_close', 'strong', -1);
-        closeToken.markup = '**';
-      }
-
-      state.pos = close + 2;
-      return true;
-    }
-
-    searchFrom = close + 2;
+    state.pos = close + 2;
+    return true;
   }
 
   return false;

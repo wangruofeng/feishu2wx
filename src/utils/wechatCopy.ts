@@ -579,7 +579,8 @@ export function formatForWeChat(
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
-  textAlignMode: 'left' | 'justify' = 'left'
+  textAlignMode: 'left' | 'justify' = 'left',
+  wechatLinkAutoAdapt: boolean = true
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
@@ -591,7 +592,10 @@ export function formatForWeChat(
   // 直接应用主题样式（使用可靠的主题配置，而不是不稳定的计算样式）
   removePreviewOnlyElements(tempDiv);
   downgradeImageFiguresForWechat(tempDiv);
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+  if (wechatLinkAutoAdapt) {
+    convertLinksToWechatText(tempDiv);
+  }
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
 
   return tempDiv.innerHTML;
 }
@@ -599,6 +603,15 @@ export function formatForWeChat(
 function removePreviewOnlyElements(container: HTMLElement): void {
   container.querySelectorAll('[data-preview-only="true"]').forEach((element) => {
     element.remove();
+  });
+}
+
+function convertLinksToWechatText(container: HTMLElement): void {
+  container.querySelectorAll('a[href]').forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const text = link.textContent?.trim() || href;
+    const textNode = document.createTextNode(`${text}: ${href}`);
+    link.parentNode?.replaceChild(textNode, link);
   });
 }
 
@@ -803,7 +816,8 @@ function applyThemeStyles(
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
-  textAlignMode: 'left' | 'justify' = 'left'
+  textAlignMode: 'left' | 'justify' = 'left',
+  wechatLinkAutoAdapt: boolean = true
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -1487,8 +1501,8 @@ function applyThemeStyles(
       }
     });
 
-    // 确保链接在新窗口打开
-    if (!linkEl.target) {
+    // 未开启自动适配时保留原始链接；开启时普通链接已在前面转换为文本。
+    if (wechatLinkAutoAdapt && !linkEl.target) {
       linkEl.target = '_blank';
     }
   });
@@ -1657,7 +1671,8 @@ export async function copySelectedToWeChat(
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
-  textAlignMode: 'left' | 'justify' = 'left'
+  textAlignMode: 'left' | 'justify' = 'left',
+  wechatLinkAutoAdapt: boolean = true
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
 
@@ -1668,7 +1683,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
 }
 
 /**
@@ -1690,14 +1705,15 @@ export async function copyHtmlToWeChat(
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
-  textAlignMode: 'left' | 'justify' = 'left'
+  textAlignMode: 'left' | 'justify' = 'left',
+  wechatLinkAutoAdapt: boolean = true
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

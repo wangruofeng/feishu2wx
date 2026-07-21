@@ -73,6 +73,7 @@ const App: React.FC = () => {
       : 'left';
   const savedHeaderTemplate = localStorage.getItem('feishu2wx_headerTemplate') || '';
   const savedFooterTemplate = localStorage.getItem('feishu2wx_footerTemplate') || '';
+  const savedWechatLinkAutoAdapt = localStorage.getItem('feishu2wx_wechatLinkAutoAdapt') !== 'false';
   const savedDarkMode = localStorage.getItem('feishu2wx_darkMode') as 'system' | 'light' | 'dark' || 'system';
   const savedSyntaxThemeValue = localStorage.getItem('feishu2wx_syntaxTheme');
   const supportedSyntaxThemes: MdSyntaxThemeKey[] = ['github', 'dracula', 'monokai', 'none'];
@@ -108,6 +109,7 @@ const App: React.FC = () => {
   const [textAlignMode, setTextAlignMode] = useState<'left' | 'justify'>(savedTextAlignMode);
   const [headerTemplate, setHeaderTemplate] = useState<string>(savedHeaderTemplate);
   const [footerTemplate, setFooterTemplate] = useState<string>(savedFooterTemplate);
+  const [wechatLinkAutoAdapt, setWechatLinkAutoAdapt] = useState<boolean>(savedWechatLinkAutoAdapt);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
     visible: false,
     message: '',
@@ -275,6 +277,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_textAlignMode', textAlignMode); }, [textAlignMode]);
   useEffect(() => { localStorage.setItem('feishu2wx_headerTemplate', headerTemplate); }, [headerTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_footerTemplate', footerTemplate); }, [footerTemplate]);
+  useEffect(() => { localStorage.setItem('feishu2wx_wechatLinkAutoAdapt', String(wechatLinkAutoAdapt)); }, [wechatLinkAutoAdapt]);
 
   useEffect(() => {
     if (copyStatusTimerRef.current) {
@@ -381,7 +384,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -392,7 +395,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
       }
 
       setCopyStatus({
@@ -410,7 +413,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode]);
+  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt]);
 
   const handleExportHtml = useCallback(async () => {
     if (!html.trim()) {
@@ -420,7 +423,7 @@ const App: React.FC = () => {
     setIsExporting(true);
     try {
       const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
       exportHtmlToFile(formatted, sanitizeFilename(articleTitle) + '.html');
       setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
     } catch (error) {
@@ -429,7 +432,7 @@ const App: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
-  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode]);
+  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -529,6 +532,8 @@ const App: React.FC = () => {
             isOpen={settingsOpen}
             onClose={() => setSettingsOpen(false)}
             wechatConfigured={wechatConfigured}
+            wechatLinkAutoAdapt={wechatLinkAutoAdapt}
+            onToggleWechatLinkAutoAdapt={() => setWechatLinkAutoAdapt(!wechatLinkAutoAdapt)}
             onSaveWechatConfig={async (appId: string, appSecret: string) => {
               const result = await saveWechatConfig(appId, appSecret);
               if (result.success) setWechatConfigured(true);
@@ -577,7 +582,7 @@ const App: React.FC = () => {
             variant="outline"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}

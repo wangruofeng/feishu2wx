@@ -47,6 +47,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   wechatConfigured: boolean;
+  wechatLinkAutoAdapt: boolean;
+  onToggleWechatLinkAutoAdapt: () => void;
   onSaveWechatConfig: (appId: string, appSecret: string) => Promise<{ success: boolean; error?: string }>;
   onDeleteWechatConfig: () => Promise<void>;
   darkMode: 'system' | 'light' | 'dark';
@@ -160,6 +162,8 @@ const SettingsPanel: React.FC<Props> = ({
   isOpen,
   onClose,
   wechatConfigured,
+  wechatLinkAutoAdapt,
+  onToggleWechatLinkAutoAdapt,
   onSaveWechatConfig,
   onDeleteWechatConfig,
   darkMode,
@@ -466,6 +470,11 @@ const SettingsPanel: React.FC<Props> = ({
       {/* ===== 公众号 ===== */}
       <section className="settings-group">
         <h3 className="settings-group-title">公众号</h3>
+        <ToggleSwitch
+          label="微信公众号链接自动适配"
+          checked={wechatLinkAutoAdapt}
+          onClick={onToggleWechatLinkAutoAdapt}
+        />
         <div className="settings-config-row">
           <div className="settings-config-info">
             <span className="settings-config-name">草稿箱推送</span>
