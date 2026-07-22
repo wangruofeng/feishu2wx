@@ -73,6 +73,29 @@ test('toggles h1 inverted style on preview content', () => {
   expect(previewContent.className.includes('invert-h1')).toBe(false);
 });
 
+test('configures and persists the marker highlight color', () => {
+  localStorage.setItem('feishu2wx_markdown', '==荧光笔文字==');
+
+  act(() => {
+    root.render(<App />);
+  });
+
+  act(() => {
+    container.querySelector('.settings-trigger').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  const yellowButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.textContent.includes('黄色')
+  );
+  act(() => {
+    yellowButton?.click();
+  });
+
+  const previewContent = container.querySelector('.preview-content');
+  expect(localStorage.getItem('feishu2wx_markerHighlightColor')).toBe('yellow');
+  expect(previewContent.style.getPropertyValue('--marker-highlight-color')).toBe('rgba(255, 193, 7, 0.28)');
+});
+
 test('syncs preview scroll by editor scroll ratio in side-by-side layout', async () => {
   localStorage.setItem('feishu2wx_markdown', Array.from({ length: 80 }, (_, index) => `段落 ${index + 1}`).join('\n\n'));
 
@@ -201,7 +224,7 @@ test('shows frontmatter metadata by default and hides it from settings', async (
     settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   });
 
-  const metadataToggle = container.querySelector('button[aria-label="元数据"]');
+  const metadataToggle = container.querySelector('button[aria-label="显示元数据"]');
 
   expect(metadataToggle.getAttribute('aria-checked')).toBe('true');
 

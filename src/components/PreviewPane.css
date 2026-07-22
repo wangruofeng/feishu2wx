@@ -730,6 +730,14 @@
   opacity: 0.85;
 }
 
+.preview-content mark {
+  color: #1f2329;
+  font-weight: bold;
+  background: linear-gradient(to top, var(--marker-highlight-color, rgba(108, 92, 231, 0.2)) 40%, transparent 40%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .preview-content s,
 .preview-content del {
   opacity: 0.7;

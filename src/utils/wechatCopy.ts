@@ -1,6 +1,7 @@
 import { CodeBlockStyle } from './markdownRenderer';
 import { modernCodeBlockStyles } from './codeBlockStyles';
 import { WECHAT_IMAGE_CAPTION_TAG, WECHAT_IMAGE_WRAPPER_TAG } from './wechatTagWhitelist';
+import { getMarkerHighlightGradient, MarkerHighlightColor } from './markerHighlight';
 
 /** 共享文章排版配置：所有颜色主题复用这组结构参数。 */
 export const sharedArticleStyleConfig = {
@@ -580,7 +581,8 @@ export function formatForWeChat(
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
-  wechatLinkAutoAdapt: boolean = true
+  wechatLinkAutoAdapt: boolean = true,
+  markerHighlightColor: MarkerHighlightColor = 'purple'
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
@@ -595,7 +597,7 @@ export function formatForWeChat(
   if (wechatLinkAutoAdapt) {
     convertLinksToWechatText(tempDiv);
   }
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
 
   return tempDiv.innerHTML;
 }
@@ -817,7 +819,8 @@ function applyThemeStyles(
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
-  wechatLinkAutoAdapt: boolean = true
+  wechatLinkAutoAdapt: boolean = true,
+  markerHighlightColor: MarkerHighlightColor = 'purple'
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -1595,13 +1598,14 @@ function applyThemeStyles(
     }
   });
 
+  const markerHighlightStyle = `background:${getMarkerHighlightGradient(markerHighlightColor)};`;
   const highlightElements = container.querySelectorAll('mark');
   highlightElements.forEach((mark) => {
     const markEl = mark as HTMLElement;
-    markEl.style.backgroundColor = 'transparent';
-    markEl.style.color = themeStyles.highlightColor || '#FF4C00';
+    markEl.style.color = '#1f2329';
     markEl.style.fontWeight = 'bold';
     markEl.style.fontFamily = fontFamily;
+    markEl.setAttribute('style', `${markEl.getAttribute('style') || ''}${markerHighlightStyle}`);
   });
 
   // 微信公众号会把 li 的「第一个子元素」提到 li 下、其余包进 section 导致换行。将每个 li 的全部内容包进一个 span，使 li 仅有一个直接子节点
@@ -1672,7 +1676,8 @@ export async function copySelectedToWeChat(
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
-  wechatLinkAutoAdapt: boolean = true
+  wechatLinkAutoAdapt: boolean = true,
+  markerHighlightColor: MarkerHighlightColor = 'purple'
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
 
@@ -1683,7 +1688,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
 }
 
 /**
@@ -1706,14 +1711,15 @@ export async function copyHtmlToWeChat(
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
-  wechatLinkAutoAdapt: boolean = true
+  wechatLinkAutoAdapt: boolean = true,
+  markerHighlightColor: MarkerHighlightColor = 'purple'
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

@@ -9,6 +9,7 @@ import { Button } from './components/ui';
 import { renderMarkdown, renderMermaidBlocks, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
 import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, sanitizeFilename } from './utils/wechatCopy';
+import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHighlight';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
 import './App.css';
@@ -74,6 +75,10 @@ const App: React.FC = () => {
   const savedHeaderTemplate = localStorage.getItem('feishu2wx_headerTemplate') || '';
   const savedFooterTemplate = localStorage.getItem('feishu2wx_footerTemplate') || '';
   const savedWechatLinkAutoAdapt = localStorage.getItem('feishu2wx_wechatLinkAutoAdapt') !== 'false';
+  const savedMarkerHighlightColorValue = localStorage.getItem('feishu2wx_markerHighlightColor');
+  const savedMarkerHighlightColor: MarkerHighlightColor = isMarkerHighlightColor(savedMarkerHighlightColorValue)
+    ? savedMarkerHighlightColorValue
+    : 'purple';
   const savedDarkMode = localStorage.getItem('feishu2wx_darkMode') as 'system' | 'light' | 'dark' || 'system';
   const savedSyntaxThemeValue = localStorage.getItem('feishu2wx_syntaxTheme');
   const supportedSyntaxThemes: MdSyntaxThemeKey[] = ['github', 'dracula', 'monokai', 'none'];
@@ -110,6 +115,7 @@ const App: React.FC = () => {
   const [headerTemplate, setHeaderTemplate] = useState<string>(savedHeaderTemplate);
   const [footerTemplate, setFooterTemplate] = useState<string>(savedFooterTemplate);
   const [wechatLinkAutoAdapt, setWechatLinkAutoAdapt] = useState<boolean>(savedWechatLinkAutoAdapt);
+  const [markerHighlightColor, setMarkerHighlightColor] = useState<MarkerHighlightColor>(savedMarkerHighlightColor);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
     visible: false,
     message: '',
@@ -278,6 +284,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_headerTemplate', headerTemplate); }, [headerTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_footerTemplate', footerTemplate); }, [footerTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_wechatLinkAutoAdapt', String(wechatLinkAutoAdapt)); }, [wechatLinkAutoAdapt]);
+  useEffect(() => { localStorage.setItem('feishu2wx_markerHighlightColor', markerHighlightColor); }, [markerHighlightColor]);
 
   useEffect(() => {
     if (copyStatusTimerRef.current) {
@@ -384,7 +391,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -395,7 +402,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
       }
 
       setCopyStatus({
@@ -413,7 +420,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt]);
+  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
 
   const handleExportHtml = useCallback(async () => {
     if (!html.trim()) {
@@ -423,7 +430,7 @@ const App: React.FC = () => {
     setIsExporting(true);
     try {
       const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
       exportHtmlToFile(formatted, sanitizeFilename(articleTitle) + '.html');
       setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
     } catch (error) {
@@ -432,7 +439,7 @@ const App: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
-  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt]);
+  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -511,6 +518,8 @@ const App: React.FC = () => {
             onToggleShowFrontMatter={() => setShowFrontMatter(!showFrontMatter)}
             textAlignMode={textAlignMode}
             onChangeTextAlignMode={setTextAlignMode}
+            markerHighlightColor={markerHighlightColor}
+            onChangeMarkerHighlightColor={setMarkerHighlightColor}
             blockquoteBackgroundMode={blockquoteBackgroundMode}
             onChangeBlockquoteBackgroundMode={setBlockquoteBackgroundMode}
             blockquoteColorMode={blockquoteColorMode}
@@ -582,7 +591,7 @@ const App: React.FC = () => {
             variant="outline"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
@@ -639,6 +648,7 @@ const App: React.FC = () => {
           blockquoteColorMode={blockquoteColorMode}
           blockquoteHeightMode={blockquoteHeightMode}
           textAlignMode={textAlignMode}
+          markerHighlightColor={markerHighlightColor}
           imageBorderStyle={imageBorderStyle}
           imageBorderRadius={imageBorderRadius}
           scrollRef={previewScrollRef}

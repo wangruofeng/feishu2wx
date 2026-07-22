@@ -98,6 +98,52 @@ test('formats h1 with inverted text and background styles when enabled', () => {
   expect(formattedHtml).toContain('background-color: rgb(13, 148, 136)');
 });
 
+test('keeps markdown strong text as ordinary bold text for wechat copy', () => {
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat('<p><strong>重点文字</strong></p>');
+
+  const strong = container.querySelector('strong');
+  expect(strong?.style.fontWeight).toBe('bold');
+  expect(strong?.getAttribute('style')).not.toContain('linear-gradient');
+});
+
+test('formats double-equals mark text as a purple marker highlight for wechat copy', () => {
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat('<p><mark>荧光笔文字</mark></p>');
+
+  const mark = container.querySelector('mark');
+  expect(mark?.style.color).toBe('rgb(31, 35, 41)');
+  expect(mark?.getAttribute('style')).toContain('background:linear-gradient(to top,rgba(108,92,231,0.2) 40%,transparent 40%)');
+  expect(mark?.style.fontWeight).toBe('bold');
+});
+
+test('uses the configured marker highlight color for wechat copy', () => {
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(
+    '<p><mark>荧光笔文字</mark></p>',
+    'classic',
+    'default',
+    true,
+    'border',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'default',
+    'loose',
+    'theme',
+    'left',
+    true,
+    'yellow'
+  );
+
+  expect(container.querySelector('mark')?.getAttribute('style')).toContain(
+    'background:linear-gradient(to top,rgba(255,193,7,0.28) 40%,transparent 40%)'
+  );
+});
+
 test('formats inverted h1 wrapper centered for wechat copy', () => {
   const html = '<h1>测试标题</h1>';
 

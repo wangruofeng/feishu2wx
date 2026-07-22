@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
 import { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
+import { MarkerHighlightColor, markerHighlightOptions } from '../utils/markerHighlight';
 import { Button } from './ui';
 import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
@@ -32,6 +33,8 @@ interface Props {
   onToggleShowFrontMatter: () => void;
   textAlignMode: 'left' | 'justify';
   onChangeTextAlignMode: (mode: 'left' | 'justify') => void;
+  markerHighlightColor: MarkerHighlightColor;
+  onChangeMarkerHighlightColor: (color: MarkerHighlightColor) => void;
   tableShadow: boolean;
   onToggleTableShadow: () => void;
   headerTemplate: string;
@@ -141,6 +144,8 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleShowFrontMatter,
   textAlignMode,
   onChangeTextAlignMode,
+  markerHighlightColor,
+  onChangeMarkerHighlightColor,
   blockquoteBackgroundMode,
   onChangeBlockquoteBackgroundMode,
   blockquoteColorMode,
@@ -207,6 +212,7 @@ const SettingsPanel: React.FC<Props> = ({
           checked={shouldConvertPastedHtml}
           onClick={onToggleShouldConvertPastedHtml}
         />
+        <ToggleSwitch label="显示元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
         {/* 源码配色：编辑器 Markdown 源码语法高亮配色方案 */}
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">源码配色</span>
@@ -326,7 +332,22 @@ const SettingsPanel: React.FC<Props> = ({
           </select>
         </div>
         <ToggleSwitch label="分割线" checked={showHorizontalRule} onClick={onToggleHorizontalRule} />
-        <ToggleSwitch label="元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">荧光笔颜色</span>
+          <div className="settings-toggles">
+            {markerHighlightOptions.map((option) => (
+              <Button
+                key={option.key}
+                variant="toggle"
+                active={markerHighlightColor === option.key}
+                onClick={() => onChangeMarkerHighlightColor(option.key)}
+              >
+                <span className="settings-color-swatch" style={{ backgroundColor: option.color }} />
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </div>
         <ToggleSwitch label="表格阴影" checked={tableShadow} onClick={onToggleTableShadow} />
       </section>
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fonts } from './FontSelector';
 import { getModernCodeBlockCssVars } from '../utils/codeBlockStyles';
+import { getMarkerHighlightColor, MarkerHighlightColor } from '../utils/markerHighlight';
 import { Button } from './ui';
 import ImageViewer from './ImageViewer';
 import './PreviewPane.css';
@@ -22,6 +23,7 @@ interface Props {
   blockquoteColorMode?: 'default' | 'theme';
   blockquoteHeightMode?: 'loose' | 'compact';
   textAlignMode?: 'left' | 'justify';
+  markerHighlightColor?: MarkerHighlightColor;
   scrollRef?: React.Ref<HTMLDivElement>;
   onDeviceChange?: (device: 'desktop' | 'mobile') => void;
   onToggleFullscreen?: () => void;
@@ -44,6 +46,7 @@ const PreviewPane: React.FC<Props> = ({
   blockquoteColorMode = 'default',
   blockquoteHeightMode = 'loose',
   textAlignMode = 'left',
+  markerHighlightColor = 'purple',
   scrollRef,
   onDeviceChange,
   onToggleFullscreen,
@@ -145,7 +148,7 @@ const PreviewPane: React.FC<Props> = ({
         <div
           ref={setPreviewRef}
           className={`preview-content article-layout-generic device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} blockquote-bg-${blockquoteBackgroundMode} blockquote-color-${blockquoteColorMode} blockquote-height-${blockquoteHeightMode} text-align-${textAlignMode} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
-          style={fontStyle}
+          style={{ ...fontStyle, '--marker-highlight-color': getMarkerHighlightColor(markerHighlightColor) } as React.CSSProperties}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />
       </div>
