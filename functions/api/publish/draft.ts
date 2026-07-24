@@ -97,6 +97,7 @@ export const onRequestPost: PagesFunction = async (context) => {
       content?: string;
       author?: string;
       coverDataUrl?: string;
+      coverUrl?: string;
       appId?: string;
       appSecret?: string;
     });

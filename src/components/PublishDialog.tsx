@@ -46,14 +46,16 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, htmlConte
     setMsg(null);
 
     try {
-      // 生成封面
-      const coverDataUrl = await generateCover(coverUrl || undefined, htmlContent, articleTitle);
+      // 指定 URL 交由后端下载，避免浏览器因图片源未开放 CORS 而无法导出 Canvas，
+      // 最终静默降级成默认封面。
+      const coverDataUrl = coverUrl ? undefined : await generateCover(undefined, htmlContent, articleTitle);
 
       const result = await publishToDraft({
         title: articleTitle,
         content: htmlContent,
         author: author || undefined,
         coverDataUrl,
+        coverUrl: coverUrl || undefined,
       });
 
       if (result.success) {

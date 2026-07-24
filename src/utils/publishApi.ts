@@ -41,6 +41,7 @@ export interface PublishParams {
   content: string;
   author?: string;
   coverDataUrl?: string;
+  coverUrl?: string;
 }
 
 export async function publishToDraft(params: PublishParams): Promise<{

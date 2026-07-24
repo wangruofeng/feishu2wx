@@ -5,6 +5,7 @@ interface PublishBody {
   content?: string;
   author?: string;
   coverDataUrl?: string;
+  coverUrl?: string;
   appId?: string;
   appSecret?: string;
 }
@@ -29,12 +30,13 @@ const MAX_TITLE_LENGTH = 200;
 const MAX_AUTHOR_LENGTH = 200;
 const MAX_CONTENT_LENGTH = 5_000_000;
 const MAX_COVER_DATA_URL_LENGTH = 12_000_000;
+const MAX_COVER_URL_LENGTH = 2_048;
 const MAX_CREDENTIAL_LENGTH = 256;
 
 export function createPublishDraftHandler(wechat: PublishWechatService) {
   return async function handlePublishDraft(body: PublishBody): Promise<Response> {
     try {
-      const { title, content, author, coverDataUrl, appId, appSecret } = body;
+      const { title, content, author, coverDataUrl, coverUrl, appId, appSecret } = body;
 
       if (
         typeof title !== 'string'
@@ -45,6 +47,7 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
         || content.length > MAX_CONTENT_LENGTH
         || (author !== undefined && (typeof author !== 'string' || author.length > MAX_AUTHOR_LENGTH))
         || (coverDataUrl !== undefined && (typeof coverDataUrl !== 'string' || coverDataUrl.length > MAX_COVER_DATA_URL_LENGTH))
+        || (coverUrl !== undefined && (typeof coverUrl !== 'string' || coverUrl.length > MAX_COVER_URL_LENGTH))
       ) {
         return jsonResponse({ error: '标题和内容不能为空' }, 400);
       }
@@ -76,6 +79,28 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
           thumbMediaId = await wechat.uploadCoverImage(data, `cover.${ext}`, token, ext === 'png' ? 'image/png' : 'image/jpeg');
         } else {
           return jsonResponse({ error: '封面图格式无效' }, 400);
+        }
+      } else if (coverUrl) {
+        let parsedCoverUrl: URL;
+        try {
+          parsedCoverUrl = new URL(coverUrl);
+        } catch {
+          return jsonResponse({ error: '封面图片 URL 无效' }, 400);
+        }
+
+        if (parsedCoverUrl.protocol !== 'http:' && parsedCoverUrl.protocol !== 'https:') {
+          return jsonResponse({ error: '封面图片 URL 仅支持 HTTP 或 HTTPS' }, 400);
+        }
+
+        try {
+          const imgRes = await fetch(parsedCoverUrl);
+          if (!imgRes.ok) throw new Error(`HTTP ${imgRes.status}`);
+          const data = new Uint8Array(await imgRes.arrayBuffer());
+          const contentType = imgRes.headers.get('content-type')?.split(';')[0];
+          const extension = contentType === 'image/png' ? 'png' : contentType === 'image/gif' ? 'gif' : 'jpg';
+          thumbMediaId = await wechat.uploadCoverImage(data, `cover.${extension}`, token, contentType || undefined);
+        } catch {
+          return jsonResponse({ error: '封面图片加载失败，请确认 URL 可公开访问' }, 400);
         }
       } else if (firstImageUrl) {
         try {
