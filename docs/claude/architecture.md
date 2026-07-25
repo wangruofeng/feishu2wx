@@ -82,6 +82,11 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 - 工具函数，包括内容感知 WebP 检测（检查文件签名 RIFF/WEBP 和 HTTP Content-Type，不依赖 URL 后缀）。
 
+### `src/utils/markerHighlight.ts`
+
+- 导出 `MarkerHighlightColor` 类型（`purple/yellow/green/blue/pink`）与 `markerHighlightOptions` 颜色表。
+- 导出 `isMarkerHighlightColor()` 类型守卫、`getMarkerHighlightColor()` 取色、`getMarkerHighlightGradient()` 生成荧光笔下划线渐变（`==text==` 标记用）。
+
 ## 主题系统
 
 - 4 种命名主题：经典（`#000000e6`）、橙色、蓝色、青绿，定义在 `src/styles/themes.css`。
@@ -117,6 +122,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `wechatConfigured`（公众号凭证状态）
 - `headerTemplate`、`footerTemplate`（文章首尾模板，持久化键 `feishu2wx_headerTemplate`/`feishu2wx_footerTemplate`，推送/复制时拼接到 front matter 之后 / 正文之后）
 - `articleTitle`（推送标题，优先取 front matter `title`，回退正文首个 H1）、`articleCover`（推送封面，取 front matter `cover`）
+- `markerHighlightColor`（`==text==` 荧光笔颜色，`purple/yellow/green/blue/pink`，键 `feishu2wx_markerHighlightColor`）
+- `wechatLinkAutoAdapt`（公众号链接自动适配开关，键 `feishu2wx_wechatLinkAutoAdapt`，默认开启）
 
 所有设置都会持久化到 localStorage（键名前缀 `feishu2wx_`）。预览 HTML 由 `markdown` 和渲染选项通过纯函数派生。
 
@@ -183,6 +190,8 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 引用块背景（无 / 跟随主题）、边框色（默认 / 跟随主题）、间距（宽松 / 紧凑）三项独立配置
 - 正文文本对齐（左对齐 / 两端对齐）
 - 图片样式（默认 / 边框 / 阴影）+ 圆角开关
+- 荧光笔颜色（`==text==` 标记，5 色）
+- 公众号链接自动适配（开启时把 Markdown 链接转为"链接文字: URL"纯文本，关闭时保留 `<a>` 超链接；仅作用于微信复制/导出/推送链路）
 
 ### UI 组件
 

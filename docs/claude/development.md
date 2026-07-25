@@ -63,10 +63,13 @@ npm run cf:dev
 
 ## 现有测试
 
-- `src/utils/wechatCopy.test.js`：10 个测试用例，覆盖 H1 反显、代码块对齐、图片间距、modern 代码块样式、缩进空白保留等。
-- `src/App.test.js`：基础渲染测试。
-- `src/utils/pasteDetection.test.js`：粘贴检测测试，覆盖飞书标记、HTML 表格、渲染后 Markdown 检测等场景。
+- `src/utils/wechatCopy.test.js`：覆盖 H1 反显、代码块对齐、图片间距、modern 代码块样式、缩进空白保留、公众号链接自动适配等。
+- `src/utils/markdownRenderer.test.js`：覆盖 Markdown 渲染（frontmatter 卡片、`==text==` 标记、Mermaid 占位等）。
+- `src/utils/mdSourceHighlight.test.js`：覆盖编辑器源码语法高亮 tokenizer 与配色方案。
+- `src/utils/htmlToMarkdown.test.js`：覆盖飞书 HTML 转 Markdown。
+- `src/utils/pasteDetection.test.js`：覆盖飞书标记、HTML 表格、渲染后 Markdown 检测等粘贴场景。
 - `src/utils/helper.test.js`：helper 工具函数测试。
+- `src/App.test.js`：基础渲染测试。
 - `scripts/start-script.test.mjs`：启动脚本测试。
 
 运行测试：
