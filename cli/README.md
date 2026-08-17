@@ -9,6 +9,8 @@
 | `init` | 初始化配置文件 | `feishu2wx init --project` |
 | `auth set\|status\|test\|clear` | 管理公众号 AppID/AppSecret | `feishu2wx auth set --app-id <id> --app-secret <s>` |
 | `theme list\|set\|status` | 管理默认主题与排版项 | `feishu2wx theme set blue` |
+| `author set\|clear\|status` | 管理默认文章作者（publish 未传 `--author` 时使用） | `feishu2wx author set ruofeng` |
+| `footer set\|clear\|status` | 管理固定结尾文案（render/publish 自动追加，`--no-footer` 跳过） | `feishu2wx footer set --file end.md` |
 | `render [file]` | 渲染微信公众号兼容 HTML | `feishu2wx render a.md --out a.html` |
 | `publish [file]` | 推送文章到公众号草稿箱 | `feishu2wx publish a.md --title "标题"` |
 
@@ -165,6 +167,50 @@ npm run cli -- auth test
 
 ```bash
 npm run cli -- auth clear
+```
+
+## 默认作者配置
+
+设置默认作者，`publish` 未传 `--author` 时自动使用：
+
+```bash
+npm run cli -- author set ruofeng
+```
+
+查看与清除：
+
+```bash
+npm run cli -- author status
+npm run cli -- author clear
+```
+
+单次发布临时覆盖默认作者，仍用 `--author`：
+
+```bash
+npm run cli -- publish a.md --title "标题" --author "另一个名字"
+```
+
+## 固定结尾配置
+
+设置固定结尾文案，`render` / `publish` 会在正文末尾自动追加（支持多行 Markdown，含加粗、链接等）：
+
+```bash
+npm run cli -- footer set "今天的分享就到这里，谢谢大家，我们下次再见。"
+# 多行文案用文件方式
+npm run cli -- footer set --file end.md
+```
+
+查看与清除：
+
+```bash
+npm run cli -- footer status
+npm run cli -- footer clear
+```
+
+单次发布或渲染不想带结尾，加 `--no-footer`：
+
+```bash
+npm run cli -- publish a.md --title "标题" --no-footer
 ```
 
 ## 主题配置

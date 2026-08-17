@@ -76,6 +76,33 @@ test('maskAppId hides the middle of a configured AppID', () => {
   assert.equal(maskAppId('short'), 's****t');
 });
 
+test('saveAuthorConfig persists default author and clearAuthorConfig removes it', () => {
+  const { clearAuthorConfig, loadConfig, saveAuthorConfig } = require('./config.cjs');
+  const configPath = tempConfigPath();
+
+  assert.equal(loadConfig({ configPath, env: {} }).author, undefined);
+
+  saveAuthorConfig(configPath, 'ruofeng');
+  assert.equal(loadConfig({ configPath, env: {} }).author, 'ruofeng');
+
+  clearAuthorConfig(configPath);
+  assert.equal(loadConfig({ configPath, env: {} }).author, undefined);
+});
+
+test('saveFooterConfig persists multiline footer and clearFooterConfig removes it', () => {
+  const { clearFooterConfig, loadConfig, saveFooterConfig } = require('./config.cjs');
+  const configPath = tempConfigPath();
+
+  assert.equal(loadConfig({ configPath, env: {} }).footer, undefined);
+
+  const footer = '今天的分享就到这里，谢谢大家，我们下次再见。\n\n**感谢你阅读我的文章。**';
+  saveFooterConfig(configPath, footer);
+  assert.equal(loadConfig({ configPath, env: {} }).footer, footer);
+
+  clearFooterConfig(configPath);
+  assert.equal(loadConfig({ configPath, env: {} }).footer, undefined);
+});
+
 test('initConfigFile creates a default config file', () => {
   const { DEFAULT_THEME_CONFIG, initConfigFile } = require('./config.cjs');
   const configPath = tempConfigPath();

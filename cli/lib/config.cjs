@@ -136,6 +136,8 @@ function loadConfig(options = {}) {
   return {
     theme,
     wechat: envWechat || savedWechat,
+    author: typeof saved.author === 'string' && saved.author ? saved.author : undefined,
+    footer: typeof saved.footer === 'string' && saved.footer ? saved.footer : undefined,
   };
 }
 
@@ -150,6 +152,34 @@ function saveWechatConfig(configPath, appId, appSecret) {
 function clearWechatConfig(configPath = DEFAULT_CONFIG_PATH) {
   const saved = readConfigFile(configPath);
   delete saved.wechat;
+  writeConfigFile(configPath, saved);
+}
+
+function saveAuthorConfig(configPath, author) {
+  const saved = readConfigFile(configPath);
+  writeConfigFile(configPath, {
+    ...saved,
+    author,
+  });
+}
+
+function clearAuthorConfig(configPath = DEFAULT_CONFIG_PATH) {
+  const saved = readConfigFile(configPath);
+  delete saved.author;
+  writeConfigFile(configPath, saved);
+}
+
+function saveFooterConfig(configPath, footer) {
+  const saved = readConfigFile(configPath);
+  writeConfigFile(configPath, {
+    ...saved,
+    footer,
+  });
+}
+
+function clearFooterConfig(configPath = DEFAULT_CONFIG_PATH) {
+  const saved = readConfigFile(configPath);
+  delete saved.footer;
   writeConfigFile(configPath, saved);
 }
 
@@ -249,6 +279,10 @@ module.exports = {
   normalizeThemeConfig,
   normalizeThemeKey,
   resolveConfigPath,
+  saveAuthorConfig,
+  clearAuthorConfig,
+  saveFooterConfig,
+  clearFooterConfig,
   saveThemeConfig,
   saveWechatConfig,
 };

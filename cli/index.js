@@ -4,12 +4,16 @@ const path = require('node:path');
 const { Command, Option } = require('commander');
 const {
   THEME_OPTIONS,
+  clearAuthorConfig,
+  clearFooterConfig,
   clearWechatConfig,
   initConfigFile,
   loadConfig,
   maskAppId,
   mergeThemeOptions,
   resolveConfigPath,
+  saveAuthorConfig,
+  saveFooterConfig,
   saveThemeConfig,
   saveWechatConfig,
 } = require('./lib/config.cjs');
@@ -86,6 +90,11 @@ function resolveActiveConfigPath(options) {
 function resolveThemeConfig(options) {
   const config = loadConfig({ configPath: resolveActiveConfigPath(options) });
   return mergeThemeOptions(config, options);
+}
+
+function appendConfiguredFooter(markdown, footer) {
+  if (!footer) return markdown;
+  return `${markdown.replace(/\s*$/, '')}\n\n${footer.trim()}\n`;
 }
 
 function printJson(value) {
@@ -181,7 +190,6 @@ async function main() {
         process.stdout.write(`${item.key}\t${item.name}\n`);
       });
     });
-
   addThemeOptions(theme.command('set <theme>'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action((themeKey, options) => {
@@ -198,15 +206,66 @@ async function main() {
       printJson(config.theme);
     });
 
+  const author = program.command('author').description('管理默认文章作者（发布草稿时未指定 --author 则使用）');
+
+  author.command('set <name>')
+    .action((name) => {
+      saveAuthorConfig(resolveActiveConfigPath(program.opts()), name);
+      process.stdout.write(`默认作者已设置为 ${name}\n`);
+    });
+
+  author.command('clear')
+    .action(() => {
+      clearAuthorConfig(resolveActiveConfigPath(program.opts()));
+      process.stdout.write('默认作者已清除\n');
+    });
+
+  author.command('status')
+    .action(() => {
+      const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
+      printJson({ author: config.author ?? null });
+    });
+
+  const footer = program.command('footer').description('管理固定结尾文案（render/publish 自动追加，--no-footer 跳过）');
+
+  footer.command('set [text]')
+    .option('--file <file>', '从 Markdown 文件读取结尾文案（支持多行）')
+    .action((text, options) => {
+      const footerText = options.file ? readMarkdownInput(path.resolve(options.file)) : text;
+      if (!footerText || !footerText.trim()) {
+        throw new Error('请提供结尾文案，或用 --file 指定 Markdown 文件');
+      }
+      saveFooterConfig(resolveActiveConfigPath(program.opts()), footerText.trim());
+      process.stdout.write('固定结尾已保存\n');
+    });
+
+  footer.command('clear')
+    .action(() => {
+      clearFooterConfig(resolveActiveConfigPath(program.opts()));
+      process.stdout.write('固定结尾已清除\n');
+    });
+
+  footer.command('status')
+    .action(() => {
+      const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
+      printJson({ footer: config.footer ?? null });
+    });
+
   addThemeOptions(program.command('render [file]')
     .description('渲染微信公众号兼容 HTML')
     .option('--copy', '复制 HTML 到系统剪贴板')
     .option('--out <file>', '导出 HTML 文件')
-    .option('--preview', '生成临时文件并打开预览'))
+    .option('--preview', '生成临时文件并打开预览')
+    .option('--no-footer', '不追加固定结尾文案'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
+      const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
       const markdown = readMarkdownInput(file);
-      let html = renderWechatHtml(markdown, resolveThemeConfig({ ...program.opts(), ...options }));
+      const markdownWithFooter = appendConfiguredFooter(
+        markdown,
+        options.footer === false ? undefined : config.footer
+      );
+      let html = renderWechatHtml(markdownWithFooter, resolveThemeConfig({ ...program.opts(), ...options }));
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
       html = inlineLocalImages(html, baseDir);
 
@@ -235,7 +294,8 @@ async function main() {
     .description('推送文章到微信公众号草稿箱')
     .requiredOption('--title <title>', '文章标题')
     .option('--author <author>', '作者')
-    .option('--cover <file>', '封面图片文件'))
+    .option('--cover <file>', '封面图片文件')
+    .option('--no-footer', '不追加固定结尾文案'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
       const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
@@ -244,11 +304,16 @@ async function main() {
       }
 
       const markdown = readMarkdownInput(file);
+      const markdownWithFooter = appendConfiguredFooter(
+        markdown,
+        options.footer === false ? undefined : config.footer
+      );
       const themeConfig = resolveThemeConfig({ ...program.opts(), ...options });
-      const content = renderWechatHtml(markdown, themeConfig);
+      const content = renderWechatHtml(markdownWithFooter, themeConfig);
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
       const result = await publishMarkdown({
         ...options,
+        author: options.author ?? config.author,
         content,
         baseDir,
         appId: config.wechat.appId,
