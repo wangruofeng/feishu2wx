@@ -54,6 +54,7 @@ test('default theme config matches persisted web theme fields', () => {
     'imageBorderStyle',
     'invertH1',
     'invertH2',
+    'markerHighlightColor',
     'showBlockquoteBg',
     'showH1Underline',
     'showHorizontalRule',
@@ -67,6 +68,7 @@ test('default theme config matches persisted web theme fields', () => {
   assert.equal(DEFAULT_THEME_CONFIG.blockquoteColorMode, 'default');
   assert.equal(DEFAULT_THEME_CONFIG.blockquoteHeightMode, 'loose');
   assert.equal(DEFAULT_THEME_CONFIG.textAlignMode, 'left');
+  assert.equal(DEFAULT_THEME_CONFIG.markerHighlightColor, 'purple');
 });
 
 test('maskAppId hides the middle of a configured AppID', () => {
@@ -101,6 +103,41 @@ test('saveFooterConfig persists multiline footer and clearFooterConfig removes i
 
   clearFooterConfig(configPath);
   assert.equal(loadConfig({ configPath, env: {} }).footer, undefined);
+});
+
+test('saveHeaderConfig persists multiline header and clearHeaderConfig removes it', () => {
+  const { clearHeaderConfig, loadConfig, saveHeaderConfig } = require('./config.cjs');
+  const configPath = tempConfigPath();
+
+  assert.equal(loadConfig({ configPath, env: {} }).header, undefined);
+
+  const header = '大家好，我是若风。\n\n欢迎来到我的博客。';
+  saveHeaderConfig(configPath, header);
+  assert.equal(loadConfig({ configPath, env: {} }).header, header);
+
+  clearHeaderConfig(configPath);
+  assert.equal(loadConfig({ configPath, env: {} }).header, undefined);
+});
+
+test('wechatLinkAutoAdapt defaults to true and saveWechatLinkAutoAdapt persists on/off', () => {
+  const { loadConfig, saveWechatLinkAutoAdapt } = require('./config.cjs');
+  const configPath = tempConfigPath();
+
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkAutoAdapt, true);
+
+  saveWechatLinkAutoAdapt(configPath, false);
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkAutoAdapt, false);
+
+  saveWechatLinkAutoAdapt(configPath, true);
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkAutoAdapt, true);
+});
+
+test('normalizeThemeConfig validates markerHighlightColor and falls back to default', () => {
+  const { normalizeThemeConfig } = require('./config.cjs');
+
+  assert.equal(normalizeThemeConfig({}).markerHighlightColor, 'purple');
+  assert.equal(normalizeThemeConfig({ markerHighlightColor: 'green' }).markerHighlightColor, 'green');
+  assert.equal(normalizeThemeConfig({ markerHighlightColor: 'invalid' }).markerHighlightColor, 'purple');
 });
 
 test('initConfigFile creates a default config file', () => {

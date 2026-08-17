@@ -10,7 +10,9 @@
 | `auth set\|status\|test\|clear` | 管理公众号 AppID/AppSecret | `feishu2wx auth set --app-id <id> --app-secret <s>` |
 | `theme list\|set\|status` | 管理默认主题与排版项 | `feishu2wx theme set blue` |
 | `author set\|clear\|status` | 管理默认文章作者（publish 未传 `--author` 时使用） | `feishu2wx author set ruofeng` |
+| `header set\|clear\|status` | 管理固定开头文案（render/publish 自动注入，`--no-header` 跳过） | `feishu2wx header set --file intro.md` |
 | `footer set\|clear\|status` | 管理固定结尾文案（render/publish 自动追加，`--no-footer` 跳过） | `feishu2wx footer set --file end.md` |
+| `wechat-link set\|status` | 公众号链接自动适配开关（默认开启，对齐网页端） | `feishu2wx wechat-link set off` |
 | `render [file]` | 渲染微信公众号兼容 HTML | `feishu2wx render a.md --out a.html` |
 | `publish [file]` | 推送文章到公众号草稿箱 | `feishu2wx publish a.md --title "标题"` |
 
@@ -213,6 +215,38 @@ npm run cli -- footer clear
 npm run cli -- publish a.md --title "标题" --no-footer
 ```
 
+## 固定开头配置
+
+设置固定开头文案，`render` / `publish` 会在正文之前自动注入（对齐网页端「文章首部模板」）：
+
+```bash
+npm run cli -- header set "大家好，我是若风。"
+# 多行文案用文件方式
+npm run cli -- header set --file intro.md
+```
+
+查看与清除：
+
+```bash
+npm run cli -- header status
+npm run cli -- header clear
+```
+
+单次发布或渲染不想带开头，加 `--no-header`：
+
+```bash
+npm run cli -- publish a.md --title "标题" --no-header
+```
+
+## 公众号链接自动适配
+
+网页端默认会把正文链接自动适配为公众号格式（新窗口打开）。CLI 同样默认开启，可关闭：
+
+```bash
+npm run cli -- wechat-link set off
+npm run cli -- wechat-link status
+```
+
 ## 主题配置
 
 查看可用主题：
@@ -238,6 +272,13 @@ npm run cli -- theme set blue
 
 ```bash
 npm run cli -- theme set blue --show-h1-underline --align-h1-left --no-table-shadow
+```
+
+标记高亮色（`==文本==` 的高亮底色，对齐网页端）：
+
+```bash
+npm run cli -- theme set classic --marker-highlight-color green
+# 可选：purple / yellow / green / blue / pink
 ```
 
 引用块三项独立配置和正文对齐也能在命令行设置：

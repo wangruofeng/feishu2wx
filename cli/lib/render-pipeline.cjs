@@ -72,7 +72,9 @@ function renderWechatHtml(markdown, config) {
     config.blockquoteColorMode,
     config.blockquoteHeightMode,
     config.blockquoteBackgroundMode,
-    config.textAlignMode
+    config.textAlignMode,
+    config.wechatLinkAutoAdapt !== false,
+    config.markerHighlightColor
   );
 }
 

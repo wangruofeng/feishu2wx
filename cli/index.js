@@ -6,6 +6,7 @@ const {
   THEME_OPTIONS,
   clearAuthorConfig,
   clearFooterConfig,
+  clearHeaderConfig,
   clearWechatConfig,
   initConfigFile,
   loadConfig,
@@ -14,8 +15,10 @@ const {
   resolveConfigPath,
   saveAuthorConfig,
   saveFooterConfig,
+  saveHeaderConfig,
   saveThemeConfig,
   saveWechatConfig,
+  saveWechatLinkAutoAdapt,
 } = require('./lib/config.cjs');
 const { writeClipboard } = require('./lib/clipboard.cjs');
 const { readMarkdownInput, writeOutputFile } = require('./lib/io.cjs');
@@ -61,7 +64,8 @@ function addThemeOptions(command) {
     .addOption(new Option('--blockquote-background-mode <mode>', '引用块背景 theme/none').hideHelp())
     .addOption(new Option('--blockquote-color-mode <mode>', '引用块边框色 theme/default').hideHelp())
     .addOption(new Option('--blockquote-height-mode <mode>', '引用块间距 loose/compact').hideHelp())
-    .addOption(new Option('--text-align-mode <mode>', '正文对齐 left/justify').hideHelp());
+    .addOption(new Option('--text-align-mode <mode>', '正文对齐 left/justify').hideHelp())
+    .addOption(new Option('--marker-highlight-color <color>', '标记高亮色 purple/yellow/green/blue/pink').hideHelp());
 }
 
 // render/publish/theme set 通用：主题与排版覆盖选项摘要，追加到各自 --help 末尾。
@@ -95,6 +99,11 @@ function resolveThemeConfig(options) {
 function appendConfiguredFooter(markdown, footer) {
   if (!footer) return markdown;
   return `${markdown.replace(/\s*$/, '')}\n\n${footer.trim()}\n`;
+}
+
+function appendConfiguredHeader(markdown, header) {
+  if (!header) return markdown;
+  return `${header.trim()}\n\n${markdown}`;
 }
 
 function printJson(value) {
@@ -251,21 +260,69 @@ async function main() {
       printJson({ footer: config.footer ?? null });
     });
 
+  const header = program.command('header').description('管理固定开头文案（render/publish 自动注入，--no-header 跳过）');
+
+  header.command('set [text]')
+    .option('--file <file>', '从 Markdown 文件读取开头文案（支持多行）')
+    .action((text, options) => {
+      const headerText = options.file ? readMarkdownInput(path.resolve(options.file)) : text;
+      if (!headerText || !headerText.trim()) {
+        throw new Error('请提供开头文案，或用 --file 指定 Markdown 文件');
+      }
+      saveHeaderConfig(resolveActiveConfigPath(program.opts()), headerText.trim());
+      process.stdout.write('固定开头已保存\n');
+    });
+
+  header.command('clear')
+    .action(() => {
+      clearHeaderConfig(resolveActiveConfigPath(program.opts()));
+      process.stdout.write('固定开头已清除\n');
+    });
+
+  header.command('status')
+    .action(() => {
+      const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
+      printJson({ header: config.header ?? null });
+    });
+
+  const link = program.command('wechat-link').description('管理公众号链接自动适配（默认开启，对齐网页端）');
+
+  link.command('set <on|off>')
+    .action((value) => {
+      if (value !== 'on' && value !== 'off') {
+        throw new Error('取值只能是 on 或 off');
+      }
+      saveWechatLinkAutoAdapt(resolveActiveConfigPath(program.opts()), value === 'on');
+      process.stdout.write(value === 'on' ? '公众号链接自动适配已开启\n' : '公众号链接自动适配已关闭\n');
+    });
+
+  link.command('status')
+    .action(() => {
+      const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
+      printJson({ wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
+    });
+
   addThemeOptions(program.command('render [file]')
     .description('渲染微信公众号兼容 HTML')
     .option('--copy', '复制 HTML 到系统剪贴板')
     .option('--out <file>', '导出 HTML 文件')
     .option('--preview', '生成临时文件并打开预览')
-    .option('--no-footer', '不追加固定结尾文案'))
+    .option('--no-footer', '不追加固定结尾文案')
+    .option('--no-header', '不注入固定开头文案'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
       const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
       const markdown = readMarkdownInput(file);
-      const markdownWithFooter = appendConfiguredFooter(
+      const markdownWithHeader = appendConfiguredHeader(
         markdown,
+        options.header === false ? undefined : config.header
+      );
+      const markdownWithFooter = appendConfiguredFooter(
+        markdownWithHeader,
         options.footer === false ? undefined : config.footer
       );
-      let html = renderWechatHtml(markdownWithFooter, resolveThemeConfig({ ...program.opts(), ...options }));
+      const themeConfig = resolveThemeConfig({ ...program.opts(), ...options });
+      let html = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
       html = inlineLocalImages(html, baseDir);
 
@@ -295,7 +352,8 @@ async function main() {
     .requiredOption('--title <title>', '文章标题')
     .option('--author <author>', '作者')
     .option('--cover <file>', '封面图片文件')
-    .option('--no-footer', '不追加固定结尾文案'))
+    .option('--no-footer', '不追加固定结尾文案')
+    .option('--no-header', '不注入固定开头文案'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
       const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
@@ -304,12 +362,16 @@ async function main() {
       }
 
       const markdown = readMarkdownInput(file);
-      const markdownWithFooter = appendConfiguredFooter(
+      const markdownWithHeader = appendConfiguredHeader(
         markdown,
+        options.header === false ? undefined : config.header
+      );
+      const markdownWithFooter = appendConfiguredFooter(
+        markdownWithHeader,
         options.footer === false ? undefined : config.footer
       );
       const themeConfig = resolveThemeConfig({ ...program.opts(), ...options });
-      const content = renderWechatHtml(markdownWithFooter, themeConfig);
+      const content = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
       const result = await publishMarkdown({
         ...options,

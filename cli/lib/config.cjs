@@ -30,6 +30,7 @@ const DEFAULT_THEME_CONFIG = {
   alignH2Left: false,
   showHorizontalRule: true,
   tableShadow: true,
+  markerHighlightColor: 'purple',
 };
 
 function normalizeThemeKey(theme) {
@@ -113,6 +114,9 @@ function normalizeThemeConfig(theme = {}) {
     alignH2Left: Boolean(theme.alignH2Left),
     showHorizontalRule: theme.showHorizontalRule !== false,
     tableShadow: theme.tableShadow !== false,
+    markerHighlightColor: ['purple', 'yellow', 'green', 'blue', 'pink'].includes(theme.markerHighlightColor)
+      ? theme.markerHighlightColor
+      : DEFAULT_THEME_CONFIG.markerHighlightColor,
   };
 }
 
@@ -138,6 +142,8 @@ function loadConfig(options = {}) {
     wechat: envWechat || savedWechat,
     author: typeof saved.author === 'string' && saved.author ? saved.author : undefined,
     footer: typeof saved.footer === 'string' && saved.footer ? saved.footer : undefined,
+    header: typeof saved.header === 'string' && saved.header ? saved.header : undefined,
+    wechatLinkAutoAdapt: saved.wechatLinkAutoAdapt !== false,
   };
 }
 
@@ -181,6 +187,28 @@ function clearFooterConfig(configPath = DEFAULT_CONFIG_PATH) {
   const saved = readConfigFile(configPath);
   delete saved.footer;
   writeConfigFile(configPath, saved);
+}
+
+function saveHeaderConfig(configPath, header) {
+  const saved = readConfigFile(configPath);
+  writeConfigFile(configPath, {
+    ...saved,
+    header,
+  });
+}
+
+function clearHeaderConfig(configPath = DEFAULT_CONFIG_PATH) {
+  const saved = readConfigFile(configPath);
+  delete saved.header;
+  writeConfigFile(configPath, saved);
+}
+
+function saveWechatLinkAutoAdapt(configPath, enabled) {
+  const saved = readConfigFile(configPath);
+  writeConfigFile(configPath, {
+    ...saved,
+    wechatLinkAutoAdapt: Boolean(enabled),
+  });
 }
 
 function saveThemeConfig(configPath, themePatch) {
@@ -262,6 +290,7 @@ function mergeThemeOptions(config, options = {}) {
   if (typeof options.alignH2Left === 'boolean') patch.alignH2Left = options.alignH2Left;
   if (typeof options.showHorizontalRule === 'boolean') patch.showHorizontalRule = options.showHorizontalRule;
   if (typeof options.tableShadow === 'boolean') patch.tableShadow = options.tableShadow;
+  if (options.markerHighlightColor) patch.markerHighlightColor = options.markerHighlightColor;
   return normalizeThemeConfig({ ...config.theme, ...patch });
 }
 
@@ -283,6 +312,9 @@ module.exports = {
   clearAuthorConfig,
   saveFooterConfig,
   clearFooterConfig,
+  saveHeaderConfig,
+  clearHeaderConfig,
+  saveWechatLinkAutoAdapt,
   saveThemeConfig,
   saveWechatConfig,
 };
