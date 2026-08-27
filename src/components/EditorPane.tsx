@@ -114,7 +114,6 @@ const getOutlineScrollTop = (textarea: HTMLTextAreaElement, markdown: string, po
 const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample, syntaxTheme }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const redoStackRef = useRef<HistoryEntry[]>([]);
   const isUndoRef = useRef(false);
@@ -395,11 +394,6 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
     e.target.value = '';
   }, [importMarkdownFile]);
 
-  // 触发文件选择
-  const triggerFileInput = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
   const handleClear = useCallback(() => {
     if (window.confirm('确定要清空所有内容吗？')) {
       archiveAndRefresh(markdown);
@@ -610,9 +604,9 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
 
       {/* 底部：文件操作 */}
       <div className="editor-footer">
-        <Button variant="footer" onClick={triggerFileInput} title="导入 Markdown 文件">
+        <label className="editor-footer-btn" htmlFor="markdown-file-input" title="导入 Markdown 文件">
           📂 导入
-        </Button>
+        </label>
         <Button variant="footer" onClick={handleLoadExampleClick}>
           加载示例
         </Button>
@@ -702,7 +696,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
       {/* 视觉隐藏但保留在渲染树中：Safari/WebKit 对 display:none 的 file input
           调用 click() 不弹文件选择框 */}
       <input
-        ref={fileInputRef}
+        id="markdown-file-input"
         type="file"
         accept=".md,text/markdown"
         onChange={handleFileImport}

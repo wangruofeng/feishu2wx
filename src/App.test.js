@@ -137,6 +137,21 @@ test('disables outline button when the article has no headings', () => {
   expect(outlineButton.disabled).toBe(true);
 });
 
+test('opens the Markdown file input from the import control', () => {
+  act(() => {
+    root.render(<App />);
+  });
+
+  const importControl = Array.from(container.querySelectorAll('label')).find((label) =>
+    label.textContent.includes('📂 导入')
+  );
+  const fileInput = container.querySelector('#markdown-file-input');
+
+  expect(importControl).toBeTruthy();
+  expect(importControl.htmlFor).toBe(fileInput.id);
+  expect(fileInput.type).toBe('file');
+});
+
 test('jumps to outline heading using measured textarea position', () => {
   localStorage.setItem('feishu2wx_markdown', [
     '# 开头',
