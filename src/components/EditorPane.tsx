@@ -699,12 +699,16 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
         onCountChange={setHistoryCount}
       />
 
+      {/* 视觉隐藏但保留在渲染树中：Safari/WebKit 对 display:none 的 file input
+          调用 click() 不弹文件选择框 */}
       <input
         ref={fileInputRef}
         type="file"
         accept=".md,text/markdown"
         onChange={handleFileImport}
-        style={{ display: 'none' }}
+        style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}
+        tabIndex={-1}
+        aria-hidden="true"
       />
     </div>
   );
