@@ -130,7 +130,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ## 组件结构
 
 - `App.tsx`：主容器与状态中心，含顶部控制栏（主题、设置面板、复制/导出/推送）。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
 - `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
 - `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。
@@ -140,6 +140,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `ShortcutsDrawer.tsx`：快捷键抽屉面板，展示所有键盘快捷键（格式、编辑、视图三组），支持 ESC 关闭和遮罩点击关闭。
 - `PublishDialog.tsx`：推送对话框（标题、作者、封面）。
 - `WechatConfigDialog.tsx`：公众号配置对话框。
+- `DocHistoryPopover.tsx`：历史文档浮层（portal 到 body），列表展示（标题 + 相对时间）、恢复、删除单条、清空全部。
 
 ## 关键行为
 
@@ -153,6 +154,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 4. 其他情况 → 保留纯文本。
 
 用户可在设置面板中关闭"智能 HTML 转 Markdown"开关（`shouldConvertPastedHtml` 状态），回退为仅粘贴纯文本。
+
+### 拖拽导入与历史文档
+
+- 拖拽 `.md` 文件到编辑区（`.editor-container`）即可导入，行为与「📂 导入」按钮一致：整体替换内容，替换前旧内容自动存入历史并进撤销栈；导入统一走 `EditorPane` 的 `importMarkdownFile()`。拖拽高亮用 enter/leave 计数器抵消子元素间穿梭的假 dragleave，仅响应 `dataTransfer.types` 含 `Files` 的拖拽。
+- 历史文档存取收敛在 `src/utils/docHistory.ts`（纯函数，有 jest 单测）：localStorage 键 `feishu2wx_docHistory`，JSON 数组最新在前，每条 `{ id, title, content, savedAt }`；上限 20 条淘汰最旧，单份 UTF-8 超 200KB 跳过存档（手写字节数计算，不依赖 TextEncoder），配额溢出逐条淘汰重试。
+- 存档触发点（均替换前调用 `archiveCurrentDoc`）：文件导入（按钮/拖拽）、拖拽导入、清空、加载示例、从历史恢复；除导入外均在 `EditorPane` 内触发（`handleLoadExampleClick` 包装了 `onLoadExample`），保证历史按钮计数同步刷新，`App.tsx` 不参与存档。
+- 恢复历史不删除原条目（可反复恢复）；标题提取 `extractDocTitle`（frontmatter title → 首个 H1 → 未命名文章）与推送标题逻辑一致。
 
 ### 微信公众号兼容性约束
 

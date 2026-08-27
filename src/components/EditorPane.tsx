@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import { shouldConvertPastedHtml } from '../utils/pasteDetection';
 import { tokenizeMarkdown, getMdSyntaxCssVars, MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
+import { archiveCurrentDoc, loadDocHistory, DocHistoryEntry } from '../utils/docHistory';
+import DocHistoryPopover from './DocHistoryPopover';
 import { Button } from './ui';
 import './EditorPane.css';
 
@@ -29,6 +31,7 @@ interface OutlineItem {
 
 const MAX_HISTORY = 50;
 const OUTLINE_POPOVER_WIDTH = 280;
+const HISTORY_POPOVER_WIDTH = 320;
 const OUTLINE_POPOVER_VIEWPORT_MARGIN = 8;
 const TEXTAREA_MIRROR_STYLE_PROPS = [
   'font-family',
@@ -53,6 +56,16 @@ const getLineHeight = (textarea: HTMLTextAreaElement): number => {
   if (!Number.isNaN(lineHeight)) return lineHeight;
   const fontSize = parseFloat(getComputedStyle(textarea).fontSize);
   return Number.isNaN(fontSize) ? 24 : fontSize * 1.6;
+};
+
+/** 计算底栏按钮上方浮层的 fixed 定位（右对齐 footer 右缘，视口内钳制） */
+const getFooterPopoverPosition = (btn: HTMLButtonElement, width: number): { top: number; left: number } => {
+  const rect = btn.getBoundingClientRect();
+  const footerRect = btn.closest('.editor-footer')?.getBoundingClientRect();
+  const anchorRight = footerRect?.right ?? rect.right;
+  const maxLeft = Math.max(OUTLINE_POPOVER_VIEWPORT_MARGIN, window.innerWidth - width - OUTLINE_POPOVER_VIEWPORT_MARGIN);
+  const left = Math.min(Math.max(anchorRight - width, OUTLINE_POPOVER_VIEWPORT_MARGIN), maxLeft);
+  return { top: rect.top, left };
 };
 
 const getOutlineScrollTop = (textarea: HTMLTextAreaElement, markdown: string, pos: number): number => {
@@ -109,6 +122,12 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
   const [outlinePos, setOutlinePos] = useState({ top: 0, left: 0 });
   const outlineBtnRef = useRef<HTMLButtonElement>(null);
   const outlinePopRef = useRef<HTMLDivElement>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyPos, setHistoryPos] = useState({ top: 0, left: 0 });
+  const [historyCount, setHistoryCount] = useState(() => loadDocHistory().length);
+  const historyBtnRef = useRef<HTMLButtonElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const dragDepthRef = useRef(0);
 
   // 保存当前状态到历史
   const pushHistory = useCallback(() => {
@@ -335,14 +354,25 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
     setMarkdown(e.target.value);
   }, [markdown, setMarkdown]);
 
-  const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // 存档当前文档到历史并刷新按钮计数；超过大小护栏时仅警告不阻断
+  const archiveAndRefresh = useCallback((md: string) => {
+    const result = archiveCurrentDoc(md);
+    if (result.reason === 'too-large') {
+      console.warn('文档超过 200KB，未存入历史');
+    }
+    setHistoryCount(loadDocHistory().length);
+    return result;
+  }, []);
 
+  // 导入 Markdown 文件（按钮选择与拖拽共用）：存档旧内容 → 进撤销栈 → 读取替换
+  const importMarkdownFile = useCallback((file: File) => {
     if (!file.name.endsWith('.md') && file.type !== 'text/markdown') {
       alert('请选择 Markdown 文件 (.md)');
       return;
     }
+
+    archiveAndRefresh(markdown);
+    pushHistory();
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -355,9 +385,15 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
       alert('读取文件失败，请重试');
     };
     reader.readAsText(file);
+  }, [markdown, archiveAndRefresh, pushHistory, setMarkdown]);
 
+  const handleFileImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      importMarkdownFile(file);
+    }
     e.target.value = '';
-  }, [setMarkdown]);
+  }, [importMarkdownFile]);
 
   // 触发文件选择
   const triggerFileInput = useCallback(() => {
@@ -366,9 +402,55 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
 
   const handleClear = useCallback(() => {
     if (window.confirm('确定要清空所有内容吗？')) {
+      archiveAndRefresh(markdown);
       setMarkdown('');
     }
-  }, [setMarkdown]);
+  }, [markdown, archiveAndRefresh, setMarkdown]);
+
+  // 拖拽导入：仅响应文件拖拽，计数器抵消子元素间穿梭产生的假 dragleave
+  const hasDragFiles = useCallback((e: React.DragEvent) =>
+    Array.from(e.dataTransfer?.types ?? []).includes('Files'), []);
+
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!hasDragFiles(e)) return;
+    e.preventDefault();
+    dragDepthRef.current += 1;
+    setIsDragOver(true);
+  }, [hasDragFiles]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (!hasDragFiles(e)) return;
+    e.preventDefault();
+  }, [hasDragFiles]);
+
+  const handleDragLeave = useCallback(() => {
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    dragDepthRef.current = 0;
+    setIsDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      importMarkdownFile(file);
+    }
+  }, [importMarkdownFile]);
+
+  // 从历史恢复：当前内容先存档（保证恢复错了还能换回来），再整体替换
+  const handleRestoreHistory = useCallback((entry: DocHistoryEntry) => {
+    archiveAndRefresh(markdown);
+    setMarkdown(entry.content);
+  }, [markdown, archiveAndRefresh, setMarkdown]);
+
+  // 加载示例前把当前内容存入历史（存档统一收敛在 EditorPane，保证历史按钮计数同步刷新）
+  const handleLoadExampleClick = useCallback(() => {
+    archiveAndRefresh(markdown);
+    onLoadExample();
+  }, [markdown, archiveAndRefresh, onLoadExample]);
 
   // 解析文章大纲（H1-H3），跳过 frontmatter 与代码块
   const outlineItems = useMemo<OutlineItem[]>(() => {
@@ -421,18 +503,23 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
     setOutlineOpen(false);
   }, [markdown]);
 
-  // 切换大纲：先算按钮在视口内的位置
+  // 切换大纲：先算按钮在视口内的位置，与历史浮层互斥
   const handleToggleOutline = useCallback(() => {
     if (!outlineOpen && outlineBtnRef.current) {
-      const rect = outlineBtnRef.current.getBoundingClientRect();
-      const footerRect = outlineBtnRef.current.closest('.editor-footer')?.getBoundingClientRect();
-      const anchorRight = footerRect?.right ?? rect.right;
-      const maxLeft = Math.max(OUTLINE_POPOVER_VIEWPORT_MARGIN, window.innerWidth - OUTLINE_POPOVER_WIDTH - OUTLINE_POPOVER_VIEWPORT_MARGIN);
-      const left = Math.min(Math.max(anchorRight - OUTLINE_POPOVER_WIDTH, OUTLINE_POPOVER_VIEWPORT_MARGIN), maxLeft);
-      setOutlinePos({ top: rect.top, left });
+      setOutlinePos(getFooterPopoverPosition(outlineBtnRef.current, OUTLINE_POPOVER_WIDTH));
     }
+    setHistoryOpen(false);
     setOutlineOpen((v) => !v);
   }, [outlineOpen]);
+
+  // 切换历史文档浮层，与大纲浮层互斥
+  const handleToggleHistory = useCallback(() => {
+    if (!historyOpen && historyBtnRef.current) {
+      setHistoryPos(getFooterPopoverPosition(historyBtnRef.current, HISTORY_POPOVER_WIDTH));
+    }
+    setOutlineOpen(false);
+    setHistoryOpen((v) => !v);
+  }, [historyOpen]);
 
   // 点击浮层外部关闭大纲
   useEffect(() => {
@@ -490,8 +577,14 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
         <Button variant="editorToolbar" onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</Button>
       </div>
 
-      {/* 中间：编辑区（高亮层在 textarea 下方，文字透明仅 caret 可见） */}
-      <div className={`editor-container${highlightEnabled ? ' md-highlight-active' : ''}`}>
+      {/* 中间：编辑区（高亮层在 textarea 下方，文字透明仅 caret 可见；支持拖拽 .md 导入） */}
+      <div
+        className={`editor-container${highlightEnabled ? ' md-highlight-active' : ''}${isDragOver ? ' is-dragover' : ''}`}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         {highlightEnabled && (
           <div className="md-highlight-layer" aria-hidden="true">
             <div
@@ -520,7 +613,7 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
         <Button variant="footer" onClick={triggerFileInput} title="导入 Markdown 文件">
           📂 导入
         </Button>
-        <Button variant="footer" onClick={onLoadExample}>
+        <Button variant="footer" onClick={handleLoadExampleClick}>
           加载示例
         </Button>
         <Button variant="footer" onClick={handleClear}>
@@ -545,6 +638,22 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
             <line x1="7" y1="12" x2="13" y2="12" />
           </svg>
           大纲
+        </button>
+        <button
+          ref={historyBtnRef}
+          type="button"
+          className={`editor-footer-btn editor-history-btn${historyOpen ? ' is-active' : ''}`}
+          onClick={handleToggleHistory}
+          title="历史文档"
+          aria-label="历史文档"
+          aria-expanded={historyOpen}
+          disabled={historyCount === 0}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <circle cx="8" cy="8" r="6" />
+            <path d="M8 4.5V8l2.5 1.5" />
+          </svg>
+          历史
         </button>
       </div>
 
@@ -579,6 +688,16 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
         </div>,
         document.body
       )}
+
+      {/* 历史文档浮层（portal 到 body） */}
+      <DocHistoryPopover
+        open={historyOpen}
+        position={historyPos}
+        anchorRef={historyBtnRef}
+        onClose={() => setHistoryOpen(false)}
+        onRestore={handleRestoreHistory}
+        onCountChange={setHistoryCount}
+      />
 
       <input
         ref={fileInputRef}

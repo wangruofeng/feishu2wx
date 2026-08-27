@@ -1,0 +1,150 @@
+/* 历史文档浮层：视觉骨架与文章大纲浮层（editor-outline-pop）保持一致 */
+.doc-history-pop {
+  width: 320px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-white);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  overflow: hidden;
+  transform: translateY(calc(-100% - 6px));
+}
+
+.doc-history-pop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-surface);
+}
+
+.doc-history-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.doc-history-clear {
+  background: transparent;
+  border: none;
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 0;
+}
+
+.doc-history-clear:hover {
+  color: #e53e3e;
+}
+
+.doc-history-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-1);
+}
+
+.doc-history-close:hover {
+  color: var(--color-text-primary);
+}
+
+.doc-history-pop-body {
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.doc-history-empty {
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.doc-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px;
+}
+
+.doc-history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.doc-history-item:hover {
+  background-color: var(--color-bg-hover-transparent);
+}
+
+.doc-history-restore {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: var(--transition-fast);
+}
+
+.doc-history-restore:hover {
+  color: var(--color-brand);
+}
+
+.doc-history-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.doc-history-restore:hover .doc-history-title {
+  color: var(--color-brand);
+}
+
+.doc-history-time {
+  flex-shrink: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  user-select: none;
+}
+
+.doc-history-delete {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: var(--transition-fast);
+}
+
+.doc-history-item:hover .doc-history-delete {
+  opacity: 1;
+}
+
+.doc-history-delete:hover {
+  color: #e53e3e;
+}
