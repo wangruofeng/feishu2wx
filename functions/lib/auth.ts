@@ -41,19 +41,24 @@ export async function completeOAuth(request: Request, env: PagesAuthEnv): Promis
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   if (!code || url.searchParams.get('state') !== getCookie(request, STATE_COOKIE)) return new Response('GitHub 登录校验失败。', { status: 400 });
-  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_SESSION_SIGNING_KEY) return new Response('GitHub 登录服务尚未完成生产环境配置。', { status: 503 });
+  const missing = ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'AUTH_SESSION_SIGNING_KEY'].filter((name) => !env[name as keyof PagesAuthEnv]);
+  if (missing.length) return new Response(`GitHub 登录服务缺少生产环境 Secret：${missing.join('、')}。请在 Cloudflare Pages Production 环境补充后重新部署。`, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  let token: { access_token?: string };
   try {
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code }) });
-    const token = await tokenResponse.json() as { access_token?: string };
-    if (!tokenResponse.ok || !token.access_token) return new Response('GitHub 授权码交换失败，请重新登录。', { status: 502 });
+    token = await tokenResponse.json() as { access_token?: string };
+    if (!tokenResponse.ok || !token.access_token) return new Response('GitHub 授权码交换失败。请确认 GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET 与 OAuth App 匹配，然后重新发起登录。', { status: 502 });
+  } catch { return new Response('无法连接 GitHub 授权服务。请稍后重试；若持续发生，请检查 Workers 出站网络与 GitHub 状态。', { status: 502 }); }
+  let user: { id?: number; login?: string; avatar_url?: string };
+  try {
     const userResponse = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json' } });
-    const user = await userResponse.json() as { id?: number; login?: string; avatar_url?: string };
-    if (!userResponse.ok || !user.id || !user.login) return new Response('无法读取 GitHub 账号。', { status: 502 });
-    const session: SessionPayload = { sub: String(user.id), login: user.login, avatarUrl: user.avatar_url ?? '', exp: Date.now() + SESSION_SECONDS * 1000 };
+    user = await userResponse.json() as typeof user;
+    if (!userResponse.ok || !user.id || !user.login) return new Response('GitHub 用户信息读取失败。请重新授权；若持续发生，请检查 OAuth App 权限是否包含 read:user。', { status: 502 });
+  } catch { return new Response('无法连接 GitHub 用户信息服务。请稍后重新登录。', { status: 502 }); }
+  try {
+    const session: SessionPayload = { sub: String(user.id), login: user.login!, avatarUrl: user.avatar_url ?? '', exp: Date.now() + SESSION_SECONDS * 1000 };
     return new Response(null, { status: 302, headers: { Location: new URL('/', request.url).toString(), 'Set-Cookie': await sessionCookie(session, env), 'Cache-Control': 'no-store' } });
-  } catch {
-    return new Response('GitHub 登录服务配置无效，请检查 Cloudflare Secret。', { status: 503, headers: { 'Cache-Control': 'no-store' } });
-  }
+  } catch { return new Response('无法创建登录会话：AUTH_SESSION_SIGNING_KEY 必须是独立的 32 字节 base64url 值。请重新生成、覆盖 Production Secret 并重新部署。', { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
 }
 
 export function clearSessionCookie(): string { return `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`; }
