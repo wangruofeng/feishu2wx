@@ -59,21 +59,21 @@ type PendingAttachment =
 
 /* 线性描边图标（lucide 风格），发送/停止按钮内使用 */
 const IcoArrowUp = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
     <path d="m5 12 7-7 7 7" />
     <path d="M12 19V5" />
   </svg>
 );
 
 const IcoStop = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor">
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor">
     <rect x="2" y="2" width="20" height="20" rx="4.5" />
   </svg>
 );
 
 /* 附件统一入口（图片 / md / csv / json 等），参考聊天应用「+」按钮 */
 const IcoPlus = () => (
-  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
     <path d="M5 12h14" />
     <path d="M12 5v14" />
   </svg>
@@ -448,7 +448,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
             aria-label="模型设置"
             active={settingsOpen}
           >
-            <GearIcon size={18} />
+            <GearIcon size={16} />
           </Button>
           <Button
             variant="aiIconBtn"

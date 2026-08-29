@@ -31,7 +31,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `src/utils/helper.test.js`：helper 工具函数单元测试
 - `functions/api/publish/draft.ts`：Cloudflare Function，代理微信草稿箱 API
 - `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传（WebP 上传前归一化为 PNG/GIF，MIME type 正确设置，优先用 HTTP 响应头检测类型）、创建草稿）
-- `src/components/ui/Button.tsx`：统一按钮组件，所有 `<button>` 应从该组件导入，通过 `variant` 映射原始 CSS 类名；`src/components/ui/GearIcon.tsx` 为共享设置齿轮图标（Lucide 线性齿轮），顶栏设置按钮与 AI 助手头部「模型设置」按钮复用同一组件，`size` 属性按场景调整
+- `src/components/ui/Button.tsx`：统一按钮组件，所有 `<button>` 应从该组件导入，通过 `variant` 映射原始 CSS 类名；`src/components/ui/GearIcon.tsx` 为共享设置齿轮图标（Lucide 线性齿轮），顶栏设置按钮与 AI 助手头部「模型设置」按钮复用同一组件；AI 面板控件图标统一 16px（SVG 与文字字形）
 
 ## 必须知道的约束
 
