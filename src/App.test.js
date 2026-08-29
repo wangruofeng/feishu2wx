@@ -296,6 +296,78 @@ test('applies article start and end markdown templates to preview without changi
   expect(localStorage.getItem('feishu2wx_footerTemplate')).toBe('结尾固定内容');
 });
 
+test('hides article start template when its visibility toggle is off', async () => {
+  localStorage.setItem('feishu2wx_markdown', '正文内容');
+  localStorage.setItem('feishu2wx_headerTemplate', '开头固定内容');
+  localStorage.setItem('feishu2wx_footerTemplate', '结尾固定内容');
+  localStorage.setItem('feishu2wx_showHeaderTemplate', 'false');
+
+  await act(async () => {
+    root.render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const previewContent = container.querySelector('.preview-content');
+
+  expect(previewContent.textContent).not.toContain('开头固定内容');
+  expect(previewContent.textContent).toContain('正文内容');
+  expect(previewContent.textContent).toContain('结尾固定内容');
+
+  const settingsButton = container.querySelector('.settings-trigger');
+  act(() => {
+    settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  expect(container.querySelector('button[aria-label="显示文章首部片段"]').getAttribute('aria-checked')).toBe('false');
+  expect(container.querySelector('button[aria-label="显示文章尾部片段"]').getAttribute('aria-checked')).toBe('true');
+});
+
+test('toggles article end template visibility from settings and disables switches when fragment is empty', async () => {
+  localStorage.setItem('feishu2wx_markdown', '正文内容');
+  localStorage.setItem('feishu2wx_headerTemplate', '开头固定内容');
+  localStorage.setItem('feishu2wx_footerTemplate', '结尾固定内容');
+
+  await act(async () => {
+    root.render(<App />);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const settingsButton = container.querySelector('.settings-trigger');
+  act(() => {
+    settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  // 片段有内容时开关可用
+  const headerSwitch = container.querySelector('button[aria-label="显示文章首部片段"]');
+  const footerSwitch = container.querySelector('button[aria-label="显示文章尾部片段"]');
+  expect(headerSwitch.disabled).toBe(false);
+  expect(footerSwitch.disabled).toBe(false);
+
+  await act(async () => {
+    footerSwitch.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(container.querySelector('.preview-content').textContent).not.toContain('结尾固定内容');
+  expect(container.querySelector('.preview-content').textContent).toContain('开头固定内容');
+  expect(localStorage.getItem('feishu2wx_showFooterTemplate')).toBe('false');
+
+  // 清空首部片段内容后，对应开关禁用而尾部开关状态保持
+  const rows = Array.from(container.querySelectorAll('.settings-row'));
+  const headerRow = rows.find((r) => r.querySelector('.settings-row-label')?.textContent === '文章首部片段');
+  const headerTextarea = headerRow.querySelector('textarea');
+  const setTextareaValue = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+
+  await act(async () => {
+    setTextareaValue.call(headerTextarea, '');
+    headerTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(container.querySelector('button[aria-label="显示文章首部片段"]').disabled).toBe(true);
+  expect(container.querySelector('button[aria-label="显示文章尾部片段"]').disabled).toBe(false);
+});
+
 test('renders article start template below frontmatter preview', async () => {
   localStorage.setItem('feishu2wx_markdown', '---\ntitle: 测试标题\ntags: [A, B]\n---\n# 正文标题');
   localStorage.setItem('feishu2wx_headerTemplate', '开头固定内容');
@@ -404,4 +476,63 @@ test('keeps plain text paste when smart html conversion is disabled', async () =
   expect(editor.value).not.toContain('# 标题');
   expect(editor.value).not.toContain('```');
   expect(editor.value).toContain('npm run cli -- auth set --app-id <appid>');
+});
+
+test('opens AI panel as overlay drawer by default without shifting content', () => {
+  act(() => {
+    root.render(<App />);
+  });
+
+  const aiFab = Array.from(container.querySelectorAll('.fab-btn')).find((button) => button.title === 'AI 助手');
+  act(() => {
+    aiFab.click();
+  });
+
+  const app = container.querySelector('.app');
+  const drawer = container.querySelector('.ai-chat-drawer');
+  expect(drawer.className.includes('open')).toBe(true);
+  expect(drawer.className.includes('ai-chat-drawer--sidebar')).toBe(false);
+  // 抽屉浮在内容上方，内容区不避让
+  expect(app.className.includes('ai-sidebar-open')).toBe(false);
+});
+
+test('switches AI panel to sidebar mode from settings and shifts content aside', async () => {
+  act(() => {
+    root.render(<App />);
+  });
+
+  await act(async () => {
+    container.querySelector('.settings-trigger').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  const sidebarButton = Array.from(container.querySelectorAll('.settings-segmented-btn')).find((button) =>
+    button.textContent === '侧栏'
+  );
+  await act(async () => {
+    sidebarButton.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  expect(localStorage.getItem('feishu2wx_aiPanelMode')).toBe('sidebar');
+
+  const aiFab = Array.from(container.querySelectorAll('.fab-btn')).find((button) => button.title === 'AI 助手');
+  act(() => {
+    aiFab.click();
+  });
+
+  const app = container.querySelector('.app');
+  const drawer = container.querySelector('.ai-chat-drawer');
+  expect(drawer.className.includes('ai-chat-drawer--sidebar')).toBe(true);
+  expect(app.className.includes('ai-sidebar-open')).toBe(true);
+
+  // 关闭面板后避让类复位，侧栏配置保留
+  const closeButton = Array.from(container.querySelectorAll('.ai-chat-header button')).find((button) =>
+    button.title === '关闭'
+  );
+  act(() => {
+    closeButton.click();
+  });
+  expect(app.className.includes('ai-sidebar-open')).toBe(false);
+  expect(localStorage.getItem('feishu2wx_aiPanelMode')).toBe('sidebar');
 });

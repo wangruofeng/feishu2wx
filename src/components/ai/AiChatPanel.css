@@ -26,6 +26,12 @@
   transform: translateX(0);
 }
 
+/* 侧栏模式：面板占据右侧布局位（内容由 .app.ai-sidebar-open 避让），以左边框分隔、不用投影 */
+.ai-chat-drawer--sidebar {
+  box-shadow: none;
+  border-left: 1px solid var(--color-border-primary);
+}
+
 /* ===== 头部 ===== */
 /* 与主页 .top-bar 同高，保证抽屉头部底边框与顶栏底边框对齐 */
 .ai-chat-header {

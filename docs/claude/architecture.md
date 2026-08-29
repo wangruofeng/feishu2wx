@@ -91,7 +91,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 主题系统
 
-- 4 种命名主题：经典（`#000000e6`）、橙色、蓝色、青绿，定义在 `src/styles/themes.css`。
+- 5 种主题：经典（`#000000e6`）、橙色、蓝色、青绿、自定义；自定义主题由 `src/utils/themeColor.ts` 的 `buildCustomThemePalette()` 从单一主色推导完整色板（非法/空值回退 `#7c3aed`）。主题定义在 `src/styles/themes.css`。
 - 暗黑模式独立于主题配色，通过 `.theme-dark` CSS 类覆盖设计 token 值实现，可在任意主题下启用。
 - `ThemeSwitcher.tsx` 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承。
 - 预览区通过 CSS 类（`theme-{name}`）应用主题。
@@ -122,10 +122,11 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `showBackTop`（回到顶部按钮）
 - `publishOpen`、`publishHtml`（推送对话框）
 - `wechatConfigured`（公众号凭证状态）
-- `headerTemplate`、`footerTemplate`（文章首尾模板，持久化键 `feishu2wx_headerTemplate`/`feishu2wx_footerTemplate`，推送/复制时拼接到 front matter 之后 / 正文之后）
+- `headerTemplate`、`footerTemplate`（文章首尾模板，持久化键 `feishu2wx_headerTemplate`/`feishu2wx_footerTemplate`，推送/复制时拼接到 front matter 之后 / 正文之后）与显示开关 `showHeaderTemplate`/`showFooterTemplate`（键 `feishu2wx_showHeaderTemplate`/`feishu2wx_showFooterTemplate`，默认开启，关闭的片段不进预览/复制/推送，片段为空时开关禁用）
 - `articleTitle`（推送标题，优先取 front matter `title`，回退正文首个 H1）、`articleCover`（推送封面，取 front matter `cover`）
 - `markerHighlightColor`（`==text==` 荧光笔颜色，`purple/yellow/green/blue/pink`，键 `feishu2wx_markerHighlightColor`）
 - `wechatLinkAutoAdapt`（公众号链接自动适配开关，键 `feishu2wx_wechatLinkAutoAdapt`，默认开启）
+- `aiPanelMode`（AI 面板显示方式，`'drawer' | 'sidebar'`，键 `feishu2wx_aiPanelMode`，默认抽屉；侧栏模式下内容区避让不重叠，移动端始终为抽屉）
 
 所有设置都会持久化到 localStorage（键名前缀 `feishu2wx_`）。预览 HTML 由 `markdown` 和渲染选项通过纯函数派生。
 
@@ -134,7 +135,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `App.tsx`：主容器与状态中心，含顶部控制栏（主题、设置面板、复制/导出/推送）。
 - `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、图片附件拖拽/粘贴插入为 data URI 图片（`src/utils/imageAttachment.ts`，后缀白名单优先识别 SVG，单图限 2MB）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式，含 `<svg>` 元素源码的标签/属性/属性值着色）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
-- `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
+- `ThemeSwitcher.tsx`：横向主题按钮组（5 种主题：经典、橙色、蓝色、青绿、自定）。
 - `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换（当前由 `PreviewPane` 内联渲染，此组件已不再被外部 import）。
 - `SettingsPanel.tsx`：排版设置弹出面板，按通用 / 标题 / 正文 / 引用块 / 图片 / 代码块 / 模板 / 公众号分组，统一管理智能粘贴转换、源码配色、主题模式、H1/H2 样式、文本对齐、字体、分割线/元数据/表格阴影、引用块（背景/边框色/间距）、图片（样式/圆角）、代码块样式、首尾模板、公众号凭证。

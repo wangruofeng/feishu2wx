@@ -139,6 +139,12 @@
   transform: translateX(14px);
 }
 
+/* 片段为空时显示开关不可用 */
+.settings-switch:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 /* ========== Segmented control ========== */
 
 /* 外观组内多选一按钮组（图片模式 / 代码块） */
@@ -350,6 +356,14 @@
 }
 
 /* ========== Markdown 模板 textarea ========== */
+
+/* 模板行头部：标签 + 显示开关同行 */
+.settings-template-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
 
 .settings-textarea {
   width: 100%;

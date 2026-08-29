@@ -39,8 +39,12 @@ interface Props {
   onToggleTableShadow: () => void;
   headerTemplate: string;
   setHeaderTemplate: (value: string) => void;
+  showHeaderTemplate: boolean;
+  onToggleShowHeaderTemplate: () => void;
   footerTemplate: string;
   setFooterTemplate: (value: string) => void;
+  showFooterTemplate: boolean;
+  onToggleShowFooterTemplate: () => void;
   imageBorderStyle: 'border' | 'shadow' | 'default';
   onChangeImageBorderStyle: (style: 'border' | 'shadow' | 'default') => void;
   imageBorderRadius: boolean;
@@ -58,6 +62,8 @@ interface Props {
   onDarkModeChange: (mode: 'system' | 'light' | 'dark') => void;
   syntaxTheme: MdSyntaxThemeKey;
   onChangeSyntaxTheme: (theme: MdSyntaxThemeKey) => void;
+  aiPanelMode: 'drawer' | 'sidebar';
+  onChangeAiPanelMode: (mode: 'drawer' | 'sidebar') => void;
   customThemeColor: string;
   onChangeCustomThemeColor: (color: string) => void;
   onResetCustomThemeColor: () => void;
@@ -106,15 +112,34 @@ const ToggleSwitch: React.FC<{ label: string; checked: boolean; onClick: () => v
   </div>
 );
 
-/** Markdown 模板编辑：textarea，填写即启用（空则不插入） */
+/** Markdown 模板编辑：textarea，填写即启用（空则不插入）；传入 onToggleVisible 时在标签行显示开关，片段为空时开关禁用 */
 const TemplateField: React.FC<{
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
-}> = ({ label, value, onChange, placeholder }) => (
+  visible?: boolean;
+  onToggleVisible?: () => void;
+}> = ({ label, value, onChange, placeholder, visible = true, onToggleVisible }) => (
   <div className="settings-row settings-row--block">
-    <span className="settings-row-label">{label}</span>
+    <div className="settings-template-head">
+      <span className="settings-row-label">{label}</span>
+      {onToggleVisible && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={visible}
+          aria-label={`显示${label}`}
+          className="settings-switch"
+          disabled={!value.trim()}
+          onClick={onToggleVisible}
+        >
+          <span className="sr-only" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+            {`显示${label}`}
+          </span>
+        </button>
+      )}
+    </div>
     <textarea
       className="settings-textarea"
       value={value}
@@ -159,8 +184,12 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleTableShadow,
   headerTemplate,
   setHeaderTemplate,
+  showHeaderTemplate,
+  onToggleShowHeaderTemplate,
   footerTemplate,
   setFooterTemplate,
+  showFooterTemplate,
+  onToggleShowFooterTemplate,
   imageBorderStyle,
   onChangeImageBorderStyle,
   imageBorderRadius,
@@ -178,6 +207,8 @@ const SettingsPanel: React.FC<Props> = ({
   onDarkModeChange,
   syntaxTheme,
   onChangeSyntaxTheme,
+  aiPanelMode,
+  onChangeAiPanelMode,
   customThemeColor,
   onChangeCustomThemeColor,
   onResetCustomThemeColor,
@@ -253,6 +284,27 @@ const SettingsPanel: React.FC<Props> = ({
             </Button>
           </div>
         </div>
+        {/* AI 面板交互方式：抽屉浮层 or 右侧侧栏（内容避让不重叠） */}
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">AI 面板</span>
+          <div className="settings-segmented">
+            <button
+              type="button"
+              className={`settings-segmented-btn${aiPanelMode === 'drawer' ? ' active' : ''}`}
+              onClick={() => onChangeAiPanelMode('drawer')}
+            >
+              抽屉
+            </button>
+            <button
+              type="button"
+              className={`settings-segmented-btn${aiPanelMode === 'sidebar' ? ' active' : ''}`}
+              onClick={() => onChangeAiPanelMode('sidebar')}
+            >
+              侧栏
+            </button>
+          </div>
+          <span className="settings-row-hint">抽屉浮在内容上方，侧栏固定最右侧、编辑区自动避让</span>
+        </div>
         {/* 主题模式：三选一 */}
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">主题模式</span>
@@ -280,7 +332,7 @@ const SettingsPanel: React.FC<Props> = ({
             </button>
           </div>
         </div>
-        {/* 自定义主题色：选择后自动切换为「自定义」主题，清空则恢复预设 */}
+        {/* 自定义主题色：选择后自动切换为「自定」主题，清空则恢复预设 */}
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">自定义主题色</span>
           <div className="settings-custom-theme">
@@ -304,7 +356,7 @@ const SettingsPanel: React.FC<Props> = ({
               恢复预设
             </Button>
           </div>
-          <span className="settings-row-hint">选择颜色后自动启用「自定义」主题，清空输入并点击「恢复预设」可回到预设主题</span>
+          <span className="settings-row-hint">选择颜色后自动启用「自定」主题，清空输入并点击「恢复预设」可回到预设主题</span>
         </div>
       </section>
 
@@ -511,12 +563,16 @@ const SettingsPanel: React.FC<Props> = ({
           value={headerTemplate}
           onChange={setHeaderTemplate}
           placeholder="留空则不添加。支持 Markdown，会自动拼接到正文前"
+          visible={showHeaderTemplate}
+          onToggleVisible={onToggleShowHeaderTemplate}
         />
         <TemplateField
           label="文章尾部片段"
           value={footerTemplate}
           onChange={setFooterTemplate}
           placeholder="留空则不添加。支持 Markdown，会自动拼接到正文后"
+          visible={showFooterTemplate}
+          onToggleVisible={onToggleShowFooterTemplate}
         />
       </section>
 

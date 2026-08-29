@@ -31,10 +31,23 @@ test('skips empty content with reason empty', () => {
   expect(loadDocHistory()).toHaveLength(0);
 });
 
-test('skips archiving when content equals the newest entry', () => {
+test('skips archiving when content equals any existing entry', () => {
   archiveCurrentDoc('# 重复\n内容');
+  archiveCurrentDoc('# 另一篇\n不同内容');
+  // 与最新一条重复
+  expect(archiveCurrentDoc('# 另一篇\n不同内容')).toEqual({ archived: false, reason: 'duplicate' });
+  // 与列表中间/较旧的条目重复，同样跳过
   expect(archiveCurrentDoc('# 重复\n内容')).toEqual({ archived: false, reason: 'duplicate' });
-  expect(loadDocHistory()).toHaveLength(1);
+  expect(loadDocHistory()).toHaveLength(2);
+});
+
+test('restoring history back and forth creates no duplicates', () => {
+  archiveCurrentDoc('# A\na');
+  archiveCurrentDoc('# B\nb');
+  // 模拟点击历史条目恢复：当前编辑器内容（上一次恢复回来的 A）存档时应跳过
+  const current = loadDocHistory()[1].content; // A
+  expect(archiveCurrentDoc(current)).toEqual({ archived: false, reason: 'duplicate' });
+  expect(loadDocHistory()).toHaveLength(2);
 });
 
 test('skips content larger than 200KB utf-8 bytes', () => {

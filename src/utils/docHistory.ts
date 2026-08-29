@@ -78,7 +78,7 @@ export function extractDocTitle(markdown: string): string {
 
 /**
  * 把即将被整体替换的文档存入历史。
- * 跳过：空内容 / 与最新一条重复 / 单份 UTF-8 超 200KB；
+ * 跳过：空内容 / 与列表中任意一条内容相同（按内容等值判重，等价于内容 hash 相同且无碰撞，历史恢复来回切换不产生重复）/ 单份 UTF-8 超 200KB；
  * 超条数上限淘汰最旧；配额溢出时逐条淘汰最旧重试，全部失败则放弃（不影响调用方主操作）。
  */
 export function archiveCurrentDoc(markdown: string): ArchiveResult {
@@ -87,7 +87,7 @@ export function archiveCurrentDoc(markdown: string): ArchiveResult {
   }
 
   const history = loadDocHistory();
-  if (history.length > 0 && history[0].content === markdown) {
+  if (history.some((entry) => entry.content === markdown)) {
     return { archived: false, reason: 'duplicate' };
   }
 

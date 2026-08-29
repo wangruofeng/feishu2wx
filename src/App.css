@@ -210,6 +210,39 @@
   top: 0;
 }
 
+/* ===== AI 侧栏模式：面板占据最右侧，顶栏/主内容区避让不重叠 ===== */
+/* 与 .ai-chat-drawer 的 transform 过渡同曲线，开合时内容同步让位/复位 */
+.app .top-bar,
+.app .main-container {
+  transition: margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app.ai-sidebar-open .top-bar,
+.app.ai-sidebar-open .main-container {
+  margin-right: 420px;
+}
+
+/* 侧栏展开时顶栏空间变窄，隐藏居中的主题色切换控件 */
+.app.ai-sidebar-open .top-bar-center {
+  display: none;
+}
+
+/* 全屏预览态为 fixed 定位（left/right 铺满），改为收 right 边 */
+.top-bar.fullscreen-bar,
+.main-container.fullscreen {
+  transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app.ai-sidebar-open .top-bar.fullscreen-bar,
+.app.ai-sidebar-open .main-container.fullscreen {
+  right: 420px;
+}
+
+/* 浮动按钮组左移到面板左侧，避免被面板盖住 */
+.app.ai-sidebar-open .fab-group {
+  right: 440px;
+}
+
 .main-container.device-mobile .preview-pane {
   max-width: 375px;
   margin: 0 auto;

@@ -79,6 +79,8 @@ const App: React.FC = () => {
       : 'left';
   const savedHeaderTemplate = localStorage.getItem('feishu2wx_headerTemplate') || '';
   const savedFooterTemplate = localStorage.getItem('feishu2wx_footerTemplate') || '';
+  const savedShowHeaderTemplate = localStorage.getItem('feishu2wx_showHeaderTemplate') !== 'false';
+  const savedShowFooterTemplate = localStorage.getItem('feishu2wx_showFooterTemplate') !== 'false';
   const savedWechatLinkAutoAdapt = localStorage.getItem('feishu2wx_wechatLinkAutoAdapt') !== 'false';
   const savedMarkerHighlightColorValue = localStorage.getItem('feishu2wx_markerHighlightColor');
   const savedMarkerHighlightColor: MarkerHighlightColor = isMarkerHighlightColor(savedMarkerHighlightColorValue)
@@ -90,6 +92,7 @@ const App: React.FC = () => {
   const savedSyntaxTheme = supportedSyntaxThemes.includes(savedSyntaxThemeValue as MdSyntaxThemeKey)
     ? (savedSyntaxThemeValue as MdSyntaxThemeKey)
     : 'github';
+  const savedAiPanelMode = localStorage.getItem('feishu2wx_aiPanelMode') === 'sidebar' ? 'sidebar' : 'drawer';
 
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
@@ -122,6 +125,8 @@ const App: React.FC = () => {
   const [textAlignMode, setTextAlignMode] = useState<'left' | 'justify'>(savedTextAlignMode);
   const [headerTemplate, setHeaderTemplate] = useState<string>(savedHeaderTemplate);
   const [footerTemplate, setFooterTemplate] = useState<string>(savedFooterTemplate);
+  const [showHeaderTemplate, setShowHeaderTemplate] = useState<boolean>(savedShowHeaderTemplate);
+  const [showFooterTemplate, setShowFooterTemplate] = useState<boolean>(savedShowFooterTemplate);
   const [wechatLinkAutoAdapt, setWechatLinkAutoAdapt] = useState<boolean>(savedWechatLinkAutoAdapt);
   const [markerHighlightColor, setMarkerHighlightColor] = useState<MarkerHighlightColor>(savedMarkerHighlightColor);
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
@@ -143,6 +148,7 @@ const App: React.FC = () => {
     return true;
   });
   const [aiOpen, setAiOpen] = useState<boolean>(aiLoginReturn);
+  const [aiPanelMode, setAiPanelMode] = useState<'drawer' | 'sidebar'>(savedAiPanelMode);
   const editorPaneRef = useRef<EditorPaneHandle>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState<boolean>(false);
   const [showBackTop, setShowBackTop] = useState<boolean>(false);
@@ -208,16 +214,17 @@ const App: React.FC = () => {
 
   useEffect(() => { localStorage.setItem('feishu2wx_darkMode', darkMode); }, [darkMode]);
   useEffect(() => { localStorage.setItem('feishu2wx_syntaxTheme', syntaxTheme); }, [syntaxTheme]);
+  useEffect(() => { localStorage.setItem('feishu2wx_aiPanelMode', aiPanelMode); }, [aiPanelMode]);
 
   // 文章首/尾固定模板：预览、复制、推送均基于组合后的 Markdown，编辑器仍只编辑正文
-  // front matter 始终置顶，首尾模板拼接到 front matter 之后 / 正文之后
+  // front matter 始终置顶，首尾模板拼接到 front matter 之后 / 正文之后，显示开关关闭的片段不参与拼接
   const composedMarkdown = useMemo(() => {
     const { frontMatter, body } = splitMarkdownFrontMatter(markdown);
-    return [frontMatter, headerTemplate, body, footerTemplate]
+    return [frontMatter, showHeaderTemplate ? headerTemplate : '', body, showFooterTemplate ? footerTemplate : '']
       .map((part) => part.trim())
       .filter(Boolean)
       .join('\n\n');
-  }, [headerTemplate, markdown, footerTemplate]);
+  }, [headerTemplate, markdown, footerTemplate, showHeaderTemplate, showFooterTemplate]);
 
   // 标题优先取 front matter 的 title 字段，其次从正文（raw markdown）首个 H1 提取
   const articleTitle = useMemo(() => {
@@ -305,6 +312,8 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_textAlignMode', textAlignMode); }, [textAlignMode]);
   useEffect(() => { localStorage.setItem('feishu2wx_headerTemplate', headerTemplate); }, [headerTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_footerTemplate', footerTemplate); }, [footerTemplate]);
+  useEffect(() => { localStorage.setItem('feishu2wx_showHeaderTemplate', String(showHeaderTemplate)); }, [showHeaderTemplate]);
+  useEffect(() => { localStorage.setItem('feishu2wx_showFooterTemplate', String(showFooterTemplate)); }, [showFooterTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_wechatLinkAutoAdapt', String(wechatLinkAutoAdapt)); }, [wechatLinkAutoAdapt]);
   useEffect(() => { localStorage.setItem('feishu2wx_markerHighlightColor', markerHighlightColor); }, [markerHighlightColor]);
 
@@ -516,9 +525,12 @@ const App: React.FC = () => {
     isMobile && mobileTab === 'preview' ? 'editor-hidden' : '',
   ].filter(Boolean).join(' ');
 
+  // 侧栏模式：AI 面板占据右侧布局位，顶栏与主内容区左移避让（移动端始终为抽屉）
+  const aiSidebarOpen = aiOpen && aiPanelMode === 'sidebar' && !isMobile;
+
   return (
     <div
-      className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}`}
+      className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}${aiSidebarOpen ? ' ai-sidebar-open' : ''}`}
       style={customThemeVars}
     >
       {/* 顶栏 */}
@@ -582,8 +594,12 @@ const App: React.FC = () => {
             onToggleTableShadow={() => setTableShadow(!tableShadow)}
             headerTemplate={headerTemplate}
             setHeaderTemplate={setHeaderTemplate}
+            showHeaderTemplate={showHeaderTemplate}
+            onToggleShowHeaderTemplate={() => setShowHeaderTemplate(!showHeaderTemplate)}
             footerTemplate={footerTemplate}
             setFooterTemplate={setFooterTemplate}
+            showFooterTemplate={showFooterTemplate}
+            onToggleShowFooterTemplate={() => setShowFooterTemplate(!showFooterTemplate)}
             imageBorderStyle={imageBorderStyle}
             onChangeImageBorderStyle={setImageBorderStyle}
             imageBorderRadius={imageBorderRadius}
@@ -608,6 +624,8 @@ const App: React.FC = () => {
             onDarkModeChange={setDarkMode}
             syntaxTheme={syntaxTheme}
             onChangeSyntaxTheme={setSyntaxTheme}
+            aiPanelMode={aiPanelMode}
+            onChangeAiPanelMode={setAiPanelMode}
             customThemeColor={customThemeColor}
             onChangeCustomThemeColor={handleCustomThemeColorChange}
             onResetCustomThemeColor={handleResetCustomThemeColor}
@@ -785,6 +803,7 @@ const App: React.FC = () => {
       <AiChatPanel
         open={aiOpen}
         onClose={() => setAiOpen(false)}
+        mode={aiPanelMode}
         markdown={markdown}
         onApplyArticle={handleApplyAiArticle}
         autoOpenSettings={aiLoginReturn}

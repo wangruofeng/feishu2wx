@@ -36,6 +36,8 @@ interface Props {
   markdown: string;
   onApplyArticle: (article: string) => void;
   autoOpenSettings?: boolean;
+  /** 显示方式：drawer 抽屉浮层（默认）｜sidebar 右侧侧栏（内容避让不重叠） */
+  mode?: 'drawer' | 'sidebar';
 }
 
 const SCROLL_FOLLOW_THRESHOLD = 80;
@@ -80,7 +82,7 @@ const IcoPlus = () => (
   </svg>
 );
 
-const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle, autoOpenSettings }) => {
+const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle, autoOpenSettings, mode = 'drawer' }) => {
   const [messages, setMessages] = useState<AiChatMessage[]>(() => restoreAiMessages());
   const [live, setLive] = useState<AiLiveState | null>(null);
   const [streaming, setStreaming] = useState(false);
@@ -466,7 +468,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
 
   return (
     <div className="ai-chat-overlay">
-      <aside className={`ai-chat-drawer${open ? ' open' : ''}`} aria-label="AI 助手">
+      <aside className={`ai-chat-drawer${open ? ' open' : ''}${mode === 'sidebar' ? ' ai-chat-drawer--sidebar' : ''}`} aria-label="AI 助手">
         <div className="ai-chat-header">
           <h3>AI 助手</h3>
           <ModelSelect
