@@ -52,14 +52,14 @@
   overflow: hidden;
 }
 
-/* 拖拽 .md 文件到编辑区：虚线高亮 + 松手提示 */
+/* 拖拽 .md / 图片文件到编辑区：虚线高亮 + 松手提示 */
 .editor-container.is-dragover {
   outline: 2px dashed var(--color-brand);
   outline-offset: -2px;
 }
 
 .editor-container.is-dragover::after {
-  content: '松开导入 Markdown 文件';
+  content: '松开导入 Markdown 文件或插入图片';
   position: absolute;
   inset: 0;
   display: flex;
@@ -133,6 +133,9 @@
 .md-tok-image { color: var(--md-tok-image, inherit); }
 .md-tok-hr { color: var(--md-tok-hr, inherit); }
 .md-tok-frontmatter { color: var(--md-tok-frontmatter, inherit); }
+.md-tok-svg-tag { color: var(--md-tok-svgTag, inherit); }
+.md-tok-svg-attr { color: var(--md-tok-svgAttr, inherit); }
+.md-tok-svg-str { color: var(--md-tok-svgString, inherit); }
 
 .markdown-editor::placeholder {
   color: var(--color-text-placeholder);

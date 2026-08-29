@@ -201,6 +201,20 @@ const mdModern: MarkdownIt = registerCjkPunctuationStrong(new MarkdownIt({
   highlight: createModernHighlightFunction(),
 }).use(footnote));
 
+// markdown-it 默认只放行 gif/png/jpeg/webp 的 data URI，SVG（附件内嵌、
+// htmlToMarkdown 转出的 ![alt](data:image/svg+xml;base64,...)）会被判为
+// 不安全链接而退化为纯文本。这里扩展放行 svg+xml 的 base64 与 URL 编码两种形式。
+const defaultValidateLink = md.validateLink;
+const SVG_DATA_URI_RE = /^data:image\/svg\+xml[;,]/i;
+
+function validateLinkWithSvgDataUri(url: string): boolean {
+  if (SVG_DATA_URI_RE.test(url.trim())) return true;
+  return defaultValidateLink(url);
+}
+
+md.validateLink = validateLinkWithSvgDataUri;
+mdModern.validateLink = validateLinkWithSvgDataUri;
+
 function renderMermaidFence(tokens: any, idx: number): string | null {
   const token = tokens[idx];
   const lang = token.info.trim().split(/\s+/)[0];
@@ -521,11 +535,28 @@ function renderFrontMatterPreview(fields: FrontMatterField[]): string {
   return `<section class="frontmatter-preview" data-preview-only="true" aria-label="元数据"><h2>元数据</h2><dl>${rows}</dl></section>`;
 }
 
+/**
+ * markdown-it 的 HTML 块（CommonMark 第 7 类）在块内首个空行处结束，
+ * 内部带空行的整块 <svg> 会被拆散：拆出的 <text>/<g> 游离进 HTML 命名空间，
+ * 再被 DOMPurify 按非白名单标签清掉，最终只剩残缺图形。
+ * 渲染前把独立 SVG 块内的空行压掉、跨行开标签折回单行，
+ * 让它以一个完整 HTML 块原样通过 markdown-it（只影响渲染，不改源码）。
+ */
+function collapseBlankLinesInsideSvgBlocks(markdown: string): string {
+  return markdown.replace(/(^|\n)([ \t]{0,3}<svg\b[\s\S]*?<\/svg[ \t]*>)(?=\n|$)/g, (_match, lead: string, block: string) => {
+    const collapsed = block.replace(/\n[ \t]*\n+/g, '\n');
+    const singleLineOpenTag = collapsed.replace(/<svg\b([^>]*?)>/, (_tag: string, attrs: string) => (
+      `<svg${attrs.replace(/\s*\n\s*/g, ' ')}>`
+    ));
+    return lead + singleLineOpenTag;
+  });
+}
+
 export function renderMarkdown(markdown: string, options: RenderMarkdownOptions = {}): string {
   const { content, fields } = parseFrontMatter(markdown);
 
   const selectedMd = currentCodeBlockStyle === 'modern' ? mdModern : md;
-  let html = selectedMd.render(content);
+  let html = selectedMd.render(collapseBlankLinesInsideSvgBlocks(content));
 
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;

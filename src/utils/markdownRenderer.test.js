@@ -155,3 +155,129 @@ test('keeps normal code blocks unaffected by mermaid handling', () => {
   expect(container.querySelector('pre code.hljs')).not.toBeNull();
   expect(container.querySelector('.mermaid')).toBeNull();
 });
+
+test('renders base64 svg data uri image in preview html', () => {
+  const html = renderMarkdown('![封面](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4=)');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const img = container.querySelector('img');
+  expect(img).not.toBeNull();
+  expect(img.getAttribute('src')).toBe('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4=');
+  expect(html).not.toContain('![封面]');
+});
+
+test('renders url-encoded svg data uri image in preview html', () => {
+  const html = renderMarkdown('![](data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3C%2Fsvg%3E)');
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const img = container.querySelector('img');
+  expect(img).not.toBeNull();
+  expect(img.getAttribute('src')).toBe('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3C%2Fsvg%3E');
+});
+
+test('still rejects non-image data uri links', () => {
+  const html = renderMarkdown('[x](data:text/html;base64,PGI+aGk8L2I+)');
+
+  const container = document.createElement('div');
+  container.innerHTML = html;
+  expect(container.querySelector('a')).toBeNull();
+  expect(container.querySelector('a[href^="data:"]')).toBeNull();
+});
+
+test('renders inline svg html in markdown body', () => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#f59e0b"/>
+  <text x="50" y="55" font-size="14" text-anchor="middle" fill="white">Hello</text>
+</svg>`;
+  const html = renderMarkdown(svg);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const svgEl = container.querySelector('svg');
+  expect(svgEl).not.toBeNull();
+  expect(svgEl.querySelector('rect')).not.toBeNull();
+  expect(svgEl.querySelector('text')).not.toBeNull();
+});
+
+test('inline svg between paragraphs is preserved', () => {
+  const md = `前一段
+
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><circle cx="25" cy="25" r="20" fill="red"/></svg>
+
+后一段`;
+  const html = renderMarkdown(md);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  expect(container.querySelector('svg')).not.toBeNull();
+  expect(container.querySelector('circle')).not.toBeNull();
+  expect(container.textContent).toContain('前一段');
+  expect(container.textContent).toContain('后一段');
+});
+
+test('svg with internal blank lines survives as a single html block', () => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1225" viewBox="0 0 980 1225">
+  <rect width="980" height="1225" fill="#0f172a"/>
+
+  <text x="60" y="64" font-size="30" font-weight="700" fill="#f8fafc">YouTube 中文圈订阅量 Top 20</text>
+
+  <g font-size="14">
+    <text x="258" y="151" font-weight="700" fill="#fde68a" text-anchor="end">李子柒 Liziqi</text>
+    <rect x="264" y="141" width="640" height="20" rx="4" fill="#f59e0b"/>
+    <text x="916" y="151" font-weight="700" fill="#fbbf24">32.8M</text>
+  </g>
+
+  <!-- 说明卡 -->
+  <rect x="60" y="990" width="860" height="64" rx="10" fill="#1e293b"/>
+  <text x="88" y="1018" font-weight="700" fill="#e2e8f0">中文 YouTube 的千万级断层</text>
+</svg>`;
+  const html = renderMarkdown(svg);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const svgs = container.querySelectorAll('svg');
+  expect(svgs).toHaveLength(1);
+  const text = svgs[0].textContent;
+  expect(text).toContain('YouTube 中文圈订阅量 Top 20');
+  expect(text).toContain('李子柒 Liziqi');
+  expect(text).toContain('32.8M');
+  expect(text).toContain('中文 YouTube 的千万级断层');
+  expect(svgs[0].querySelectorAll('rect')).toHaveLength(3);
+  // 空行只压渲染输入，不改动传入的源码
+  expect(svg).toContain('fill="#0f172a"/>\n\n  <text x="60"');
+});
+
+test('svg with wrapped multi-line open tag renders intact', () => {
+  const svg = `<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="100"
+  height="100">
+  <rect width="100" height="100" fill="#f59e0b"/>
+</svg>`;
+  const html = renderMarkdown(svg);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  const svgs = container.querySelectorAll('svg');
+  expect(svgs).toHaveLength(1);
+  expect(svgs[0].querySelector('rect')).not.toBeNull();
+});
+
+test('svg blank line collapse does not touch surrounding markdown', () => {
+  const md = `# 标题
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>
+
+
+正文段落`;
+  const html = renderMarkdown(md);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  expect(container.querySelector('h1')).not.toBeNull();
+  expect(container.querySelector('svg')).not.toBeNull();
+  expect(container.textContent).toContain('正文段落');
+});

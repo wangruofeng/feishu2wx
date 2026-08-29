@@ -26,6 +26,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 使用 Turndown + GFM 插件将 HTML 转为 Markdown。
 - 处理飞书特有的代码块与高亮标记（`==text==`）。
 - 移除 `<script>`、`<style>` 和 HTML 注释。
+- 内联 `<svg>` 元素经 `convertInlineSvgElementsToImages()` 预处理转为 data URI `<img>`（turndown 会把无文字 SVG 当空白节点丢弃），复用 `wechatCopy.ts` 的 `svgTextToDataUrl()` 做 UTF-8 安全 base64。
 
 ### `src/utils/markdownRenderer.ts`
 
@@ -37,6 +38,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `.md` 文件名链接会被还原为纯文本，避免被 linkify 错误处理。
 - 链接自动添加 `target="_blank"`。
 - 图片带 alt 文本时，预览层渲染为 `<figure class="img-figure">` + `<figcaption>`；导出到微信时会降级为更稳妥的 `section.wechat-image-wrapper + img + p.img-caption`。无 alt 时预览层仍渲染为裸 `<img>`。
+- `data:image/svg+xml` data URI（base64 与 URL 编码）经 `validateLinkWithSvgDataUri` 放行，SVG 图片语法 `![](data:image/svg+xml;base64,...)` 可正常渲染为 `<img>`；`data:text/html` 等其他 data URI 仍按默认策略拒绝。
 - 水平分割线渲染受 `showHorizontalRule` 控制：关闭时 `<hr>` 渲染为空字符串，开启时渲染为 `<hr class="custom-hr">`。通过导出的 `setShowHorizontalRule()` / `getShowHorizontalRule()` 控制。
 - Task List 后处理：检测 `<li>` 中的 `[x]` / `[ ]` 前缀，替换为 `<span class="task-checkbox">`（☑/☐）和 `task-list-item` 类。支持 `<li>text` 和 `<li><p>text</p>` 两种 DOM 结构。
 - 脚注由 `markdown-it-footnote` 插件处理，生成 `sup.footnote-ref`（正文引用）、`hr.footnotes-sep`（分隔线）、`section.footnotes > ol.footnotes-list > li.footnote-item`（脚注区块）、`a.footnote-backref`（返回链接）。
@@ -130,7 +132,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ## 组件结构
 
 - `App.tsx`：主容器与状态中心，含顶部控制栏（主题、设置面板、复制/导出/推送）。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、图片附件拖拽/粘贴插入为 data URI 图片（`src/utils/imageAttachment.ts`，后缀白名单优先识别 SVG，单图限 2MB）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式，含 `<svg>` 元素源码的标签/属性/属性值着色）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
 - `ThemeSwitcher.tsx`：横向主题按钮组（4 种主题：经典、橙色、蓝色、青绿）。
 - `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。

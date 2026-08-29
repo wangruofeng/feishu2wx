@@ -1,5 +1,6 @@
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
+import { svgTextToDataUrl } from './wechatCopy';
 
 // 创建 Turndown 实例
 const turndownService = new TurndownService({
@@ -141,6 +142,29 @@ turndownService.addRule('strong', {
 });
 
 /**
+ * 把内联 <svg> 元素换成 data URI <img> 占位。
+ * turndown 会把无文字内容的 SVG（图标类常见）当空白节点整体丢弃、
+ * 有文字的也只留下零散文字，因此转换前统一走图片规则保留图形。
+ */
+function convertInlineSvgElementsToImages(html: string): string {
+  if (!html.includes('<svg')) return html;
+
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const svgs = Array.from(doc.querySelectorAll('svg'));
+  if (svgs.length === 0) return html;
+
+  for (const svg of svgs) {
+    const alt = (svg.getAttribute('aria-label') || svg.querySelector('title')?.textContent || '')
+      .replace(/[[\]]/g, ' ').trim();
+    const img = doc.createElement('img');
+    img.setAttribute('alt', alt);
+    img.setAttribute('src', svgTextToDataUrl(svg.outerHTML));
+    svg.replaceWith(img);
+  }
+  return doc.body.innerHTML;
+}
+
+/**
  * 将 HTML 转换为 Markdown
  * @param html HTML 字符串
  * @returns Markdown 字符串
@@ -157,8 +181,8 @@ export function convertHtmlToMarkdown(html: string): string {
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
       .replace(/<!--[\s\S]*?-->/g, '');
 
-    // 转换为 Markdown
-    const markdown = turndownService.turndown(cleanedHtml);
+    // 转换为 Markdown（内联 SVG 先换成 data URI 图片占位，避免被当空白节点丢弃）
+    const markdown = turndownService.turndown(convertInlineSvgElementsToImages(cleanedHtml));
 
     // 清理多余的空白行（保留最多两个连续换行）
     const cleanedMarkdown = markdown

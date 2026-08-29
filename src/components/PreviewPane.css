@@ -572,6 +572,13 @@
   height: auto;
 }
 
+/* 内联 <svg> 元素（直贴源码/画布导出）：与 img 一致自适应容器宽度，
+   否则固定 width（如 980px）会在桌面/手机预览里溢出被 overflow:hidden 裁剪 */
+.preview-content svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .preview-content img,
 .preview-content video {
   max-width: 100%;

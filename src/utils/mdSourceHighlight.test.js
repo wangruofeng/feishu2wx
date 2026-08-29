@@ -175,3 +175,67 @@ describe('getMdSyntaxCssVars', () => {
     expect(g['--md-tok-heading']).not.toBe(mo['--md-tok-heading']);
   });
 });
+
+describe('tokenizeMarkdown SVG 源码高亮', () => {
+  test('单行 <svg> 元素：标签/属性名/属性值分别着色', () => {
+    const html = tokenizeMarkdown('<svg width="10" height="10"><rect fill="#fff"/></svg>');
+    expect(textInClass(html, 'md-tok-svg-tag')).toBe('<svg><rect/></svg>');
+    expect(textInClass(html, 'md-tok-svg-attr')).toBe('widthheightfill');
+    expect(textInClass(html, 'md-tok-svg-str')).toBe('"10""10""#fff"');
+  });
+
+  test('SVG 内注释着色为 codeblock 灰色', () => {
+    const html = tokenizeMarkdown('<svg><!-- 背景渐变 --><rect/></svg>');
+    expect(textInClass(html, 'md-tok-codeblock')).toBe('<!-- 背景渐变 -->');
+  });
+
+  test('多行 SVG 元素块：块内持续着色，块外恢复行内解析', () => {
+    const html = tokenizeMarkdown('<svg viewBox="0 0 10 10">\n  <rect width="10"/>\n</svg>\n普通 **粗** 文字');
+    expect(textInClass(html, 'md-tok-svg-tag')).toBe('<svg><rect/></svg>');
+    expect(textInClass(html, 'md-tok-svg-str')).toBe('"0 0 10 10""10"');
+    // 块外恢复
+    expect(html).toContain('md-tok-bold');
+  });
+
+  test('带命名空间属性（xmlns:xlink）与自闭合标签', () => {
+    const html = tokenizeMarkdown('<svg xmlns:xlink="http://www.w3.org/1999/xlink"/>');
+    expect(textInClass(html, 'md-tok-svg-attr')).toBe('xmlns:xlink');
+    expect(textInClass(html, 'md-tok-svg-str')).toBe('"http://www.w3.org/1999/xlink"');
+    // 自闭合单行：不进入持续 svg 模式
+    const after = tokenizeMarkdown('<svg/>\n普通行 **粗**');
+    expect(after).toContain('md-tok-bold');
+  });
+
+  test('嵌套 <svg> 计数：外层闭合后才退出 svg 模式', () => {
+    const html = tokenizeMarkdown('<svg><svg><rect/></svg>\n<rect/></svg>\n**粗**');
+    expect(html).toContain('md-tok-svg-tag');
+    expect(html).toContain('md-tok-bold');
+  });
+
+  test('行中提及 `<svg>` 不触发 svg 模式，行内代码优先', () => {
+    const html = tokenizeMarkdown('使用 `<svg>` 标签 **加粗**');
+    expect(html).not.toContain('md-tok-svg-tag');
+    expect(html).toContain('md-tok-code');
+    expect(html).toContain('md-tok-bold');
+  });
+
+  test('非 SVG 的 HTML 行保持原有行内解析', () => {
+    const html = tokenizeMarkdown('<div>**粗**</div>');
+    expect(html).not.toContain('md-tok-svg-tag');
+    expect(html).toContain('md-tok-bold');
+  });
+
+  test('SVG 行字符保真（span 不跨行、无增删字符，尖括号按 HTML 转义）', () => {
+    const src = '<svg viewBox="0 0 10 10">\n  <text>a & b</text>\n</svg>\n';
+    const html = tokenizeMarkdown(src);
+    const expected = src.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    expect(html.replace(/<\/?span[^>]*>/g, '')).toBe(expected);
+  });
+
+  test('三套主题均包含 SVG token 配色', () => {
+    const vars = getMdSyntaxCssVars('dracula');
+    expect(vars['--md-tok-svgTag']).toBe(mdSyntaxThemes.dracula.svgTag);
+    expect(vars['--md-tok-svgAttr']).toBe(mdSyntaxThemes.dracula.svgAttr);
+    expect(vars['--md-tok-svgString']).toBe(mdSyntaxThemes.dracula.svgString);
+  });
+});

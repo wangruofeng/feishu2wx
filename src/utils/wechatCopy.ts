@@ -482,7 +482,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function svgTextToDataUrl(svgText: string): string {
+export function svgTextToDataUrl(svgText: string): string {
   const utf8 = encodeURIComponent(svgText).replace(/%([0-9A-F]{2})/g, (_match, hex) => (
     String.fromCharCode(Number.parseInt(hex, 16))
   ));

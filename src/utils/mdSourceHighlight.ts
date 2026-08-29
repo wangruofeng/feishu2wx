@@ -22,6 +22,9 @@ interface ThemeColors {
   image: string;
   hr: string;
   frontmatter: string;
+  svgTag: string;
+  svgAttr: string;
+  svgString: string;
 }
 
 /** 预设配色方案：github 偏亮色、dracula/monokai 偏暗色，适合编辑器源码区分。 */
@@ -38,6 +41,9 @@ export const mdSyntaxThemes: Record<Exclude<MdSyntaxThemeKey, 'none'>, ThemeColo
     image: '#bf3989',
     hr: '#8c959f',
     frontmatter: '#8250df',
+    svgTag: '#116329',
+    svgAttr: '#0550ae',
+    svgString: '#953800',
   },
   dracula: {
     heading: '#bd93f9',
@@ -51,6 +57,9 @@ export const mdSyntaxThemes: Record<Exclude<MdSyntaxThemeKey, 'none'>, ThemeColo
     image: '#ff79c6',
     hr: '#44475a',
     frontmatter: '#bd93f9',
+    svgTag: '#ff79c6',
+    svgAttr: '#8be9fd',
+    svgString: '#f1fa8c',
   },
   monokai: {
     heading: '#66d9ef',
@@ -64,6 +73,9 @@ export const mdSyntaxThemes: Record<Exclude<MdSyntaxThemeKey, 'none'>, ThemeColo
     image: '#ae81ff',
     hr: '#49483e',
     frontmatter: '#ae81ff',
+    svgTag: '#f92672',
+    svgAttr: '#fd971f',
+    svgString: '#e6db74',
   },
 };
 
@@ -125,6 +137,7 @@ function collectInlineMatches(text: string): InlineMatch[] {
 }
 
 /** 对单行文本做行内高亮：输出 HTML，未匹配部分转义，匹配部分包裹 span。 */
+/** 对单行文本做行内高亮：输出 HTML，未匹配部分转义，匹配部分包裹 span。 */
 function tokenizeInline(text: string): string {
   const all = collectInlineMatches(text);
   // 贪心选取不重叠区间（collectInlineMatches 已按 start 升序、长度降序排序）
@@ -148,9 +161,35 @@ function tokenizeInline(text: string): string {
   return result;
 }
 
+/* SVG 源码行内词法：注释（复用 codeblock 灰色）/ 标签（含尖括号）/ 属性名 / 引号属性值。
+   属性名仅在后随 = 时匹配，= 与标签间文本内容保持原色。 */
+const SVG_LINE_TOKEN_RE = /<!--[\s\S]*?(?:-->|$)|<\/?[A-Za-z][\w:.-]*|\/?>|[A-Za-z_][\w:.-]*(?=\s*=)|"[^"]*"|'[^']*'/g;
+
+function svgTokenClass(token: string): string {
+  if (token.startsWith('<!--')) return 'md-tok-codeblock';
+  if (token.startsWith('"') || token.startsWith("'")) return 'md-tok-svg-str';
+  if (/[A-Za-z_]/.test(token[0])) return 'md-tok-svg-attr';
+  return 'md-tok-svg-tag';
+}
+
+/** 对单行 SVG/HTML 源码做语法着色：未匹配部分（文本内容、=、空白）转义保持原色。 */
+function tokenizeSvgLine(text: string): string {
+  let result = '';
+  let pos = 0;
+  const re = new RegExp(SVG_LINE_TOKEN_RE.source, 'g');
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    result += escapeHtml(text.slice(pos, m.index));
+    result += `<span class="${svgTokenClass(m[0])}">${escapeHtml(m[0])}</span>`;
+    pos = m.index + m[0].length;
+  }
+  result += escapeHtml(text.slice(pos));
+  return result;
+}
+
 /**
  * 把 Markdown 源码转成带语法高亮 span 的 HTML（保留原换行 `\n`）。
- * 行级元素（标题/引用/代码块/列表/分割线/frontmatter）整体着色；
+ * 行级元素（标题/引用/代码块/列表/分割线/frontmatter/SVG 元素）整体着色；
  * 普通行与引用/列表的内容部分做行内标记着色。
  */
 export function tokenizeMarkdown(source: string): string {
@@ -159,6 +198,7 @@ export function tokenizeMarkdown(source: string): string {
   let inCodeBlock = false;
   let inFrontmatter = false;
   let isFirstLine = true;
+  let svgElementDepth = 0;
 
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx];
@@ -189,6 +229,17 @@ export function tokenizeMarkdown(source: string): string {
     }
     if (inCodeBlock) {
       out.push(`<span class="md-tok-codeblock">${escapeHtml(line)}</span>`);
+      continue;
+    }
+
+    // SVG 元素源码：行首 <svg 进入、</svg> 退出（嵌套计数），块内按 SVG 词法着色；
+    // 仅行首触发，行中提及 `<svg>`（如行内代码）不影响正常 markdown 解析
+    if (svgElementDepth > 0 || /^<svg[\s/>]/i.test(trimmed)) {
+      out.push(tokenizeSvgLine(line));
+      const selfClosing = (trimmed.match(/<svg\b[^>]*?\/>/gi) || []).length;
+      const opens = (trimmed.match(/<svg[\s/>]/gi) || []).length - selfClosing;
+      const closes = (trimmed.match(/<\/svg\s*>/gi) || []).length;
+      svgElementDepth = Math.max(0, svgElementDepth + opens - closes);
       continue;
     }
 

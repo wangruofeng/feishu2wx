@@ -1,7 +1,8 @@
 import React, { useRef, useCallback, useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
-import { shouldConvertPastedHtml } from '../utils/pasteDetection';
+import { shouldConvertPastedHtml, looksLikeSvgText } from '../utils/pasteDetection';
+import { isImageAttachmentFile, readImageFileAsMarkdown } from '../utils/imageAttachment';
 import { tokenizeMarkdown, getMdSyntaxCssVars, MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { archiveCurrentDoc, loadDocHistory, DocHistoryEntry } from '../utils/docHistory';
 import DocHistoryPopover from './DocHistoryPopover';
@@ -150,6 +151,39 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     }
   }, [markdown]);
 
+  // 插入图片附件（拖拽/粘贴）：读取为 data URI 图片语法，超限文件跳过并提示
+  const insertImageFiles = useCallback(async (files: File[]) => {
+    const snippets: string[] = [];
+    let skipped = 0;
+    for (const file of files) {
+      const snippet = await readImageFileAsMarkdown(file);
+      if (snippet) snippets.push(snippet);
+      else skipped += 1;
+    }
+    if (skipped > 0) {
+      alert(`已跳过 ${skipped} 个图片附件（超过 2MB 或读取失败）`);
+    }
+    if (snippets.length === 0) return;
+
+    pushHistory();
+    const insertText = snippets.join('\n\n');
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newMd = markdown.slice(0, start) + insertText + markdown.slice(end);
+      setMarkdown(newMd);
+
+      setTimeout(() => {
+        const newPos = start + insertText.length;
+        textarea.setSelectionRange(newPos, newPos);
+        textarea.focus();
+      }, 0);
+    } else {
+      setMarkdown(markdown + insertText);
+    }
+  }, [markdown, setMarkdown, pushHistory]);
+
   // 处理粘贴事件
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const htmlData = e.clipboardData.getData('text/html');
@@ -181,20 +215,32 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
       e.preventDefault();
       pushHistory();
       const textarea = textareaRef.current;
+      // 如果粘贴的是 SVG 源码，直接作为内联 HTML 插入（预览和微信复制均已支持内联 SVG）
+      const insertText = looksLikeSvgText(textData)
+        ? `\n\n${textData.trim()}\n\n`
+        : textData;
       if (textarea) {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const newMd = markdown.slice(0, start) + textData + markdown.slice(end);
+        const newMd = markdown.slice(0, start) + insertText + markdown.slice(end);
         setMarkdown(newMd);
 
         setTimeout(() => {
-          const newPos = start + textData.length;
+          const newPos = start + insertText.length;
           textarea.setSelectionRange(newPos, newPos);
           textarea.focus();
         }, 0);
       }
+      return;
     }
-  }, [markdown, setMarkdown, pushHistory, shouldConvertPastedHtmlEnabled]);
+
+    // 无文本时的图片附件（截图、复制的图片文件）：插入为 data URI 图片
+    const pastedImageFiles = Array.from(e.clipboardData?.files ?? []).filter(isImageAttachmentFile);
+    if (pastedImageFiles.length) {
+      e.preventDefault();
+      await insertImageFiles(pastedImageFiles);
+    }
+  }, [markdown, setMarkdown, pushHistory, shouldConvertPastedHtmlEnabled, insertImageFiles]);
 
   // 插入Markdown语法
   const insertMarkdown = useCallback((before: string, after: string = '') => {
@@ -451,15 +497,22 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     }
   }, []);
 
+  // 拖拽导入：.md 文件走导入替换，图片附件（含 SVG）插入为 data URI 图片
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dragDepthRef.current = 0;
     setIsDragOver(false);
-    const file = e.dataTransfer?.files?.[0];
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    const imageFiles = files.filter(isImageAttachmentFile);
+    if (imageFiles.length) {
+      void insertImageFiles(imageFiles);
+      return;
+    }
+    const file = files[0];
     if (file) {
       importMarkdownFile(file);
     }
-  }, [importMarkdownFile]);
+  }, [importMarkdownFile, insertImageFiles]);
 
   // 从历史恢复：当前内容先存档（保证恢复错了还能换回来），再整体替换
   const handleRestoreHistory = useCallback((entry: DocHistoryEntry) => {
@@ -598,7 +651,7 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
         <Button variant="editorToolbar" onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</Button>
       </div>
 
-      {/* 中间：编辑区（高亮层在 textarea 下方，文字透明仅 caret 可见；支持拖拽 .md 导入） */}
+      {/* 中间：编辑区（高亮层在 textarea 下方，文字透明仅 caret 可见；支持拖拽 .md 导入与图片附件插入） */}
       <div
         className={`editor-container${highlightEnabled ? ' md-highlight-active' : ''}${isDragOver ? ' is-dragover' : ''}`}
         onDragEnter={handleDragEnter}

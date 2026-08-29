@@ -47,3 +47,27 @@ test('keeps bold for non-code text', () => {
 
   expect(convertHtmlToMarkdown(html)).toBe('这是 **重点** 内容');
 });
+
+test('converts inline svg element to base64 data uri image markdown', () => {
+  const html = '<div>前文</div><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="#000"/></svg><div>后文</div>';
+  const markdown = convertHtmlToMarkdown(html);
+
+  expect(markdown).toContain('![](data:image/svg+xml;base64,');
+  expect(markdown).toContain('前文');
+  expect(markdown).toContain('后文');
+  // SVG 图形不再被拆成零散文字
+  expect(markdown).not.toMatch(/^rect$/m);
+});
+
+test('uses svg aria-label as image alt and keeps utf-8 svg payload decodable', () => {
+  const html = '<svg xmlns="http://www.w3.org/2000/svg" aria-label="架构图" width="10" height="10"><title>标题</title></svg>';
+  const markdown = convertHtmlToMarkdown(html);
+
+  expect(markdown).toMatch(/^!\[架构图\]\(data:image\/svg\+xml;base64,/);
+  const base64 = markdown.match(/base64,([^)]+)\)$/)?.[1] ?? '';
+  const decoded = decodeURIComponent(atob(base64).split('').map((ch) => (
+    '%' + ch.charCodeAt(0).toString(16).padStart(2, '0')
+  )).join(''));
+  expect(decoded).toContain('<svg');
+  expect(decoded).toContain('架构图');
+});
