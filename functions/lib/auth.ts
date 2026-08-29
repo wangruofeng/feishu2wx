@@ -45,10 +45,16 @@ export async function completeOAuth(request: Request, env: PagesAuthEnv): Promis
   if (missing.length) return new Response(`GitHub 登录服务缺少生产环境 Secret：${missing.join('、')}。请在 Cloudflare Pages Production 环境补充后重新部署。`, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   let token: { access_token?: string };
   try {
-    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code }) });
+    const tokenBody = new URLSearchParams({
+      client_id: env.GITHUB_CLIENT_ID,
+      client_secret: env.GITHUB_CLIENT_SECRET,
+      code,
+      redirect_uri: new URL('/api/auth/github/callback', request.url).toString(),
+    });
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'feishu2wx' }, body: tokenBody.toString() });
     token = await tokenResponse.json() as { access_token?: string };
     if (!tokenResponse.ok || !token.access_token) return new Response('GitHub 授权码交换失败。请确认 GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET 与 OAuth App 匹配，然后重新发起登录。', { status: 400, headers: { 'Cache-Control': 'no-store' } });
-  } catch { return new Response('无法连接 GitHub 授权服务。请稍后重试；若持续发生，请检查 Workers 出站网络与 GitHub 状态。', { status: 502 }); }
+  } catch { return new Response('无法连接 GitHub 授权服务。请稍后重试；若持续发生，请检查 Workers 出站网络与 GitHub 状态。', { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   let user: { id?: number; login?: string; avatar_url?: string };
   try {
     const userResponse = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json' } });

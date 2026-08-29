@@ -1,6 +1,6 @@
 {
   "name": "feishu2wx",
-  "version": "1.27.5",
+  "version": "1.27.6",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
   "homepage": "/feishu2wx",
@@ -38,7 +38,7 @@
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "server": "ts-node --project server/tsconfig.json server/index.ts",
+    "server": "TS_NODE_PROJECT=server/tsconfig.json node --watch -r ts-node/register server/index.ts",
     "dev": "concurrently \"PORT=3100 npm start\" \"npm run server\"",
     "cf:dev": "concurrently \"CF_DEV=1 PORT=3100 react-scripts start\" \"sleep 5 && wrangler pages dev --proxy 3100 \"",
     "cf:deploy": "PUBLIC_URL=/ npm run build && npx wrangler pages deploy --project-name feishu2wx --branch main",
