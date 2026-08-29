@@ -451,7 +451,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     .filter((p) => p.enabled)
     .flatMap((p) => p.models
       .filter((m) => m.id)
-      .map((m) => ({ value: `${p.id}::${m.id}`, label: `${p.name || '未命名供应商'} · ${m.id}` })));
+      .map((m) => ({ value: `${p.id}::${m.id}`, label: m.id, menuLabel: `${p.name || '未命名供应商'} · ${m.id}` })));
   const activeModelValue = activeProvider && activeModelId
     ? `${activeProvider.id}::${activeModelId}`
     : '';

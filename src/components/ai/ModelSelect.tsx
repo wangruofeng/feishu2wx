@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 export interface ModelOption {
   value: string;
   label: string;
+  /** 下拉菜单中展示的完整标签（可含供应商信息）；缺省时回退到 label */
+  menuLabel?: string;
 }
 
 interface Props {
@@ -73,7 +75,7 @@ const ModelSelect: React.FC<Props> = ({ options, value, onChange, disabled }) =>
               }}
               title={option.label}
             >
-              <span className="ai-model-select-option-text">{option.label}</span>
+              <span className="ai-model-select-option-text">{option.menuLabel ?? option.label}</span>
               {option.value === value && <span className="ai-model-select-check">✓</span>}
             </button>
           ))}
