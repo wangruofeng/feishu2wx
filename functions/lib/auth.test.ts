@@ -26,3 +26,18 @@ test('returns a readable client error when GitHub rejects the authorization code
     assert.match(await response.text(), /授权码交换失败/);
   } finally { global.fetch = originalFetch; }
 });
+
+test('does not return a Cloudflare-rewritten 502 when GitHub user lookup fails', async () => {
+  const originalFetch = global.fetch;
+  let calls = 0;
+  global.fetch = async () => {
+    calls += 1;
+    if (calls === 1) return Response.json({ access_token: 'token' });
+    throw new Error('network failed');
+  };
+  try {
+    const response = await completeOAuth(new Request('https://example.com/api/auth/github/callback?code=code&state=state', { headers: { Cookie: 'feishu2wx_oauth_state=state' } }), { ...env, AUTH_SESSION_SIGNING_KEY: key });
+    assert.equal(response.status, 503);
+    assert.match(await response.text(), /api\.github\.com/);
+  } finally { global.fetch = originalFetch; }
+});

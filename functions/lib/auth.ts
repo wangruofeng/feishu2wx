@@ -60,7 +60,7 @@ export async function completeOAuth(request: Request, env: PagesAuthEnv): Promis
     const userResponse = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json' } });
     user = await userResponse.json() as typeof user;
     if (!userResponse.ok || !user.id || !user.login) return new Response('GitHub 用户信息读取失败。请重新授权；若持续发生，请检查 OAuth App 权限是否包含 read:user。', { status: 400, headers: { 'Cache-Control': 'no-store' } });
-  } catch { return new Response('无法连接 GitHub 用户信息服务。请稍后重新登录。', { status: 502 }); }
+  } catch { return new Response('无法连接 GitHub 用户信息服务。请稍后重新登录；若持续发生，请在 Cloudflare 日志中检查 api.github.com 出站请求。', { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
   try {
     const session: SessionPayload = { sub: String(user.id), login: user.login!, avatarUrl: user.avatar_url ?? '', exp: Date.now() + SESSION_SECONDS * 1000 };
     return new Response(null, { status: 302, headers: { Location: new URL('/', request.url).toString(), 'Set-Cookie': await sessionCookie(session, env), 'Cache-Control': 'no-store' } });
