@@ -1286,7 +1286,7 @@ function applyThemeStyles(
 
     listEl.style.marginBottom = isNested ? '4px' : '16px';
     listEl.style.marginTop = isNested ? '4px' : '0';
-    listEl.style.paddingLeft = '30px';
+    listEl.style.paddingLeft = '20px';
     listEl.style.color = '#333';
     listEl.style.fontFamily = fontFamily;
     listEl.style.textAlign = textAlignMode;
@@ -1371,7 +1371,7 @@ function applyThemeStyles(
   taskItems.forEach((li: Element) => {
     const liEl = li as HTMLElement;
     liEl.style.listStyle = 'none';
-    liEl.style.marginLeft = '-20px';
+    liEl.style.marginLeft = '-10px';
   });
 
   // 处理脚注分隔线

@@ -929,6 +929,24 @@
   background: var(--color-brand-subtle);
 }
 
+.ai-ps-login-btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.ai-ps-login-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ai-login-spin 0.7s linear infinite;
+}
+
+@keyframes ai-login-spin {
+  to { transform: rotate(360deg); }
+}
+
 .ai-ps-provider-list {
   display: flex;
   flex-direction: column;

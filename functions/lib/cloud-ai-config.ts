@@ -25,6 +25,6 @@ export function mergeConfig(existing: CloudConfig, incoming: CloudConfig): Cloud
     ...provider,
     id: String(provider.id ?? '').slice(0, 80), name: String(provider.name ?? '').slice(0, 120), baseUrl: String(provider.baseUrl ?? '').slice(0, 500),
     apiKey: String(provider.apiKey ?? '') || oldKeys.get(provider.id) || '', models: Array.isArray(provider.models) ? provider.models.slice(0, 30).map((model) => ({ id: String(model?.id ?? '').slice(0, 160) })) : [],
-  })).filter((provider) => provider.id && provider.baseUrl);
+  })).filter((provider) => provider.id);
   return { activeProviderId: providers.some((provider) => provider.id === incoming.activeProviderId) ? incoming.activeProviderId : providers[0]?.id ?? null, activeModelId: String(incoming.activeModelId ?? '') || null, providers };
 }

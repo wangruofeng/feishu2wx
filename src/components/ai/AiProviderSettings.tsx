@@ -99,6 +99,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
   );
   const [editingName, setEditingName] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
   // 删除当前选中供应商后自动切换
@@ -202,6 +203,11 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
     if (e.target === e.currentTarget) onClose();
   };
 
+  const handleLogin = () => {
+    setLoggingIn(true);
+    window.setTimeout(onLogin, 0);
+  };
+
   return createPortal(
     <div className="ai-ps-overlay" onClick={handleOverlayClick}>
       <div className="ai-ps-modal" role="dialog" aria-label="模型设置">
@@ -229,8 +235,9 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
               </div>
               <p className="ai-ps-account-tip">{cloudUser ? '配置已加密保存到云端，其他设备登录同一账号可读取。' : '配置仅保存在本地浏览器，登录后加密同步到云端。'}</p>
               {!cloudUser && (
-                <button type="button" className="ai-ps-login-btn" onClick={onLogin}>
-                  <IcoGitHub /> 使用 GitHub 登录
+                <button type="button" className="ai-ps-login-btn" onClick={handleLogin} disabled={loggingIn} aria-busy={loggingIn}>
+                  {loggingIn ? <span className="ai-ps-login-spinner" aria-hidden="true" /> : <IcoGitHub />}
+                  {loggingIn ? '正在跳转至 GitHub…' : '使用 GitHub 登录'}
                 </button>
               )}
             </div>
