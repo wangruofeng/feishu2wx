@@ -16,3 +16,13 @@ test('identifies an invalid session signing key after GitHub succeeds', async ()
     assert.match(await response.text(), /AUTH_SESSION_SIGNING_KEY/);
   } finally { global.fetch = originalFetch; }
 });
+
+test('returns a readable client error when GitHub rejects the authorization code', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async () => Response.json({ error: 'bad_verification_code' }, { status: 400 });
+  try {
+    const response = await completeOAuth(new Request('https://example.com/api/auth/github/callback?code=code&state=state', { headers: { Cookie: 'feishu2wx_oauth_state=state' } }), { ...env, AUTH_SESSION_SIGNING_KEY: key });
+    assert.equal(response.status, 400);
+    assert.match(await response.text(), /授权码交换失败/);
+  } finally { global.fetch = originalFetch; }
+});
