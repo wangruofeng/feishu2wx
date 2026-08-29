@@ -181,10 +181,6 @@
   color: var(--color-status-error);
 }
 
-.ai-icon-btn--gear {
-  font-size: 18px;
-}
-
 /* ===== 消息列表 ===== */
 .ai-chat-messages {
   flex: 1;

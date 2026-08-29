@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Button } from '../ui';
+import { Button, GearIcon } from '../ui';
 import AiMessageBubble from './AiMessageBubble';
 import type { AiLiveState } from './AiMessageBubble';
 import AiProviderSettings from './AiProviderSettings';
@@ -443,13 +443,12 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
           />
           <Button
             variant="aiIconBtn"
-            className="ai-icon-btn--gear"
             onClick={() => setSettingsOpen((v) => !v)}
             title="模型设置"
             aria-label="模型设置"
             active={settingsOpen}
           >
-            ⚙
+            <GearIcon size={18} />
           </Button>
           <Button
             variant="aiIconBtn"
