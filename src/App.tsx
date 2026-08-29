@@ -133,7 +133,13 @@ const App: React.FC = () => {
   const [publishHtml, setPublishHtml] = useState<string>('');
   const [darkMode, setDarkMode] = useState<'system' | 'light' | 'dark'>(savedDarkMode);
   const [syntaxTheme, setSyntaxTheme] = useState<MdSyntaxThemeKey>(savedSyntaxTheme);
-  const [aiOpen, setAiOpen] = useState<boolean>(false);
+  // GitHub 登录回调带 ?ai_login=1 返回时，自动重开 AI 面板与模型设置
+  const [aiLoginReturn] = useState(() => {
+    if (new URLSearchParams(window.location.search).get('ai_login') !== '1') return false;
+    window.history.replaceState(null, '', window.location.pathname);
+    return true;
+  });
+  const [aiOpen, setAiOpen] = useState<boolean>(aiLoginReturn);
   const editorPaneRef = useRef<EditorPaneHandle>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState<boolean>(false);
   const [showBackTop, setShowBackTop] = useState<boolean>(false);
@@ -755,6 +761,7 @@ const App: React.FC = () => {
         onClose={() => setAiOpen(false)}
         markdown={markdown}
         onApplyArticle={handleApplyAiArticle}
+        autoOpenSettings={aiLoginReturn}
       />
     </div>
   );

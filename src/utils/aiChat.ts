@@ -1,13 +1,14 @@
 // AI 聊天编辑核心：类型定义、供应商配置与聊天历史的 localStorage 持久化、
 // SSE 流读取、<<<ARTICLE 标记状态机解析、后端代理请求封装。
 
+import { API_BASE } from './apiBase';
+
 export const AI_START_MARKER = '<<<ARTICLE';
 export const AI_END_MARKER = 'ARTICLE>>>';
 export const AI_HISTORY_LIMIT = 20;
 export const AI_INPUT_HISTORY_LIMIT = 10;
 export const MAX_AI_ATTACHMENTS = 6;
 
-const API_BASE = process.env.REACT_APP_API_URL || '';
 const CONFIG_KEY = 'feishu2wx_ai_config';
 const MESSAGES_KEY = 'feishu2wx_ai_messages';
 const INPUT_HISTORY_KEY = 'feishu2wx_ai_input_history';

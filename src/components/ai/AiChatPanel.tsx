@@ -35,6 +35,7 @@ interface Props {
   onClose: () => void;
   markdown: string;
   onApplyArticle: (article: string) => void;
+  autoOpenSettings?: boolean;
 }
 
 const SCROLL_FOLLOW_THRESHOLD = 80;
@@ -78,7 +79,7 @@ const IcoPlus = () => (
   </svg>
 );
 
-const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle }) => {
+const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle, autoOpenSettings }) => {
   const [messages, setMessages] = useState<AiChatMessage[]>(() => restoreAiMessages());
   const [live, setLive] = useState<AiLiveState | null>(null);
   const [streaming, setStreaming] = useState(false);
@@ -104,6 +105,8 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
     : getActiveProvider(providerSettings);
   const activeModelId = getActiveModelId(providerSettings);
   const canSend = (!streaming && !settingsOpen && (!!input.trim() || pendingFiles.length > 0) && !!activeProvider && !!activeModelId);
+
+  useEffect(() => { if (autoOpenSettings) setSettingsOpen(true); }, [autoOpenSettings]);
 
   useEffect(() => { getAiCloudSession().then(async (user) => { if (!user) return; setCloudUser(user); setProviderSettings(await loadAiCloudSettings()); }).catch(() => {}); }, []);
 

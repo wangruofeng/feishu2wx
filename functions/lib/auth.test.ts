@@ -17,6 +17,19 @@ test('identifies an invalid session signing key after GitHub succeeds', async ()
   } finally { global.fetch = originalFetch; }
 });
 
+test('redirects back with ai_login flag and session cookie after successful login', async () => {
+  const originalFetch = global.fetch;
+  global.fetch = async (url) => String(url).includes('access_token')
+    ? Response.json({ access_token: 'token' })
+    : Response.json({ id: 1, login: 'octo', avatar_url: 'https://example.com/a.png' });
+  try {
+    const response = await completeOAuth(new Request('https://feishu2wx.wangruofeng007.com/api/auth/github/callback?code=code&state=state', { headers: { Cookie: 'feishu2wx_oauth_state=state' } }), { ...env, AUTH_SESSION_SIGNING_KEY: key });
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get('Location'), 'https://feishu2wx.wangruofeng007.com/?ai_login=1');
+    assert.match(response.headers.get('Set-Cookie') ?? '', /^feishu2wx_session=/);
+  } finally { global.fetch = originalFetch; }
+});
+
 test('returns a readable client error when GitHub rejects the authorization code', async () => {
   const originalFetch = global.fetch;
   global.fetch = async () => Response.json({ error: 'bad_verification_code' }, { status: 400 });

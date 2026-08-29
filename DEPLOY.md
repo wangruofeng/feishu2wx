@@ -226,6 +226,12 @@ https://feishu2wx.wangruofeng007.com/
 Cloudflare 专用构建必须从域名根路径 `/` 加载静态资源；请在 Cloudflare Pages 的环境变量中设置
 `PUBLIC_URL=/`。
 
+**不要**在 Cloudflare Pages 环境变量中把 `REACT_APP_API_URL` 指向 `*.pages.dev` 地址：部署在自定义域名上时，
+这会让 `/api/auth/session` 等请求跨域发往 pages.dev，浏览器不会携带会话 cookie，登录状态永远检测不到。
+Cloudflare 部署正确做法是**不设置** `REACT_APP_API_URL`（同源相对路径）；该变量仅供 GitHub Pages 构建
+指向 `https://feishu2wx.wangruofeng007.com`。前端 `src/utils/apiBase.ts` 已对「配置域名与页面同域」或
+「自定义域名上误配 pages.dev」两种情况回退为同源相对路径，但环境变量本身仍应保持干净。
+
 由于项目使用 CRA 5 和 TypeScript 5，建议关闭 Cloudflare 的自动依赖安装，并使用仓库中的兼容安装配置：
 
 ```text
@@ -246,7 +252,7 @@ Functions 使用独立的 `functions/tsconfig.json`，避免受到前端 CRA 的
 
 若启用跨设备保存 AI 供应商配置，需要在 Pages 项目中配置 KV binding `AI_CONFIGS_KV`，并创建以下加密 Secret：`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`、`AI_CONFIG_ENCRYPTION_KEY`、`AUTH_SESSION_SIGNING_KEY`。GitHub OAuth 回调地址固定为 `https://feishu2wx.wangruofeng007.com/api/auth/github/callback`。Secret 不得写入 `wrangler.toml` 或 Git；本地 Pages 调试使用未提交的 `.dev.vars`。部署后应验证 GitHub 登录、云端配置读取不返回 API Key、以及已登录 AI 对话。
 
-若 GitHub 授权回调失败，重新发起登录获取新的授权码；授权码不可复用。授权码或 OAuth App 凭据不匹配会返回可读的 400 提示（不用 502，避免 Pages 替换错误正文）；回调返回“登录服务配置无效”时，检查上述 Secret 是否配置在 **Production** 环境，且两项随机密钥均为独立的 32 字节 base64url 值。授权码交换使用标准表单编码并显式传入同一回调 URL；交换与用户信息请求都必须携带 User-Agent 请求头（GitHub 边缘对无 UA 的 api.github.com 请求返回 403 纯文本拦截页，曾因此被误报为网络异常）。用户信息返回非 2xx 时回调返回带 HTTP 状态码的 400 提示，Workers Logs 中 `[auth]` 日志记录状态与响应体片段；仅真正的网络异常返回 503。
+若 GitHub 授权回调失败，重新发起登录获取新的授权码；授权码不可复用。授权码或 OAuth App 凭据不匹配会返回可读的 400 提示（不用 502，避免 Pages 替换错误正文）；回调返回“登录服务配置无效”时，检查上述 Secret 是否配置在 **Production** 环境，且两项随机密钥均为独立的 32 字节 base64url 值。授权码交换使用标准表单编码并显式传入同一回调 URL；交换与用户信息请求都必须携带 User-Agent 请求头（GitHub 边缘对无 UA 的 api.github.com 请求返回 403 纯文本拦截页，曾因此被误报为网络异常）。用户信息返回非 2xx 时回调返回带 HTTP 状态码的 400 提示，Workers Logs 中 `[auth]` 日志记录状态与响应体片段；仅真正的网络异常返回 503。登录成功后回调重定向到 `/?ai_login=1`，前端据此自动重开 AI 面板与模型设置弹窗；若登录后仍显示未登录，检查 `/api/auth/session` 请求是否与页面同域（跨域不携带会话 cookie）。
 请不要同时启用仓库内的 Cloudflare Direct Upload workflow，避免一次推送产生两次部署。
 `npm run cf:deploy` 仅作为本地手动发布备用入口，不要与 Cloudflare Git 集成同时使用。
 

@@ -1,4 +1,5 @@
-const API_BASE = process.env.REACT_APP_API_URL || '';
+import { API_BASE } from './apiBase';
+
 const LOCAL_CONFIG_KEY = 'feishu2wx_wechat_config';
 
 export interface WechatConfigStatus {

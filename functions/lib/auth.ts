@@ -70,7 +70,7 @@ export async function completeOAuth(request: Request, env: PagesAuthEnv): Promis
   }
   try {
     const session: SessionPayload = { sub: String(user.id), login: user.login!, avatarUrl: user.avatar_url ?? '', exp: Date.now() + SESSION_SECONDS * 1000 };
-    return new Response(null, { status: 302, headers: { Location: new URL('/', request.url).toString(), 'Set-Cookie': await sessionCookie(session, env), 'Cache-Control': 'no-store' } });
+    return new Response(null, { status: 302, headers: { Location: new URL('/?ai_login=1', request.url).toString(), 'Set-Cookie': await sessionCookie(session, env), 'Cache-Control': 'no-store' } });
   } catch { return new Response('无法创建登录会话：AUTH_SESSION_SIGNING_KEY 必须是独立的 32 字节 base64url 值。请重新生成、覆盖 Production Secret 并重新部署。', { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
 }
 
