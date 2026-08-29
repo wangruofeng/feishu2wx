@@ -41,14 +41,19 @@ export async function completeOAuth(request: Request, env: PagesAuthEnv): Promis
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   if (!code || url.searchParams.get('state') !== getCookie(request, STATE_COOKIE)) return new Response('GitHub 登录校验失败。', { status: 400 });
-  const tokenResponse = await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code }) });
-  const token = await tokenResponse.json() as { access_token?: string };
-  if (!token.access_token) return new Response('GitHub 授权失败。', { status: 502 });
-  const userResponse = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json' } });
-  const user = await userResponse.json() as { id?: number; login?: string; avatar_url?: string };
-  if (!userResponse.ok || !user.id || !user.login) return new Response('无法读取 GitHub 账号。', { status: 502 });
-  const session: SessionPayload = { sub: String(user.id), login: user.login, avatarUrl: user.avatar_url ?? '', exp: Date.now() + SESSION_SECONDS * 1000 };
-  return new Response(null, { status: 302, headers: { Location: new URL('/', request.url).toString(), 'Set-Cookie': await sessionCookie(session, env) } });
+  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_SESSION_SIGNING_KEY) return new Response('GitHub 登录服务尚未完成生产环境配置。', { status: 503 });
+  try {
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: env.GITHUB_CLIENT_ID, client_secret: env.GITHUB_CLIENT_SECRET, code }) });
+    const token = await tokenResponse.json() as { access_token?: string };
+    if (!tokenResponse.ok || !token.access_token) return new Response('GitHub 授权码交换失败，请重新登录。', { status: 502 });
+    const userResponse = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json' } });
+    const user = await userResponse.json() as { id?: number; login?: string; avatar_url?: string };
+    if (!userResponse.ok || !user.id || !user.login) return new Response('无法读取 GitHub 账号。', { status: 502 });
+    const session: SessionPayload = { sub: String(user.id), login: user.login, avatarUrl: user.avatar_url ?? '', exp: Date.now() + SESSION_SECONDS * 1000 };
+    return new Response(null, { status: 302, headers: { Location: new URL('/', request.url).toString(), 'Set-Cookie': await sessionCookie(session, env), 'Cache-Control': 'no-store' } });
+  } catch {
+    return new Response('GitHub 登录服务配置无效，请检查 Cloudflare Secret。', { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
 }
 
 export function clearSessionCookie(): string { return `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`; }
