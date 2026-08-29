@@ -58,6 +58,9 @@ interface Props {
   onDarkModeChange: (mode: 'system' | 'light' | 'dark') => void;
   syntaxTheme: MdSyntaxThemeKey;
   onChangeSyntaxTheme: (theme: MdSyntaxThemeKey) => void;
+  customThemeColor: string;
+  onChangeCustomThemeColor: (color: string) => void;
+  onResetCustomThemeColor: () => void;
 }
 
 const fonts = [
@@ -175,6 +178,9 @@ const SettingsPanel: React.FC<Props> = ({
   onDarkModeChange,
   syntaxTheme,
   onChangeSyntaxTheme,
+  customThemeColor,
+  onChangeCustomThemeColor,
+  onResetCustomThemeColor,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
@@ -273,6 +279,32 @@ const SettingsPanel: React.FC<Props> = ({
               深色
             </button>
           </div>
+        </div>
+        {/* 自定义主题色：选择后自动切换为「自定义」主题，清空则恢复预设 */}
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">自定义主题色</span>
+          <div className="settings-custom-theme">
+            <input
+              type="color"
+              className="settings-custom-theme-picker"
+              value={customThemeColor || '#0D9488'}
+              onChange={(e) => onChangeCustomThemeColor(e.target.value)}
+              aria-label="自定义主题色"
+            />
+            <input
+              type="text"
+              className="settings-custom-theme-hex"
+              value={customThemeColor}
+              onChange={(e) => onChangeCustomThemeColor(e.target.value)}
+              placeholder="#0D9488"
+              spellCheck={false}
+              aria-label="自定义主题色十六进制值"
+            />
+            <Button variant="toggle" onClick={onResetCustomThemeColor}>
+              恢复预设
+            </Button>
+          </div>
+          <span className="settings-row-hint">选择颜色后自动启用「自定义」主题，清空输入并点击「恢复预设」可回到预设主题</span>
         </div>
       </section>
 

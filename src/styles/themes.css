@@ -331,6 +331,78 @@
 }
 
 
+/* ========== 自定义主题色 ========== */
+
+/* 颜色由设置页自定义主色推导，通过 .app 根节点内联 CSS 变量注入：
+   --custom-primary / --custom-heading / --custom-h3h6 / --custom-bg */
+
+.theme-custom .preview-content {
+  --preview-primary-color: var(--custom-primary, #0D9488);
+  --article-quote-theme-color: var(--custom-primary, #0D9488);
+  --article-quote-bg-color: var(--custom-bg, #F0FDFA);
+  background-color: #ffffff;
+  color: #333;
+}
+
+.theme-custom .preview-content h1,
+.theme-custom .preview-content h2 {
+  border-bottom-color: var(--custom-heading, #115E59);
+  color: var(--custom-heading, #115E59);
+}
+
+.theme-custom .preview-content h3,
+.theme-custom .preview-content h4,
+.theme-custom .preview-content h5,
+.theme-custom .preview-content h6 {
+  color: var(--custom-h3h6, #0F766E);
+}
+
+.theme-custom .preview-content blockquote {
+  border-left-color: var(--custom-primary, #0D9488);
+  background-color: var(--custom-bg, #F0FDFA);
+}
+
+.theme-custom .preview-content a {
+  color: #576B95;
+}
+
+.theme-custom .preview-content a:hover {
+  color: #576B95;
+}
+
+.theme-custom .preview-content table th {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.theme-custom .preview-content hr.custom-hr,
+.theme-custom .preview-content hr.custom-hr::before,
+.theme-custom .preview-content hr.custom-hr::after {
+  color: var(--custom-primary, #0D9488);
+}
+
+.theme-custom .toolbar-btn-primary {
+  background-color: var(--custom-primary, #0D9488);
+  border-color: var(--custom-primary, #0D9488);
+}
+
+.theme-custom .toolbar-btn-primary:hover:not(:disabled) {
+  background-color: var(--custom-primary, #0D9488);
+  border-color: var(--custom-primary, #0D9488);
+  filter: brightness(1.08);
+  color: #ccc;
+}
+
+.theme-custom .theme-option.active {
+  color: var(--custom-primary, #0D9488);
+}
+
+.theme-custom .preview-content.invert-h1 h1 .h1-inline-block {
+  background-color: var(--custom-heading, #115E59);
+}
+
+
+
 .preview-content.blockquote-color-default blockquote {
   border-left-color: #D8D8D8 !important;
 }

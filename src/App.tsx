@@ -13,6 +13,7 @@ import { renderMarkdown, renderMermaidBlocks, setCodeBlockStyle, CodeBlockStyle,
 import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, exportMarkdownToFile, exportHtmlToPdf, sanitizeFilename } from './utils/wechatCopy';
 import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHighlight';
+import { buildCustomThemePalette, isValidHexColor } from './utils/themeColor';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
 import './App.css';
@@ -39,8 +40,9 @@ function splitMarkdownFrontMatter(markdown: string): { frontMatter: string; body
 const App: React.FC = () => {
   const savedMarkdown = localStorage.getItem('feishu2wx_markdown') || '';
   const savedThemeValue = localStorage.getItem('feishu2wx_theme');
-  const supportedThemes = ['classic', 'orange', 'blue', 'teal'];
+  const supportedThemes = ['classic', 'orange', 'blue', 'teal', 'custom'];
   const savedTheme = savedThemeValue && supportedThemes.includes(savedThemeValue) ? savedThemeValue : 'classic';
+  const savedCustomThemeColor = localStorage.getItem('feishu2wx_customThemeColor') || '';
   const savedFont = localStorage.getItem('feishu2wx_font') || 'default';
   const savedShouldConvertPastedHtml = localStorage.getItem('feishu2wx_shouldConvertPastedHtml') !== 'false';
   const savedCodeBlockStyle = localStorage.getItem('feishu2wx_codeBlockStyle') as CodeBlockStyle || 'modern';
@@ -92,6 +94,7 @@ const App: React.FC = () => {
   const [markdown, setMarkdown] = useState<string>(savedMarkdown);
   const [html, setHtml] = useState<string>('');
   const [theme, setTheme] = useState<string>(savedTheme);
+  const [customThemeColor, setCustomThemeColor] = useState<string>(savedCustomThemeColor);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -265,6 +268,7 @@ const App: React.FC = () => {
 
   useEffect(() => { localStorage.setItem('feishu2wx_markdown', markdown); }, [markdown]);
   useEffect(() => { localStorage.setItem('feishu2wx_theme', theme); }, [theme]);
+  useEffect(() => { localStorage.setItem('feishu2wx_customThemeColor', customThemeColor); }, [customThemeColor]);
   useEffect(() => { localStorage.setItem('feishu2wx_font', font); }, [font]);
   useEffect(() => { localStorage.setItem('feishu2wx_shouldConvertPastedHtml', String(shouldConvertPastedHtml)); }, [shouldConvertPastedHtml]);
   useEffect(() => { localStorage.setItem('feishu2wx_codeBlockStyle', codeBlockStyle); }, [codeBlockStyle]);
@@ -387,6 +391,32 @@ const App: React.FC = () => {
   const displayTheme = theme === 'light' || theme === 'dark' ? (isDark ? 'dark' : 'light') : theme;
   const wechatTheme = displayTheme;
 
+  // 自定义主题色：由主色推导完整色板，通过根节点 CSS 变量注入预览样式
+  const customPalette = theme === 'custom' && customThemeColor
+    ? buildCustomThemePalette(customThemeColor)
+    : null;
+  const customThemeVars = customPalette
+    ? ({
+        '--custom-primary': customPalette.primaryColor,
+        '--custom-heading': customPalette.headingColor,
+        '--custom-h3h6': customPalette.headingColorH3H6,
+        '--custom-bg': customPalette.blockquoteBgColor,
+      } as React.CSSProperties)
+    : undefined;
+
+  const handleCustomThemeColorChange = useCallback((color: string) => {
+    const trimmed = color.trim();
+    setCustomThemeColor(trimmed);
+    if (isValidHexColor(trimmed)) {
+      setTheme('custom');
+    }
+  }, []);
+
+  const handleResetCustomThemeColor = useCallback(() => {
+    setCustomThemeColor('');
+    setTheme('classic');
+  }, []);
+
   const handleCopyToWeChat = useCallback(async () => {
     setIsCopying(true);
     try {
@@ -487,7 +517,10 @@ const App: React.FC = () => {
   ].filter(Boolean).join(' ');
 
   return (
-    <div className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}`}>
+    <div
+      className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}`}
+      style={customThemeVars}
+    >
       {/* 顶栏 */}
       <div className={`top-bar ${isFullscreen ? 'fullscreen-bar' : ''}`}>
         <span className="top-bar-brand" title="飞书文档转公众号排版一键排版工具，秒级完成排版，效率起飞还免费">feishu<span className="brand-accent">2wx</span></span>
@@ -504,7 +537,7 @@ const App: React.FC = () => {
         </a>
 
         <div className="top-bar-center">
-          {!isFullscreen && <ThemeSwitcher theme={theme} setTheme={setTheme} />}
+          {!isFullscreen && <ThemeSwitcher theme={theme} setTheme={setTheme} customThemeColor={customThemeColor} />}
         </div>
 
         <div className="top-bar-right">
@@ -575,6 +608,9 @@ const App: React.FC = () => {
             onDarkModeChange={setDarkMode}
             syntaxTheme={syntaxTheme}
             onChangeSyntaxTheme={setSyntaxTheme}
+            customThemeColor={customThemeColor}
+            onChangeCustomThemeColor={handleCustomThemeColorChange}
+            onResetCustomThemeColor={handleResetCustomThemeColor}
           />
           {isFullscreen && (
             <Button className="exit-btn" onClick={() => setIsFullscreen(false)}>
@@ -607,7 +643,7 @@ const App: React.FC = () => {
             aria-haspopup="menu"
             aria-expanded={exportMenuOpen}
           >
-            导出 ▾
+            导出
           </Button>
           <ExportMenu
             open={exportMenuOpen}

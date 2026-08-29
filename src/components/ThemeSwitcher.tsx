@@ -5,6 +5,7 @@ import './ThemeSwitcher.css';
 interface Props {
   theme: string;
   setTheme: (theme: string) => void;
+  customThemeColor?: string;
 }
 
 interface ThemeIconProps {
@@ -17,14 +18,14 @@ const ThemeIcon: React.FC<ThemeIconProps> = ({ color }) => (
   </svg>
 );
 
-const themes = [
-  { key: 'classic', name: '经典', icon: <ThemeIcon color="#000000e6" /> },
-  { key: 'orange', name: '橙色', icon: <ThemeIcon color="#FD4606" /> },
-  { key: 'blue', name: '蓝色', icon: <ThemeIcon color="#0F4C81" /> },
-  { key: 'teal', name: '青绿', icon: <ThemeIcon color="#0D9488" /> },
-];
-
-const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme }) => {
+const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme, customThemeColor = '' }) => {
+  const themes = [
+    { key: 'classic', name: '经典', icon: <ThemeIcon color="#000000e6" /> },
+    { key: 'orange', name: '橙色', icon: <ThemeIcon color="#FD4606" /> },
+    { key: 'blue', name: '蓝色', icon: <ThemeIcon color="#0F4C81" /> },
+    { key: 'teal', name: '青绿', icon: <ThemeIcon color="#0D9488" /> },
+    { key: 'custom', name: '自定义', icon: <ThemeIcon color={customThemeColor || '#0D9488'} /> },
+  ];
   return (
     <div className="theme-switcher">
       {themes.map((t) => (

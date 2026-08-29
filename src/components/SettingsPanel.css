@@ -250,6 +250,76 @@
   color: var(--color-text-secondary);
 }
 
+/* ========== 自定义主题色 ========== */
+
+.settings-custom-theme {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.settings-custom-theme-picker {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-white);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.settings-custom-theme-picker::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.settings-custom-theme-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-lg) - 3px);
+}
+
+.settings-custom-theme-picker::-moz-color-swatch {
+  border: none;
+  border-radius: calc(var(--radius-lg) - 3px);
+}
+
+.settings-custom-theme-picker:focus-visible {
+  outline: 2px solid var(--color-brand-focus-ring);
+  outline-offset: 2px;
+}
+
+.settings-custom-theme-hex {
+  flex: 1;
+  min-width: 90px;
+  padding: var(--space-2) 10px;
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-mono, inherit);
+  color: var(--color-text-primary);
+  background: var(--color-bg-white);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.settings-custom-theme-hex:hover {
+  border-color: var(--color-brand);
+}
+
+.settings-custom-theme-hex:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px var(--color-brand-focus-ring);
+}
+
+.settings-row-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-tertiary);
+}
+
 /* ========== 字体下拉（保留原样式） ========== */
 
 .settings-select {

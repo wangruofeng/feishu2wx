@@ -2,6 +2,7 @@ import { CodeBlockStyle } from './markdownRenderer';
 import { modernCodeBlockStyles } from './codeBlockStyles';
 import { WECHAT_IMAGE_CAPTION_TAG, WECHAT_IMAGE_WRAPPER_TAG } from './wechatTagWhitelist';
 import { getMarkerHighlightGradient, MarkerHighlightColor } from './markerHighlight';
+import { buildCustomThemePalette } from './themeColor';
 
 /** 共享文章排版配置：所有颜色主题复用这组结构参数。 */
 export const sharedArticleStyleConfig = {
@@ -48,6 +49,17 @@ export const sharedArticleStyleConfig = {
 function getThemeStyles(theme: string) {
   // 向后兼容：旧版 'green' → 新版 'teal'
   const normalizedTheme = theme === 'green' ? 'teal' : theme;
+
+  // 自定义主题色：从 localStorage 读取用户主色，推导出完整色板
+  if (normalizedTheme === 'custom') {
+    const savedColor = typeof localStorage !== 'undefined'
+      ? (localStorage.getItem('feishu2wx_customThemeColor') || '')
+      : '';
+    return {
+      ...sharedArticleStyleConfig,
+      ...buildCustomThemePalette(savedColor),
+    };
+  }
 
   const themes: Record<string, {
     primaryColor: string;

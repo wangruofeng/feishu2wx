@@ -679,3 +679,63 @@ test('formats modern code blocks with explicit whitespace preservation for inden
   expect(code.innerHTML).toContain('&nbsp;&nbsp;console.log');
   expect(code.innerHTML).toContain('&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;1;');
 });
+
+test('uses the saved custom theme color for the custom theme export', () => {
+  const html = '<h2>标题</h2><blockquote><p>引用</p></blockquote>';
+  const container = document.createElement('div');
+
+  localStorage.setItem('feishu2wx_customThemeColor', '#FD4606');
+  container.innerHTML = formatForWeChat(
+    html,
+    'custom',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'theme',
+    'loose',
+    'theme',
+    'left'
+  );
+  localStorage.removeItem('feishu2wx_customThemeColor');
+
+  const heading = container.querySelector('h2');
+  const quote = container.querySelector('blockquote');
+
+  // 主色 #FD4606 推导出的深色标题色（rgb(157, 43, 4)）
+  expect(heading?.style.color).toBe('rgb(157, 43, 4)');
+  // 引用块边框使用自定义主色（hex 大小写不敏感）
+  expect(quote?.style.borderLeft).toBe('4px solid #fd4606');
+  // 引用块背景为自定义主色与白色混合的淡色
+  expect(quote?.style.backgroundColor).not.toBe('rgb(255, 247, 237)');
+});
+
+test('falls back to the default palette when the custom theme color is empty', () => {
+  localStorage.removeItem('feishu2wx_customThemeColor');
+  const html = '<blockquote><p>引用</p></blockquote>';
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(
+    html,
+    'custom',
+    'default',
+    true,
+    'default',
+    false,
+    'classic',
+    false,
+    false,
+    false,
+    true,
+    'theme',
+    'loose',
+    'theme',
+    'left'
+  );
+
+  expect(container.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #0d9488');
+});
