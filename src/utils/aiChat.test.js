@@ -10,6 +10,7 @@ import {
   loadInputHistory,
   formatAiMessageTime,
   formatAiDayDivider,
+  formatAiDuration,
   isSameAiDay,
   streamAiChat,
 } from './aiChat';
@@ -280,6 +281,23 @@ describe('message time formatting', () => {
   test('zero timestamp renders empty', () => {
     expect(formatAiMessageTime(0, now)).toBe('');
     expect(formatAiDayDivider(0, now)).toBe('');
+  });
+});
+
+describe('formatAiDuration', () => {
+  test('under one minute shows seconds only, minimum 1s', () => {
+    expect(formatAiDuration(0)).toBe('1秒');
+    expect(formatAiDuration(42 * 1000)).toBe('42秒');
+  });
+
+  test('under one hour shows minutes and seconds', () => {
+    expect(formatAiDuration(60 * 1000)).toBe('1分钟 0秒');
+    expect(formatAiDuration((3 * 60 + 29) * 1000)).toBe('3分钟 29秒');
+  });
+
+  test('one hour and beyond shows hours and minutes', () => {
+    expect(formatAiDuration(3600 * 1000)).toBe('1小时');
+    expect(formatAiDuration(7500 * 1000)).toBe('2小时 5分钟');
   });
 });
 

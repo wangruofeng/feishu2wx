@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Button } from '../ui';
 import { renderAiMarkdown } from '../../utils/aiMarkdown';
 import { changedArticleHunks } from '../../utils/aiDiff';
-import { formatAiMessageTime } from '../../utils/aiChat';
+import { formatAiMessageTime, formatAiDuration } from '../../utils/aiChat';
 import type { AiChatMessage } from '../../utils/aiChat';
 
 export interface AiLiveState {
@@ -49,6 +49,13 @@ const IcoFile = () => (
   <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <path d="M14 2v6h6" />
+  </svg>
+);
+
+/* 右向尖角箭头，响应卡片元信息行展开推理过程使用（展开时旋转朝下） */
+const IcoChevronRight = () => (
+  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+    <path d="m9 6 6 6-6 6" />
   </svg>
 );
 
@@ -154,16 +161,29 @@ const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, 
         </div>
       ) : (
       <div className="ai-msg-bubble">
-        {/* 思考过程：流式时展开，完成后折叠 */}
-        {(live?.reasoning || message.reasoning) && (
-          <details className={`ai-reasoning${isLive ? ' ai-reasoning--live' : ''}`} open={isLive || undefined}>
+        {/* 响应元信息行（卡片左上角）：用时，点开查看推理过程 */}
+        {!isUser && !isLive && message.durationMs !== undefined && (
+          message.reasoning ? (
+            <details className="ai-msg-meta">
+              <summary>
+                用时 {formatAiDuration(message.durationMs)}
+                <span className="ai-msg-meta-chevron" aria-hidden="true"><IcoChevronRight /></span>
+              </summary>
+              <div className="ai-reasoning-body">{message.reasoning}</div>
+            </details>
+          ) : (
+            <div className="ai-msg-meta">用时 {formatAiDuration(message.durationMs)}</div>
+          )
+        )}
+
+        {/* 思考过程：流式中实时展示，完成后收进元信息行 */}
+        {isLive && live.reasoning && (
+          <details className="ai-reasoning ai-reasoning--live" open>
             <summary>
               思考过程
-              {isLive && (
-                <span className="ai-typing"><span /><span /><span /></span>
-              )}
+              <span className="ai-typing"><span /><span /><span /></span>
             </summary>
-            <div className="ai-reasoning-body">{live?.reasoning ?? message.reasoning}</div>
+            <div className="ai-reasoning-body">{live.reasoning}</div>
           </details>
         )}
 

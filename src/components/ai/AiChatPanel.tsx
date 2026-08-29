@@ -262,6 +262,8 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
   }) => {
     if (!activeProvider || !activeModelId) return;
 
+    const startedAt = Date.now();
+    let reasoningText = '';
     setStreaming(true);
     setLive({ reply: '', reasoning: '', articleStarted: false });
 
@@ -293,6 +295,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
       }
       await readAiSseStream(response, (event) => {
         if (event.type === 'reasoning' && event.text) {
+          reasoningText += event.text;
           setLive((l) => (l ? { ...l, reasoning: l.reasoning + event.text } : l));
         } else if (event.type === 'delta' && event.text) {
           parser.push(event.text);
@@ -320,7 +323,8 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
               content: result.replyText
                 || (result.articleText ? '已生成修改稿。' : aborted ? '（已停止生成）' : errorMessage || '（无回复）'),
               article: result.articleText || undefined,
-              reasoning: undefined,
+              reasoning: reasoningText || undefined,
+              durationMs: Date.now() - startedAt,
               error: !result.replyText && !result.articleText && !!errorMessage && !aborted,
               truncated: !!result.articleText && !result.sawEndMarker,
             };

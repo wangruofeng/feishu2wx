@@ -34,6 +34,8 @@ export interface AiChatMessage {
   article?: string;
   requestSource?: string;
   reasoning?: string;
+  /** 本轮生成耗时（毫秒），完成后写入，响应卡片元信息行展示 */
+  durationMs?: number;
   error?: boolean;
   truncated?: boolean;
   createdAt: number;
@@ -229,6 +231,7 @@ export function restoreAiMessages(): AiChatMessage[] {
         article: typeof item.article === 'string' ? item.article : undefined,
         requestSource: typeof item.requestSource === 'string' ? item.requestSource : undefined,
         reasoning: typeof item.reasoning === 'string' ? item.reasoning : undefined,
+        durationMs: typeof item.durationMs === 'number' ? item.durationMs : undefined,
         error: item.error === true,
         truncated: item.truncated === true,
         attachments: Array.isArray(item.attachments)
@@ -279,6 +282,17 @@ export function formatAiDayDivider(createdAt: number, now: number = Date.now()):
   if (!createdAt) return '';
   const time = formatHhMm(createdAt);
   return isSameAiDay(createdAt, now) ? `今天 ${time}` : `${formatMonthDay(createdAt)} ${time}`;
+}
+
+/** 响应用时：<1 分钟「42秒」，<1 小时「3分钟 29秒」，≥1 小时「2小时 5分钟」 */
+export function formatAiDuration(ms: number): string {
+  const totalSeconds = Math.max(1, Math.round(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) return minutes > 0 ? `${hours}小时 ${minutes}分钟` : `${hours}小时`;
+  if (minutes > 0) return `${minutes}分钟 ${seconds}秒`;
+  return `${seconds}秒`;
 }
 
 // ---- 输入历史（上/下方向键回溯）----
