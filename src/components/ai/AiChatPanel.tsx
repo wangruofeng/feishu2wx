@@ -39,6 +39,7 @@ interface Props {
 }
 
 const SCROLL_FOLLOW_THRESHOLD = 80;
+const CLOUD_SAVE_DELAY = 300;
 const STATIC_DEPLOY_HINT = '当前部署未提供 AI 代理接口：GitHub Pages 静态部署不支持 AI 功能，请使用本地 npm run dev / cf:dev 或 Cloudflare Pages 部署版本。';
 
 /* 组装请求历史；assistant 历史只回传说明文字，不带修改稿，避免 token 膨胀 */
@@ -87,6 +88,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
   const [providerSettings, setProviderSettings] = useState<AiProviderSettingsData>(() => loadAiProviderSettings());
   const [cloudUser, setCloudUser] = useState<AiCloudUser | null>(null);
+  const [cloudSessionLoading, setCloudSessionLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -99,6 +101,8 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
   const inputHistoryRef = useRef<string[]>(loadInputHistory());
   const historyCursorRef = useRef(-1);
   const draftRef = useRef('');
+  const cloudSaveTimerRef = useRef<number | null>(null);
+  const cloudSaveQueueRef = useRef(Promise.resolve());
 
   const activeProvider = cloudUser
     ? providerSettings.providers.find((provider) => provider.id === providerSettings.activeProviderId && provider.enabled && provider.baseUrl) ?? null
@@ -108,7 +112,23 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
 
   useEffect(() => { if (autoOpenSettings) setSettingsOpen(true); }, [autoOpenSettings]);
 
-  useEffect(() => { getAiCloudSession().then(async (user) => { if (!user) return; setCloudUser(user); setProviderSettings(await loadAiCloudSettings()); }).catch(() => {}); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    getAiCloudSession().then(async (user) => {
+      if (!user) return;
+      const cloudSettings = await loadAiCloudSettings();
+      if (cancelled) return;
+      setProviderSettings(cloudSettings);
+      setCloudUser(user);
+    }).catch(() => {}).finally(() => {
+      if (!cancelled) setCloudSessionLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => () => {
+    if (cloudSaveTimerRef.current !== null) window.clearTimeout(cloudSaveTimerRef.current);
+  }, []);
 
   // ---- 滚动跟随：接近底部时自动滚到底 ----
   useEffect(() => {
@@ -140,8 +160,18 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
   // ---- 供应商配置变更：即时持久化 ----
   const commitSettings = useCallback((next: AiProviderSettingsData) => {
     setProviderSettings(next);
-    if (cloudUser) saveAiCloudSettings(next).then(setProviderSettings).catch(() => {});
-    else saveAiProviderSettings(next);
+    if (!cloudUser) {
+      saveAiProviderSettings(next);
+      return;
+    }
+    if (cloudSaveTimerRef.current !== null) window.clearTimeout(cloudSaveTimerRef.current);
+    cloudSaveTimerRef.current = window.setTimeout(() => {
+      cloudSaveTimerRef.current = null;
+      cloudSaveQueueRef.current = cloudSaveQueueRef.current
+        .catch(() => {})
+        .then(async () => { await saveAiCloudSettings(next); })
+        .catch(() => {});
+    }, CLOUD_SAVE_DELAY);
   }, [cloudUser]);
 
   // ---- 附件输入（图片 + 文本文件，共 ≤ MAX_AI_ATTACHMENTS 个）----
@@ -576,6 +606,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
             onChange={commitSettings}
             onClose={() => setSettingsOpen(false)}
             cloudUser={cloudUser}
+            cloudLoading={cloudSessionLoading}
             onLogin={() => { window.location.assign('/api/auth/github'); }}
             onLogout={() => { logoutAiCloudSession().then(() => { setCloudUser(null); setProviderSettings(loadAiProviderSettings()); }); }}
         />

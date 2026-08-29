@@ -835,6 +835,11 @@
   min-height: 0;
 }
 
+.ai-ps-body.is-loading {
+  pointer-events: none;
+  opacity: 0.58;
+}
+
 /* 左栏：供应商列表 */
 .ai-ps-sidebar {
   width: 280px;

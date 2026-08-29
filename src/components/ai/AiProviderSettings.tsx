@@ -8,6 +8,7 @@ interface Props {
   onChange: (next: AiProviderSettingsData) => void;
   onClose: () => void;
   cloudUser: AiCloudUser | null;
+  cloudLoading: boolean;
   onLogin: () => void;
   onLogout: () => void;
 }
@@ -93,7 +94,7 @@ const IcoChevronDown = () => (
   </svg>
 );
 
-const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, cloudUser, onLogin, onLogout }) => {
+const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, cloudUser, cloudLoading, onLogin, onLogout }) => {
   const [selectedId, setSelectedId] = useState<string | null>(
     settings.activeProviderId ?? settings.providers[0]?.id ?? null
   );
@@ -222,7 +223,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
           </button>
         </div>
 
-        <div className="ai-ps-body">
+        <div className={`ai-ps-body${cloudLoading ? ' is-loading' : ''}`} aria-busy={cloudLoading}>
           {/* 左栏：GitHub 账号卡 + 供应商列表 */}
           <aside className="ai-ps-sidebar">
             <div className="ai-ps-account">
@@ -233,7 +234,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                 <span className="ai-ps-account-name">{cloudUser ? cloudUser.login : '未登录'}</span>
                 {cloudUser && <button type="button" className="ai-ps-toggle-btn ai-ps-account-logout" onClick={onLogout}>退出登录</button>}
               </div>
-              <p className="ai-ps-account-tip">{cloudUser ? '配置已加密保存到云端，其他设备登录同一账号可读取。' : '配置仅保存在本地浏览器，登录后加密同步到云端。'}</p>
+              <p className="ai-ps-account-tip">{cloudLoading ? '正在加载云端模型配置…' : cloudUser ? '配置已加密保存到云端，其他设备登录同一账号可读取。' : '配置仅保存在本地浏览器，登录后加密同步到云端。'}</p>
               {!cloudUser && (
                 <button type="button" className="ai-ps-login-btn" onClick={handleLogin} disabled={loggingIn} aria-busy={loggingIn}>
                   {loggingIn ? <span className="ai-ps-login-spinner" aria-hidden="true" /> : <IcoGitHub />}
