@@ -1930,6 +1930,20 @@ export function sanitizeFilename(name: string): string {
 }
 
 /**
+ * 触发浏览器下载 Blob 文件
+ */
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
  * 把格式化后的 HTML（body 片段）包裹成完整 HTML 文档并触发浏览器下载
  */
 export function exportHtmlToFile(html: string, filename: string): void {
@@ -1947,13 +1961,103 @@ ${html}
 </body>
 </html>`;
 
-  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadBlob(new Blob([fullHtml], { type: 'text/html;charset=utf-8' }), filename);
+}
+
+/**
+ * 把 Markdown 源码作为 .md 文件触发浏览器下载
+ */
+export function exportMarkdownToFile(markdown: string, filename: string): void {
+  downloadBlob(new Blob([markdown], { type: 'text/markdown;charset=utf-8' }), filename);
+}
+
+/**
+ * 通过隐藏 iframe 载入打印版 HTML 并调用浏览器打印对话框，由用户「另存为 PDF」。
+ * 打印对话框的文件名无法由脚本指定，但文档 <title> 会作为默认文件名。
+ */
+export function exportHtmlToPdf(html: string, filename: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const title = filename.replace(/\.pdf$/i, '');
+    const fullHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>${title}</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; color: #333; }
+  img { max-width: 100%; height: auto; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '0';
+    iframe.style.left = '-10000px';
+    iframe.style.width = '960px';
+    iframe.style.height = '720px';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    // 打印对话框关闭后再移除，避免部分浏览器打印出空白页
+    const cleanup = () => {
+      window.setTimeout(() => iframe.remove(), 1000);
+    };
+
+    iframe.onload = () => {
+      const doc = iframe.contentDocument;
+      const win = iframe.contentWindow;
+      if (!doc || !win) {
+        cleanup();
+        reject(new Error('无法创建打印页面'));
+        return;
+      }
+
+      const triggerPrint = () => {
+        try {
+          win.focus();
+          win.print();
+          resolve();
+        } catch (e) {
+          reject(e);
+        } finally {
+          cleanup();
+        }
+      };
+
+      const pendingImages = Array.from(doc.images).filter((img) => !img.complete);
+      if (pendingImages.length === 0) {
+        triggerPrint();
+        return;
+      }
+
+      // 等图片加载完再打印，避免 PDF 中图片缺失；失败图片兜底跳过
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        triggerPrint();
+      };
+      Promise.all(pendingImages.map((img) => new Promise<void>((res) => {
+        img.addEventListener('load', () => res());
+        img.addEventListener('error', () => res());
+      }))).then(finish);
+      window.setTimeout(finish, 5000);
+    };
+
+    iframe.onerror = () => {
+      cleanup();
+      reject(new Error('创建打印页面失败'));
+    };
+
+    iframe.srcdoc = fullHtml;
+  });
 }

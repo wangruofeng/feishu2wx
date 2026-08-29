@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import EditorPane from './components/EditorPane';
+import type { EditorPaneHandle } from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
+import AiChatPanel from './components/ai/AiChatPanel';
+import ExportMenu, { ExportFormat } from './components/ExportMenu';
 import { Button } from './components/ui';
 import { renderMarkdown, renderMermaidBlocks, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
 import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
-import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, sanitizeFilename } from './utils/wechatCopy';
+import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, exportMarkdownToFile, exportHtmlToPdf, sanitizeFilename } from './utils/wechatCopy';
 import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHighlight';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import exampleMd from './data/example';
@@ -92,6 +95,8 @@ const App: React.FC = () => {
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState<boolean>(false);
+  const exportAnchorRef = useRef<HTMLButtonElement | null>(null);
   const [showEditor, setShowEditor] = useState<boolean>(true);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [font, setFont] = useState<string>(savedFont);
@@ -128,6 +133,8 @@ const App: React.FC = () => {
   const [publishHtml, setPublishHtml] = useState<string>('');
   const [darkMode, setDarkMode] = useState<'system' | 'light' | 'dark'>(savedDarkMode);
   const [syntaxTheme, setSyntaxTheme] = useState<MdSyntaxThemeKey>(savedSyntaxTheme);
+  const [aiOpen, setAiOpen] = useState<boolean>(false);
+  const editorPaneRef = useRef<EditorPaneHandle>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState<boolean>(false);
   const [showBackTop, setShowBackTop] = useState<boolean>(false);
 
@@ -177,6 +184,11 @@ const App: React.FC = () => {
 
     editorScrollFrameRef.current = window.requestAnimationFrame(syncPreviewScrollFromEditor);
   }, [syncPreviewScrollFromEditor]);
+
+  // AI 应用修改稿：走 EditorPane 的存档 → 撤销栈 → 整体替换管道
+  const handleApplyAiArticle = useCallback((article: string) => {
+    editorPaneRef.current?.replaceWholeDocument(article);
+  }, []);
 
   // 检测系统暗黑模式
   useEffect(() => {
@@ -422,24 +434,35 @@ const App: React.FC = () => {
     }
   }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
 
-  const handleExportHtml = useCallback(async () => {
+  const handleExport = useCallback(async (format: ExportFormat) => {
     if (!html.trim()) {
       setCopyStatus({ visible: true, message: '请先输入或粘贴内容', isError: true });
       return;
     }
     setIsExporting(true);
     try {
+      const filename = sanitizeFilename(articleTitle);
+      if (format === 'md') {
+        exportMarkdownToFile(composedMarkdown, `${filename}.md`);
+        setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
+        return;
+      }
       const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
       const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
-      exportHtmlToFile(formatted, sanitizeFilename(articleTitle) + '.html');
-      setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
+      if (format === 'html') {
+        exportHtmlToFile(formatted, `${filename}.html`);
+        setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
+      } else {
+        await exportHtmlToPdf(formatted, `${filename}.pdf`);
+        setCopyStatus({ visible: true, message: '已在打印对话框中打开，请选择「另存为 PDF」', isError: false });
+      }
     } catch (error) {
       console.error('导出失败:', error);
       setCopyStatus({ visible: true, message: '导出失败，请刷新页面后重试', isError: true });
     } finally {
       setIsExporting(false);
     }
-  }, [html, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
+  }, [html, composedMarkdown, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -581,12 +604,21 @@ const App: React.FC = () => {
           </Button>
           <Button
             variant="outline"
-            onClick={handleExportHtml}
+            ref={exportAnchorRef}
+            onClick={() => setExportMenuOpen((open) => !open)}
             disabled={isExporting || !composedMarkdown.trim()}
-            title="导出公众号 HTML 文件"
+            title="导出文件"
+            aria-haspopup="menu"
+            aria-expanded={exportMenuOpen}
           >
-            导出
+            导出 ▾
           </Button>
+          <ExportMenu
+            open={exportMenuOpen}
+            anchorRef={exportAnchorRef}
+            onClose={() => setExportMenuOpen(false)}
+            onExport={handleExport}
+          />
           <Button
             variant="outline"
             onClick={async () => {
@@ -626,6 +658,7 @@ const App: React.FC = () => {
       {/* 主内容区 */}
       <main className={mainClasses}>
         <EditorPane
+          ref={editorPaneRef}
           markdown={markdown}
           setMarkdown={setMarkdown}
           shouldConvertPastedHtml={shouldConvertPastedHtml}
@@ -696,6 +729,13 @@ const App: React.FC = () => {
         </button>}
         <button
           className="fab-btn"
+          onClick={() => setAiOpen((v) => !v)}
+          title="AI 助手"
+        >
+          <strong>AI</strong>
+        </button>
+        <button
+          className="fab-btn"
           onClick={() => setShortcutsOpen(true)}
           title="快捷键"
         >
@@ -707,6 +747,14 @@ const App: React.FC = () => {
       <ShortcutsDrawer
         open={shortcutsOpen}
         onClose={() => setShortcutsOpen(false)}
+      />
+
+      {/* AI 聊天编辑面板 */}
+      <AiChatPanel
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        markdown={markdown}
+        onApplyArticle={handleApplyAiArticle}
       />
     </div>
   );

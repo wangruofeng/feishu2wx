@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import configRouter from './routes/config';
 import publishRouter from './routes/publish';
+import aiRouter from './routes/ai';
 
 const app = express();
 const PORT = process.env.PORT || 3101;
@@ -14,6 +15,7 @@ app.use(express.json({ limit: '50mb' }));
 
 app.use('/api/config', configRouter);
 app.use('/api/publish', publishRouter);
+app.use('/api/ai', aiRouter);
 
 app.use((err: Error & { type?: string; status?: number }, _req: Request, res: Response, next: NextFunction) => {
   if (err.type === 'entity.too.large' || err.status === 413) {

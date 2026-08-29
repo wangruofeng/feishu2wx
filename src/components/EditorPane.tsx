@@ -111,12 +111,21 @@ const getOutlineScrollTop = (textarea: HTMLTextAreaElement, markdown: string, po
   return measuredTop;
 };
 
-const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample, syntaxTheme }) => {
+/** 暴露给父组件的命令接口（AI 应用修改稿等外部整体替换场景） */
+export interface EditorPaneHandle {
+  /** 整体替换文档：存档旧内容到历史文档 → 进撤销栈 → setMarkdown */
+  replaceWholeDocument: (content: string) => void;
+}
+
+const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample, syntaxTheme }, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const redoStackRef = useRef<HistoryEntry[]>([]);
   const isUndoRef = useRef(false);
+  // 供 imperative handle 读取最新内容，避免闭包过期
+  const markdownRef = useRef(markdown);
+  markdownRef.current = markdown;
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [outlinePos, setOutlinePos] = useState({ top: 0, left: 0 });
   const outlineBtnRef = useRef<HTMLButtonElement>(null);
@@ -362,6 +371,24 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
     setHistoryCount(loadDocHistory().length);
     return result;
   }, []);
+
+  // 外部整体替换文档（AI 应用修改稿）：与 importMarkdownFile 同款三段式
+  // （存档 → 进撤销栈 → setMarkdown），保证 Cmd+Z 可撤销、历史文档有存档
+  React.useImperativeHandle(ref, () => ({
+    replaceWholeDocument(content: string) {
+      archiveAndRefresh(markdownRef.current);
+      const textarea = textareaRef.current;
+      historyRef.current.push({
+        content: markdownRef.current,
+        cursorStart: textarea?.selectionStart ?? 0,
+        cursorEnd: textarea?.selectionEnd ?? 0,
+      });
+      if (historyRef.current.length > MAX_HISTORY) {
+        historyRef.current.shift();
+      }
+      setMarkdown(content);
+    },
+  }), [archiveAndRefresh, setMarkdown]);
 
   // 导入 Markdown 文件（按钮选择与拖拽共用）：存档旧内容 → 进撤销栈 → 读取替换
   const importMarkdownFile = useCallback((file: File) => {
@@ -706,6 +733,8 @@ const EditorPane: React.FC<Props> = ({ markdown, setMarkdown, shouldConvertPaste
       />
     </div>
   );
-};
+});
+
+EditorPane.displayName = 'EditorPane';
 
 export default EditorPane;

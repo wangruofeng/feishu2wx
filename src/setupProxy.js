@@ -8,6 +8,12 @@ module.exports = function (app) {
       createProxyMiddleware({
         target: 'http://localhost:3101',
         changeOrigin: true,
+        onError(_error, _req, res) {
+          res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({
+            error: '本地 API 服务未启动。请停止当前进程后运行 npm run dev。',
+          }));
+        },
       })
     );
   }
