@@ -1,3 +1,7 @@
 name = "feishu2wx"
 compatibility_date = "2025-08-01"
 pages_build_output_dir = "./build"
+
+[[kv_namespaces]]
+binding = "AI_CONFIGS_KV"
+id = "ef8b4976c92044b1b4085d1bad4487eb"

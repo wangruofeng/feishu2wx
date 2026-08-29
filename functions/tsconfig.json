@@ -6,5 +6,6 @@
     "types": ["@cloudflare/workers-types"],
     "skipLibCheck": true,
     "strict": true
-  }
+  },
+  "exclude": ["**/*.test.ts"]
 }

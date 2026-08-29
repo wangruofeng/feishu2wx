@@ -1,5 +1,7 @@
 import { handleAiChat } from '../../../server/lib/ai-handler';
 import { jsonResponse } from '../../../server/lib/config-handlers';
+import { getSession, type PagesAuthEnv } from '../../lib/auth';
+import { loadCloudConfig } from '../../lib/cloud-ai-config';
 
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024;
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -9,7 +11,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
 
 type PagesContext = {
   request: Request;
-  env?: {
+  env?: PagesAuthEnv & {
     ALLOWED_ORIGIN?: string;
     ALLOWED_ORIGINS?: string;
   };
@@ -72,13 +74,13 @@ function getForbiddenResponse(context: PagesContext): Response {
 }
 
 export const onRequestOptions: PagesFunction = async (context) => {
-  const pagesContext = context as PagesContext;
+  const pagesContext = context as unknown as PagesContext;
   if (isOriginForbidden(pagesContext)) return getForbiddenResponse(pagesContext);
   return new Response(null, { status: 204, headers: getCorsHeaders(pagesContext) });
 };
 
 export const onRequestPost: PagesFunction = async (context) => {
-  const pagesContext = context as PagesContext;
+  const pagesContext = context as unknown as PagesContext;
   if (isOriginForbidden(pagesContext)) return getForbiddenResponse(pagesContext);
   if (isRequestTooLarge(pagesContext.request)) {
     return withCorsHeaders(jsonResponse({ error: '请求内容过大' }, 413), pagesContext);
@@ -91,6 +93,15 @@ export const onRequestPost: PagesFunction = async (context) => {
     }
 
     const body = JSON.parse(rawBody);
+    const session = await getSession(pagesContext.request, pagesContext.env as PagesAuthEnv);
+    if (session) {
+      const config = await loadCloudConfig(session.sub, pagesContext.env as PagesAuthEnv);
+      const providerId = String(body.providerId ?? '');
+      const provider = config.providers.find((item) => item.id === providerId && item.enabled);
+      if (!provider || provider.id !== providerId) return withCorsHeaders(jsonResponse({ error: '未找到可用的云端模型配置。' }, 400), pagesContext);
+      body.provider = { baseUrl: provider.baseUrl, apiKey: provider.apiKey, apiFormat: provider.apiFormat };
+      body.modelId = String(body.modelId ?? '');
+    }
     const response = await handleAiChat(body, { signal: pagesContext.request.signal });
     return withCorsHeaders(response, pagesContext);
   } catch {

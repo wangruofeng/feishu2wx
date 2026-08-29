@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { newAiId, normalizeProviderSettings } from '../../utils/aiChat';
-import type { AiProvider, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
+import type { AiCloudUser, AiProvider, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
 
 interface Props {
   settings: AiProviderSettingsData;
   onChange: (next: AiProviderSettingsData) => void;
   onClose: () => void;
+  cloudUser: AiCloudUser | null;
+  onLogin: () => void;
+  onLogout: () => void;
 }
 
 const API_FORMAT_OPTIONS = [
@@ -84,7 +87,7 @@ const IcoChevronDown = () => (
   </svg>
 );
 
-const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose }) => {
+const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, cloudUser, onLogin, onLogout }) => {
   const [selectedId, setSelectedId] = useState<string | null>(
     settings.activeProviderId ?? settings.providers[0]?.id ?? null
   );
@@ -200,8 +203,9 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose }) =>
         <div className="ai-ps-header">
           <div>
             <h3>模型设置</h3>
-            <p>管理自定义模型供应商，配置后可在聊天时选择使用。</p>
+            <p>{cloudUser ? `已登录 GitHub：${cloudUser.login}。配置已加密保存到云端。` : '管理自定义模型供应商，配置后可在聊天时选择使用。'}</p>
           </div>
+          <button type="button" className="ai-ps-toggle-btn" onClick={cloudUser ? onLogout : onLogin}>{cloudUser ? '退出登录' : '使用 GitHub 登录'}</button>
           <button type="button" className="ai-ps-close" onClick={onClose} aria-label="关闭">
             <IcoClose />
           </button>

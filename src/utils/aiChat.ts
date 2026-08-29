@@ -56,6 +56,8 @@ export interface AiProviderSettings {
   providers: AiProvider[];
 }
 
+export interface AiCloudUser { login: string; avatarUrl: string; }
+
 export interface AiSseEvent {
   type: 'reasoning' | 'delta' | 'error';
   text?: string;
@@ -157,6 +159,27 @@ export function getActiveProvider(settings: AiProviderSettings): AiProvider | nu
   if (!provider || !provider.enabled || !provider.apiKey.trim() || !provider.baseUrl.trim()) return null;
   return provider;
 }
+
+export async function getAiCloudSession(): Promise<AiCloudUser | null> {
+  const response = await fetch(`${API_BASE}/api/auth/session`, { credentials: 'same-origin' });
+  if (!response.ok) return null;
+  const data = await response.json();
+  return data?.user?.login ? { login: String(data.user.login), avatarUrl: String(data.user.avatarUrl ?? '') } : null;
+}
+
+export async function loadAiCloudSettings(): Promise<AiProviderSettings> {
+  const response = await fetch(`${API_BASE}/api/ai/config`, { credentials: 'same-origin' });
+  if (!response.ok) throw new Error('无法读取云端模型配置。');
+  return normalizeProviderSettings(await response.json());
+}
+
+export async function saveAiCloudSettings(settings: AiProviderSettings): Promise<AiProviderSettings> {
+  const response = await fetch(`${API_BASE}/api/ai/config`, { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) });
+  if (!response.ok) throw new Error('无法保存云端模型配置。');
+  return normalizeProviderSettings(await response.json());
+}
+
+export async function logoutAiCloudSession(): Promise<void> { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'same-origin' }); }
 
 export function getActiveModelId(settings: AiProviderSettings): string | null {
   const provider = settings.providers.find((item) => item.id === settings.activeProviderId);
@@ -405,6 +428,7 @@ export async function streamAiChat(params: {
   images: AiImage[];
   attachments: AiTextAttachment[];
   provider: AiProvider;
+  cloudProviderId?: string;
   modelId: string;
   signal: AbortSignal;
 }): Promise<Response> {
@@ -431,11 +455,7 @@ export async function streamAiChat(params: {
           attachments: params.attachments.map(({ name, content }) => ({ name, content })),
         },
       ],
-      provider: {
-        baseUrl: params.provider.baseUrl,
-        apiKey: params.provider.apiKey,
-        apiFormat: params.provider.apiFormat,
-      },
+      ...(params.cloudProviderId ? { providerId: params.cloudProviderId } : { provider: { baseUrl: params.provider.baseUrl, apiKey: params.provider.apiKey, apiFormat: params.provider.apiFormat } }),
       modelId: params.modelId,
     }),
     signal: params.signal,

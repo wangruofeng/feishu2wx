@@ -12,6 +12,10 @@ import {
   persistAiMessages,
   loadAiProviderSettings,
   saveAiProviderSettings,
+  getAiCloudSession,
+  loadAiCloudSettings,
+  saveAiCloudSettings,
+  logoutAiCloudSession,
   getActiveProvider,
   getActiveModelId,
   loadInputHistory,
@@ -22,7 +26,7 @@ import {
   isSameAiDay,
   formatAiDayDivider,
 } from '../../utils/aiChat';
-import type { AiChatHistoryMessage, AiChatMessage, AiImage, AiTextAttachment, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
+import type { AiCloudUser, AiChatHistoryMessage, AiChatMessage, AiImage, AiTextAttachment, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
 import { readImageFileAsAiImage } from '../../utils/aiImages';
 import { readTextFileAsAttachment } from '../../utils/aiFiles';
 
@@ -81,6 +85,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
   const [input, setInput] = useState('');
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
   const [providerSettings, setProviderSettings] = useState<AiProviderSettingsData>(() => loadAiProviderSettings());
+  const [cloudUser, setCloudUser] = useState<AiCloudUser | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
@@ -94,9 +99,13 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
   const historyCursorRef = useRef(-1);
   const draftRef = useRef('');
 
-  const activeProvider = getActiveProvider(providerSettings);
+  const activeProvider = cloudUser
+    ? providerSettings.providers.find((provider) => provider.id === providerSettings.activeProviderId && provider.enabled && provider.baseUrl) ?? null
+    : getActiveProvider(providerSettings);
   const activeModelId = getActiveModelId(providerSettings);
   const canSend = (!streaming && !settingsOpen && (!!input.trim() || pendingFiles.length > 0) && !!activeProvider && !!activeModelId);
+
+  useEffect(() => { getAiCloudSession().then(async (user) => { if (!user) return; setCloudUser(user); setProviderSettings(await loadAiCloudSettings()); }).catch(() => {}); }, []);
 
   // ---- 滚动跟随：接近底部时自动滚到底 ----
   useEffect(() => {
@@ -128,8 +137,9 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
   // ---- 供应商配置变更：即时持久化 ----
   const commitSettings = useCallback((next: AiProviderSettingsData) => {
     setProviderSettings(next);
-    saveAiProviderSettings(next);
-  }, []);
+    if (cloudUser) saveAiCloudSettings(next).then(setProviderSettings).catch(() => {});
+    else saveAiProviderSettings(next);
+  }, [cloudUser]);
 
   // ---- 附件输入（图片 + 文本文件，共 ≤ MAX_AI_ATTACHMENTS 个）----
   const addFiles = useCallback(async (files: Iterable<File>) => {
@@ -237,6 +247,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
         images: params.images,
         attachments: params.attachments,
         provider: activeProvider,
+        cloudProviderId: cloudUser ? activeProvider.id : undefined,
         modelId: activeModelId,
         signal: abortRef.current.signal,
       });
@@ -290,7 +301,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [activeProvider, activeModelId]);
+  }, [activeProvider, activeModelId, cloudUser]);
 
   // ---- 发送 ----
   const handleSend = useCallback(async () => {
@@ -558,10 +569,13 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle 
 
       {/* 模型设置模态（居中弹窗，portal 到 body） */}
       {settingsOpen && (
-        <AiProviderSettings
-          settings={providerSettings}
-          onChange={commitSettings}
-          onClose={() => setSettingsOpen(false)}
+          <AiProviderSettings
+            settings={providerSettings}
+            onChange={commitSettings}
+            onClose={() => setSettingsOpen(false)}
+            cloudUser={cloudUser}
+            onLogin={() => { window.location.assign('/api/auth/github'); }}
+            onLogout={() => { logoutAiCloudSession().then(() => { setCloudUser(null); setProviderSettings(loadAiProviderSettings()); }); }}
         />
       )}
 
