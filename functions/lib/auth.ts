@@ -58,11 +58,12 @@ export async function completeOAuth(request: Request, env: PagesAuthEnv): Promis
   let user: { id?: number; login?: string; avatar_url?: string };
   try {
     const userResponse = await fetch('https://api.github.com/user', { headers: { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json', 'User-Agent': 'feishu2wx', 'X-GitHub-Api-Version': '2022-11-28' } });
-    user = await userResponse.json() as typeof user;
-    if (!userResponse.ok || !user.id || !user.login) {
-      console.error('[auth] GitHub user lookup rejected', { status: userResponse.status });
-      return new Response('GitHub 用户信息读取失败。请重新授权；若持续发生，请检查 OAuth App 权限是否包含 read:user。', { status: 400, headers: { 'Cache-Control': 'no-store' } });
+    if (!userResponse.ok) {
+      console.error('[auth] GitHub user lookup rejected', { status: userResponse.status, body: (await userResponse.text()).slice(0, 120) });
+      return new Response(`GitHub 用户信息读取失败（HTTP ${userResponse.status}）。请重新授权；若持续发生，请检查 OAuth App 权限是否包含 read:user。`, { status: 400, headers: { 'Cache-Control': 'no-store' } });
     }
+    user = await userResponse.json() as typeof user;
+    if (!user.id || !user.login) return new Response('GitHub 用户信息读取失败。请重新授权；若持续发生，请检查 OAuth App 权限是否包含 read:user。', { status: 400, headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('[auth] GitHub user lookup failed', { message: error instanceof Error ? error.message : String(error) });
     return new Response('无法连接 GitHub 用户信息服务。请稍后重新登录；若持续发生，请在 Cloudflare 日志中检查 api.github.com 出站请求。', { status: 503, headers: { 'Cache-Control': 'no-store' } });

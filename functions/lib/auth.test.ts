@@ -41,3 +41,18 @@ test('does not return a Cloudflare-rewritten 502 when GitHub user lookup fails',
     assert.match(await response.text(), /api\.github\.com/);
   } finally { global.fetch = originalFetch; }
 });
+
+test('reports a readable rejection when GitHub answers a non-JSON block page without User-Agent', async () => {
+  const originalFetch = global.fetch;
+  let calls = 0;
+  global.fetch = async () => {
+    calls += 1;
+    if (calls === 1) return Response.json({ access_token: 'token' });
+    return new Response('Request forbidden by administrative rules. Please make sure your request has a User-Agent header', { status: 403 });
+  };
+  try {
+    const response = await completeOAuth(new Request('https://example.com/api/auth/github/callback?code=code&state=state', { headers: { Cookie: 'feishu2wx_oauth_state=state' } }), { ...env, AUTH_SESSION_SIGNING_KEY: key });
+    assert.equal(response.status, 400);
+    assert.match(await response.text(), /HTTP 403/);
+  } finally { global.fetch = originalFetch; }
+});
