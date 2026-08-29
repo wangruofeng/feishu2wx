@@ -68,6 +68,12 @@ const IcoEyeOff = () => (
   </svg>
 );
 
+const IcoGitHub = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+  </svg>
+);
+
 const IcoClose = () => (
   <svg {...iconProps} width={20} height={20}>
     <path d="M18 6 6 18" />
@@ -203,17 +209,31 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
         <div className="ai-ps-header">
           <div>
             <h3>模型设置</h3>
-            <p>{cloudUser ? `已登录 GitHub：${cloudUser.login}。配置已加密保存到云端。` : '管理自定义模型供应商，配置后可在聊天时选择使用。'}</p>
+            <p>管理自定义模型供应商，配置后可在聊天时选择使用。</p>
           </div>
-          <button type="button" className="ai-ps-toggle-btn" onClick={cloudUser ? onLogout : onLogin}>{cloudUser ? '退出登录' : '使用 GitHub 登录'}</button>
           <button type="button" className="ai-ps-close" onClick={onClose} aria-label="关闭">
             <IcoClose />
           </button>
         </div>
 
         <div className="ai-ps-body">
-          {/* 左栏：供应商列表 */}
+          {/* 左栏：GitHub 账号卡 + 供应商列表 */}
           <aside className="ai-ps-sidebar">
+            <div className="ai-ps-account">
+              <div className="ai-ps-account-row">
+                {cloudUser?.avatarUrl
+                  ? <img className="ai-ps-account-avatar" src={cloudUser.avatarUrl} alt="" />
+                  : <span className="ai-ps-account-icon"><IcoGitHub /></span>}
+                <span className="ai-ps-account-name">{cloudUser ? cloudUser.login : '未登录'}</span>
+                {cloudUser && <button type="button" className="ai-ps-toggle-btn ai-ps-account-logout" onClick={onLogout}>退出登录</button>}
+              </div>
+              <p className="ai-ps-account-tip">{cloudUser ? '配置已加密保存到云端，其他设备登录同一账号可读取。' : '配置仅保存在本地浏览器，登录后加密同步到云端。'}</p>
+              {!cloudUser && (
+                <button type="button" className="ai-ps-login-btn" onClick={onLogin}>
+                  <IcoGitHub /> 使用 GitHub 登录
+                </button>
+              )}
+            </div>
             <div className="ai-ps-sidebar-label">自定义供应商</div>
             <div className="ai-ps-provider-list">
               {settings.providers.map((provider, index) => (
