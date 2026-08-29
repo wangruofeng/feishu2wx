@@ -17,8 +17,8 @@ export interface CustomThemePalette {
   tableHeaderColor: string;
 }
 
-/** 未设置自定义色时的回退主色（与青绿主题一致）。 */
-export const CUSTOM_THEME_DEFAULT = '#0d9488';
+/** 未设置自定义色时的回退主色（紫色，与所有预设主题色区分开）。 */
+export const CUSTOM_THEME_DEFAULT = '#7c3aed';
 
 /** 规范化 hex 输入为 #rrggbb 小写；非法输入返回空串。 */
 export function normalizeHex(input: string): string {

@@ -24,7 +24,7 @@ const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme, customThemeColor = ''
     { key: 'orange', name: '橙色', icon: <ThemeIcon color="#FD4606" /> },
     { key: 'blue', name: '蓝色', icon: <ThemeIcon color="#0F4C81" /> },
     { key: 'teal', name: '青绿', icon: <ThemeIcon color="#0D9488" /> },
-    { key: 'custom', name: '自定义', icon: <ThemeIcon color={customThemeColor || '#0D9488'} /> },
+    { key: 'custom', name: '自定义', icon: <ThemeIcon color={customThemeColor || '#7C3AED'} /> },
   ];
   return (
     <div className="theme-switcher">

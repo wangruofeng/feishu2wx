@@ -737,5 +737,5 @@ test('falls back to the default palette when the custom theme color is empty', (
     'left'
   );
 
-  expect(container.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #0d9488');
+  expect(container.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #7c3aed');
 });

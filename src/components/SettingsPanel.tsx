@@ -287,7 +287,7 @@ const SettingsPanel: React.FC<Props> = ({
             <input
               type="color"
               className="settings-custom-theme-picker"
-              value={customThemeColor || '#0D9488'}
+              value={customThemeColor || '#7C3AED'}
               onChange={(e) => onChangeCustomThemeColor(e.target.value)}
               aria-label="自定义主题色"
             />
@@ -296,7 +296,7 @@ const SettingsPanel: React.FC<Props> = ({
               className="settings-custom-theme-hex"
               value={customThemeColor}
               onChange={(e) => onChangeCustomThemeColor(e.target.value)}
-              placeholder="#0D9488"
+              placeholder="#7C3AED"
               spellCheck={false}
               aria-label="自定义主题色十六进制值"
             />

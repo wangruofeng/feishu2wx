@@ -337,29 +337,29 @@
    --custom-primary / --custom-heading / --custom-h3h6 / --custom-bg */
 
 .theme-custom .preview-content {
-  --preview-primary-color: var(--custom-primary, #0D9488);
-  --article-quote-theme-color: var(--custom-primary, #0D9488);
-  --article-quote-bg-color: var(--custom-bg, #F0FDFA);
+  --preview-primary-color: var(--custom-primary, #7C3AED);
+  --article-quote-theme-color: var(--custom-primary, #7C3AED);
+  --article-quote-bg-color: var(--custom-bg, #F6F1FE);
   background-color: #ffffff;
   color: #333;
 }
 
 .theme-custom .preview-content h1,
 .theme-custom .preview-content h2 {
-  border-bottom-color: var(--custom-heading, #115E59);
-  color: var(--custom-heading, #115E59);
+  border-bottom-color: var(--custom-heading, #4D2493);
+  color: var(--custom-heading, #4D2493);
 }
 
 .theme-custom .preview-content h3,
 .theme-custom .preview-content h4,
 .theme-custom .preview-content h5,
 .theme-custom .preview-content h6 {
-  color: var(--custom-h3h6, #0F766E);
+  color: var(--custom-h3h6, #6630C2);
 }
 
 .theme-custom .preview-content blockquote {
-  border-left-color: var(--custom-primary, #0D9488);
-  background-color: var(--custom-bg, #F0FDFA);
+  border-left-color: var(--custom-primary, #7C3AED);
+  background-color: var(--custom-bg, #F6F1FE);
 }
 
 .theme-custom .preview-content a {
@@ -378,27 +378,27 @@
 .theme-custom .preview-content hr.custom-hr,
 .theme-custom .preview-content hr.custom-hr::before,
 .theme-custom .preview-content hr.custom-hr::after {
-  color: var(--custom-primary, #0D9488);
+  color: var(--custom-primary, #7C3AED);
 }
 
 .theme-custom .toolbar-btn-primary {
-  background-color: var(--custom-primary, #0D9488);
-  border-color: var(--custom-primary, #0D9488);
+  background-color: var(--custom-primary, #7C3AED);
+  border-color: var(--custom-primary, #7C3AED);
 }
 
 .theme-custom .toolbar-btn-primary:hover:not(:disabled) {
-  background-color: var(--custom-primary, #0D9488);
-  border-color: var(--custom-primary, #0D9488);
+  background-color: var(--custom-primary, #7C3AED);
+  border-color: var(--custom-primary, #7C3AED);
   filter: brightness(1.08);
   color: #ccc;
 }
 
 .theme-custom .theme-option.active {
-  color: var(--custom-primary, #0D9488);
+  color: var(--custom-primary, #7C3AED);
 }
 
 .theme-custom .preview-content.invert-h1 h1 .h1-inline-block {
-  background-color: var(--custom-heading, #115E59);
+  background-color: var(--custom-heading, #4D2493);
 }
 
 
