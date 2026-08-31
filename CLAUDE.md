@@ -58,7 +58,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 字体配置分散在两处（`FontSelector.tsx`、`wechatCopy.ts`），改字体时两处都要同步
 - 正文/引用块基础字号为 `16px`（`sharedArticleStyleConfig.bodyFontSize` / `quoteFontSize`），预览层（`themes.css`）与微信输出层（`wechatCopy.ts`）须保持一致；默认字体栈以 `PingFang SC NEW` 为首选项
 - 表头样式跨主题统一：背景 `#f5f5f5`、文字 `#333`（不再使用主题强调色），改表头时 `themes.css` 各主题块与 `wechatCopy.ts` 的 `tableHeaderBgColor`/`tableHeaderColor` 都要同步
-- 列表样式在微信输出层单点维护：`wechatCopy.ts` 的 `applyThemeStyles()` 把无序列表重建为 6px 内联圆点（`.wechat-list-bullet` span，`●` 字符兜底防微信清空空 span + `overflow:hidden` 钳制在 6px 盒内）+ `li` 悬挂缩进（`padding-left:16px; text-indent:-16px`，圆点 6px + 间距 10px 恰占 16px，换行内容与首行文字对齐），`ul` 自身 `padding-left:0`、`list-style:none`；有序列表 `padding-left:24px` + `list-style-position:outside`；预览层 `PreviewPane.css` 同步（ul 16px / ol 24px），CLI 渲染管线复用 `formatForWeChat` 自动同构
+- 列表样式在微信输出层单点维护：`wechatCopy.ts` 的 `applyThemeStyles()` 把无序列表重建为 6px 内联圆点（`.wechat-list-bullet` span，`●` 字符兜底防微信清空空 span + `overflow:hidden` 钳制在 6px 盒内，`vertical-align:3px` 使圆点中心对齐 16px 首行文本墨迹中心，`middle` 会偏低约 1.4px 勿改回）+ `li` 悬挂缩进（`padding-left:16px; text-indent:-16px`，圆点 6px + 间距 10px 恰占 16px，换行内容与首行文字对齐），`ul` 自身 `padding-left:0`、`list-style:none`；有序列表 `padding-left:24px` + `list-style-position:outside`；预览层 `PreviewPane.css` 同步（ul 16px / ol 24px），CLI 渲染管线复用 `formatForWeChat` 自动同构
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 设置迁移：设置面板「配置迁移」组支持导出/导入排版设置 JSON（`SettingsPanel.tsx` 按钮与隐藏 file input + `App.tsx` 的 `handleExportSettings`/`handleImportSettings`），`src/utils/settingsBackup.ts` 的 `createSettingsBackup()`/`parseSettingsBackup()` 使用与用户级 CLI 配置同构的 v1 结构（`theme`/`editor`/`header`/`footer`/`wechatLinkAutoAdapt` 分组，导出时附带 CLI 兼容的 `showBlockquoteBg` 布尔），逐字段白名单校验、不含任何凭证；导出文件名 `feishu2wx-config.json`
 - 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储
@@ -77,6 +77,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 详细文档
 
+- 使用说明（面向用户）：[docs/usage.md](docs/usage.md)
 - 架构与渲染细节：[docs/claude/architecture.md](docs/claude/architecture.md)
 - 开发命令、测试、部署与提交流程：[docs/claude/development.md](docs/claude/development.md)
 - 部署说明（GitHub Pages + Cloudflare Pages）：[DEPLOY.md](DEPLOY.md)
