@@ -60,6 +60,10 @@
   margin-bottom: var(--space-3);
 }
 
+.settings-config-import-input {
+  display: none;
+}
+
 /* ========== 行：标签 + 控件 ========== */
 
 .settings-row {

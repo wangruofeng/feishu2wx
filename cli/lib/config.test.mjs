@@ -188,37 +188,14 @@ test('initConfigFile force rewrites config with optional credentials', () => {
   });
 });
 
-test('getProjectConfigPath resolves config under the current project', () => {
-  const { getProjectConfigPath } = require('./config.cjs');
+test('resolveConfigPath always uses the user config even when a project config exists', () => {
+  const { DEFAULT_CONFIG_PATH, initConfigFile, resolveConfigPath } = require('./config.cjs');
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'feishu2wx-project-'));
-
-  assert.equal(getProjectConfigPath(cwd), path.join(cwd, '.feishu2wx', 'config.json'));
-});
-
-test('resolveConfigPath prefers project config when it exists', () => {
-  const { getProjectConfigPath, initConfigFile, resolveConfigPath } = require('./config.cjs');
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'feishu2wx-project-'));
-  const projectConfigPath = getProjectConfigPath(cwd);
+  const projectConfigPath = path.join(cwd, '.feishu2wx', 'config.json');
 
   initConfigFile(projectConfigPath);
 
-  assert.equal(resolveConfigPath({ cwd }), projectConfigPath);
-});
-
-test('resolveConfigPath falls back to user config when project config is missing', () => {
-  const { DEFAULT_CONFIG_PATH, resolveConfigPath } = require('./config.cjs');
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'feishu2wx-project-'));
-
   assert.equal(resolveConfigPath({ cwd }), DEFAULT_CONFIG_PATH);
-});
-
-test('resolveConfigPath supports explicit project and config path scopes', () => {
-  const { getProjectConfigPath, resolveConfigPath } = require('./config.cjs');
-  const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'feishu2wx-project-'));
-  const explicitPath = path.join(cwd, 'custom-config.json');
-
-  assert.equal(resolveConfigPath({ cwd, project: true }), getProjectConfigPath(cwd));
-  assert.equal(resolveConfigPath({ cwd, configPath: explicitPath }), explicitPath);
 });
 
 test('mergeThemeOptions updates the full web-aligned theme config', () => {

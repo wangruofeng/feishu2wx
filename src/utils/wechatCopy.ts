@@ -624,7 +624,9 @@ function convertLinksToWechatText(container: HTMLElement): void {
   container.querySelectorAll('a[href]').forEach((link) => {
     const href = link.getAttribute('href') || '';
     const text = link.textContent?.trim() || href;
-    const textNode = document.createTextNode(`${text}: ${href}`);
+    // 链接文本与 URL 相同时（裸链接 / [url](url) / 空文本）只显示一次，避免「url: url」重复
+    const display = text === href ? href : `${text}: ${href}`;
+    const textNode = document.createTextNode(display);
     link.parentNode?.replaceChild(textNode, link);
   });
 }
@@ -1298,11 +1300,12 @@ function applyThemeStyles(
 
     listEl.style.marginBottom = isNested ? '4px' : '16px';
     listEl.style.marginTop = isNested ? '4px' : '0';
-    listEl.style.paddingLeft = '20px';
     listEl.style.color = '#333';
     listEl.style.fontFamily = fontFamily;
     listEl.style.textAlign = textAlignMode;
     listEl.style.fontSize = '16px';
+    listEl.style.paddingLeft = '24px';
+    listEl.style.listStylePosition = 'outside';
   });
 
   // 先展开 li > p，避免微信把 p 转成 section 后把「第一个子元素」提到 li 下、其余包进 section 导致换行
@@ -1318,6 +1321,49 @@ function applyThemeStyles(
     }
   });
   removeListFormattingWhitespace(container);
+
+  // 微信编辑器不会稳定保留原生 ul marker 的尺寸。用内联圆点保证 6px 的主流 Markdown 视觉；
+  // li 用 padding-left 16px + text-indent -16px 做悬挂缩进，圆点（6px）+ 间距（10px）正好占满
+  // 16px，换行后的内容与首行文字对齐，即标准 Markdown 渲染效果。ul 自身 padding-left 置 0，
+  // 圆点与正文左边缘平齐，嵌套列表靠逐级 16px 悬挂自然区分层级。
+  const unorderedLists = container.querySelectorAll('ul');
+  unorderedLists.forEach((list) => {
+    const listEl = list as HTMLElement;
+    const items = Array.from(listEl.children).filter((child) => (
+      child.tagName === 'LI' && !child.classList.contains('task-list-item')
+    )) as HTMLElement[];
+
+    if (items.length === 0) return;
+
+    listEl.style.listStyle = 'none';
+    listEl.style.paddingLeft = '0';
+
+    items.forEach((item) => {
+      item.style.paddingLeft = '16px';
+      item.style.textIndent = '-16px';
+
+      if (item.querySelector(':scope > .wechat-list-bullet')) return;
+
+      const bullet = document.createElement('span');
+      bullet.className = 'wechat-list-bullet';
+      bullet.setAttribute('aria-hidden', 'true');
+      // 微信会清理空 span，因此保留一个真实字符作为兜底；overflow hidden 保证字符被钳制放大时
+      // 仍裁剪在 6px 盒内，背景圆点确保几何尺寸恒为 6px。
+      bullet.textContent = '●';
+      bullet.style.display = 'inline-block';
+      bullet.style.width = '6px';
+      bullet.style.height = '6px';
+      bullet.style.overflow = 'hidden';
+      bullet.style.marginRight = '10px';
+      bullet.style.borderRadius = '50%';
+      bullet.style.backgroundColor = '#333';
+      bullet.style.color = '#333';
+      bullet.style.fontSize = '6px';
+      bullet.style.lineHeight = '6px';
+      bullet.style.verticalAlign = 'middle';
+      item.insertBefore(bullet, item.firstChild);
+    });
+  });
 
   // 处理列表项
   const listItems = container.querySelectorAll('li');

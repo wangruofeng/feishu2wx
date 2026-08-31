@@ -84,11 +84,7 @@ const THEME_HELP_TEXT = [
 ].join('\n');
 
 function resolveActiveConfigPath(options) {
-  return resolveConfigPath({
-    configPath: options.config,
-    project: options.project,
-    user: options.user,
-  });
+  return resolveConfigPath();
 }
 
 function resolveThemeConfig(options) {
@@ -122,16 +118,11 @@ async function main() {
   const program = new Command();
   program
     .name('feishu2wx')
-    .description('飞书/Markdown 转微信公众号排版 CLI')
-    .option('--config <path>', '显式配置文件路径')
-    .option('--project', '使用当前项目 .feishu2wx/config.json')
-    .option('--user', '使用用户级 ~/.feishu2wx/config.json');
+    .description('飞书/Markdown 转微信公众号排版 CLI');
 
   program.command('init')
     .description('初始化 CLI 配置文件并显示后续引导')
     .option('--force', '覆盖已有配置文件')
-    .option('--project', '初始化当前项目级配置文件')
-    .option('--user', '初始化用户级配置文件')
     .option('--theme <theme>', '初始主题 classic/orange/blue/teal')
     .option('--app-id <appId>', '初始化时写入微信公众号 AppID')
     .option('--app-secret <appSecret>', '初始化时写入微信公众号 AppSecret')

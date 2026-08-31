@@ -598,6 +598,41 @@ test('removes formatting whitespace from loose lists before wechat publish', () 
   });
 });
 
+test('keeps ordered-list semantics and uses a 6px marker for unordered lists in WeChat', () => {
+  const formattedHtml = formatForWeChat(
+    '<ol><li>第一项</li><li>第二项</li></ol><ul><li>无序项</li></ul>',
+    'green',
+    'default',
+    true,
+    'border',
+    false,
+    'classic',
+    false
+  );
+
+  const container = document.createElement('div');
+  container.innerHTML = formattedHtml;
+  const orderedList = container.querySelector('ol');
+  const unorderedList = container.querySelector('ul');
+  const unorderedItem = unorderedList.querySelector('li');
+  const bullet = unorderedItem.querySelector('.wechat-list-bullet');
+
+  expect(orderedList.style.paddingLeft).toBe('24px');
+  expect(orderedList.style.listStyle).toBe('');
+  expect(orderedList.style.listStylePosition).toBe('outside');
+  expect(unorderedList.style.paddingLeft).toBe('0px');
+  expect(unorderedList.style.listStyle).toBe('none');
+  expect(unorderedItem.style.paddingLeft).toBe('16px');
+  expect(unorderedItem.style.textIndent).toBe('-16px');
+  expect(bullet.style.width).toBe('6px');
+  expect(bullet.style.height).toBe('6px');
+  expect(bullet.style.overflow).toBe('hidden');
+  expect(bullet.style.marginRight).toBe('10px');
+  expect(bullet.textContent).toBe('●');
+  expect(container.querySelector('ol > li').textContent).toBe('第一项');
+  expect(container.querySelector('ul > li').textContent).toBe('●无序项');
+});
+
 test('formats modern code blocks with the same key visual styles as preview', () => {
   const html = '<pre class="modern-code-block"><div class="code-block-header"><span class="code-block-dot red"></span><span class="code-block-dot orange"></span><span class="code-block-dot green"></span></div><div class="code-block-content"><code class="hljs language-js"><span class="hljs-keyword">const</span> answer = 42;</code></div></pre>';
 

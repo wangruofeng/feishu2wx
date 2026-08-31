@@ -302,10 +302,18 @@
   margin-bottom: 0;
 }
 
-.preview-content ul,
+.preview-content ul {
+  margin-bottom: 16px;
+  /* 与微信导出一致：圆点贴列表左缘、文字悬挂缩进 16px（原生 marker 挂在 padding 区） */
+  padding-left: 16px;
+  list-style-position: outside;
+  text-align: left;
+}
+
 .preview-content ol {
   margin-bottom: 16px;
-  padding-left: 30px;
+  padding-left: 24px;
+  list-style-position: outside;
   text-align: left;
 }
 

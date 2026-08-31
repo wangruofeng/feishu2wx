@@ -15,6 +15,7 @@ import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImag
 import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHighlight';
 import { buildCustomThemePalette, isValidHexColor } from './utils/themeColor';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
+import { createSettingsBackup, parseSettingsBackup, type SettingsBackup } from './utils/settingsBackup';
 import exampleMd from './data/example';
 import './App.css';
 import './styles/themes.css';
@@ -426,6 +427,58 @@ const App: React.FC = () => {
     setTheme('classic');
   }, []);
 
+  const handleExportSettings = useCallback(() => {
+    const backup: SettingsBackup = {
+      theme: theme as SettingsBackup['theme'], customThemeColor, font, shouldConvertPastedHtml,
+      codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left,
+      invertH2, alignH2Left, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode,
+      blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate,
+      showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode,
+      syntaxTheme, aiPanelMode,
+    };
+    const url = URL.createObjectURL(new Blob([createSettingsBackup(backup)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'feishu2wx-config.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [theme, customThemeColor, font, shouldConvertPastedHtml, codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate, showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode, syntaxTheme, aiPanelMode]);
+
+  const handleImportSettings = useCallback(async (file: File) => {
+    const result = parseSettingsBackup(await file.text());
+    if ('error' in result) return { success: false, error: result.error };
+    const settings = result.settings;
+    if (settings.theme) setTheme(settings.theme);
+    if (settings.customThemeColor !== undefined) setCustomThemeColor(settings.customThemeColor);
+    if (settings.font) setFont(settings.font);
+    if (settings.shouldConvertPastedHtml !== undefined) setShouldConvertPastedHtml(settings.shouldConvertPastedHtml);
+    if (settings.codeBlockStyle) setCodeBlockStyleState(settings.codeBlockStyle);
+    if (settings.imageBorderStyle) setImageBorderStyle(settings.imageBorderStyle);
+    if (settings.imageBorderRadius !== undefined) setImageBorderRadius(settings.imageBorderRadius);
+    if (settings.showH1Underline !== undefined) setShowH1Underline(settings.showH1Underline);
+    if (settings.invertH1 !== undefined) setInvertH1(settings.invertH1);
+    if (settings.alignH1Left !== undefined) setAlignH1Left(settings.alignH1Left);
+    if (settings.invertH2 !== undefined) setInvertH2(settings.invertH2);
+    if (settings.alignH2Left !== undefined) setAlignH2Left(settings.alignH2Left);
+    if (settings.showHorizontalRule !== undefined) setShowHorizontalRuleState(settings.showHorizontalRule);
+    if (settings.showFrontMatter !== undefined) setShowFrontMatter(settings.showFrontMatter);
+    if (settings.tableShadow !== undefined) setTableShadow(settings.tableShadow);
+    if (settings.blockquoteBackgroundMode) setBlockquoteBackgroundMode(settings.blockquoteBackgroundMode);
+    if (settings.blockquoteColorMode) setBlockquoteColorMode(settings.blockquoteColorMode);
+    if (settings.blockquoteHeightMode) setBlockquoteHeightMode(settings.blockquoteHeightMode);
+    if (settings.textAlignMode) setTextAlignMode(settings.textAlignMode);
+    if (settings.headerTemplate !== undefined) setHeaderTemplate(settings.headerTemplate);
+    if (settings.footerTemplate !== undefined) setFooterTemplate(settings.footerTemplate);
+    if (settings.showHeaderTemplate !== undefined) setShowHeaderTemplate(settings.showHeaderTemplate);
+    if (settings.showFooterTemplate !== undefined) setShowFooterTemplate(settings.showFooterTemplate);
+    if (settings.wechatLinkAutoAdapt !== undefined) setWechatLinkAutoAdapt(settings.wechatLinkAutoAdapt);
+    if (settings.markerHighlightColor) setMarkerHighlightColor(settings.markerHighlightColor);
+    if (settings.darkMode) setDarkMode(settings.darkMode);
+    if (settings.syntaxTheme) setSyntaxTheme(settings.syntaxTheme);
+    if (settings.aiPanelMode) setAiPanelMode(settings.aiPanelMode);
+    return { success: true };
+  }, []);
+
   const handleCopyToWeChat = useCallback(async () => {
     setIsCopying(true);
     try {
@@ -629,6 +682,8 @@ const App: React.FC = () => {
             customThemeColor={customThemeColor}
             onChangeCustomThemeColor={handleCustomThemeColorChange}
             onResetCustomThemeColor={handleResetCustomThemeColor}
+            onExportSettings={handleExportSettings}
+            onImportSettings={handleImportSettings}
           />
           {isFullscreen && (
             <Button className="exit-btn" onClick={() => setIsFullscreen(false)}>

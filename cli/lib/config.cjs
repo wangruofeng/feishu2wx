@@ -3,7 +3,6 @@ const os = require('node:os');
 const path = require('node:path');
 
 const DEFAULT_CONFIG_PATH = path.join(os.homedir(), '.feishu2wx', 'config.json');
-const PROJECT_CONFIG_RELATIVE_PATH = path.join('.feishu2wx', 'config.json');
 
 const THEME_OPTIONS = [
   { key: 'classic', name: '经典' },
@@ -60,27 +59,8 @@ function writeConfigFile(configPath, config) {
   });
 }
 
-function getProjectConfigPath(cwd = process.cwd()) {
-  return path.join(cwd, PROJECT_CONFIG_RELATIVE_PATH);
-}
-
-function resolveConfigPath(options = {}) {
-  const cwd = options.cwd || process.cwd();
-  if (options.configPath) {
-    return path.resolve(cwd, options.configPath);
-  }
-  if (options.project && options.user) {
-    throw new Error('--project 和 --user 不能同时使用');
-  }
-  if (options.project) {
-    return getProjectConfigPath(cwd);
-  }
-  if (options.user) {
-    return DEFAULT_CONFIG_PATH;
-  }
-
-  const projectConfigPath = getProjectConfigPath(cwd);
-  return fs.existsSync(projectConfigPath) ? projectConfigPath : DEFAULT_CONFIG_PATH;
+function resolveConfigPath() {
+  return DEFAULT_CONFIG_PATH;
 }
 
 function normalizeThemeConfig(theme = {}) {
@@ -296,11 +276,9 @@ function mergeThemeOptions(config, options = {}) {
 
 module.exports = {
   DEFAULT_CONFIG_PATH,
-  PROJECT_CONFIG_RELATIVE_PATH,
   DEFAULT_THEME_CONFIG,
   THEME_OPTIONS,
   clearWechatConfig,
-  getProjectConfigPath,
   initConfigFile,
   loadConfig,
   maskAppId,

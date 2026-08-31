@@ -67,6 +67,8 @@ interface Props {
   customThemeColor: string;
   onChangeCustomThemeColor: (color: string) => void;
   onResetCustomThemeColor: () => void;
+  onExportSettings: () => void;
+  onImportSettings: (file: File) => Promise<{ success: boolean; error?: string }>;
 }
 
 const fonts = [
@@ -212,9 +214,21 @@ const SettingsPanel: React.FC<Props> = ({
   customThemeColor,
   onChangeCustomThemeColor,
   onResetCustomThemeColor,
+  onExportSettings,
+  onImportSettings,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
+  const [configTransferStatus, setConfigTransferStatus] = useState('');
+
+  const handleImportSettings = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    const result = await onImportSettings(file);
+    setConfigTransferStatus(result.success ? '配置已导入。' : result.error || '配置导入失败。');
+  };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -574,6 +588,26 @@ const SettingsPanel: React.FC<Props> = ({
           visible={showFooterTemplate}
           onToggleVisible={onToggleShowFooterTemplate}
         />
+      </section>
+
+      <section className="settings-group">
+        <h3 className="settings-group-title">配置迁移</h3>
+        <div className="settings-row settings-row--block">
+          <div className="settings-toggles">
+            <Button variant="toggle" onClick={onExportSettings}>导出 JSON</Button>
+            <Button variant="toggle" onClick={() => importInputRef.current?.click()}>导入 JSON</Button>
+          </div>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="settings-config-import-input"
+            aria-label="导入配置 JSON"
+            onChange={handleImportSettings}
+          />
+          <span className="settings-row-hint">导入导出均使用用户级 CLI 配置格式；不导入文章、历史记录或任何 API Key、AppSecret 等凭证。</span>
+          {configTransferStatus && <span className="settings-row-hint" role="status">{configTransferStatus}</span>}
+        </div>
       </section>
 
       {/* ===== 公众号 ===== */}

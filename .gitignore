@@ -38,7 +38,6 @@ yarn-error.log*
 
 # Server data (sensitive)
 server/data/
-.feishu2wx/
 
 # Cloudflare
 .wrangler/

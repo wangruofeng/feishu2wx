@@ -97,7 +97,6 @@ npm test
 
 ```bash
 npm run cli -- init
-npm run cli -- init --project
 npm run cli -- auth set --app-id <appid> --app-secret <secret>
 npm run cli -- auth status
 npm run cli -- theme list
@@ -106,13 +105,7 @@ npm run cli -- render article.md --out article.html
 npm run cli -- publish article.md --title "文章标题" --cover cover.jpg
 ```
 
-配置默认优先读取当前项目的 `.feishu2wx/config.json`；如果不存在，则回退到用户级 `~/.feishu2wx/config.json`。项目级配置可通过 `init --project` 初始化，敏感配置目录 `.feishu2wx/` 已加入 `.gitignore`。也可以通过全局参数覆盖：
-
-```bash
-npm run cli -- --config /tmp/feishu2wx-config.json theme status
-npm run cli -- --project theme status
-npm run cli -- --user theme status
-```
+CLI 只读取用户级 `~/.feishu2wx/config.json`。AppID/AppSecret 仅保存在该目录（权限为仅当前用户），不要放入项目目录或提交到仓库；自动化环境请用 `FEISHU2WX_WECHAT_APP_ID` 与 `FEISHU2WX_WECHAT_APP_SECRET` 覆盖。
 
 `render` 默认把微信公众号兼容 HTML 输出到 stdout；指定 `--out` 会写入文件，`--copy` 会把 HTML 字符串写入系统剪贴板，`--preview` 会生成临时预览页并打开浏览器。
 

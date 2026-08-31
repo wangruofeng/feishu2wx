@@ -6,7 +6,7 @@
 
 | 命令 | 作用 | 示例 |
 |------|------|------|
-| `init` | 初始化配置文件 | `feishu2wx init --project` |
+| `init` | 初始化用户级配置文件 | `feishu2wx init` |
 | `auth set\|status\|test\|clear` | 管理公众号 AppID/AppSecret | `feishu2wx auth set --app-id <id> --app-secret <s>` |
 | `theme list\|set\|status` | 管理默认主题与排版项 | `feishu2wx theme set blue` |
 | `author set\|clear\|status` | 管理默认文章作者（publish 未传 `--author` 时使用） | `feishu2wx author set ruofeng` |
@@ -18,7 +18,7 @@
 
 `render` / `publish` / `theme set` 还支持一组通用的**排版覆盖选项**（主题、H1/H2、引用块、正文对齐等，运行 `feishu2wx render --help` 可查看，下文「主题配置」有用法），单次命令临时覆盖默认主题。
 
-**配置来源**（优先级从高到低）：`--config <path>` 与 `--project` / `--user` 开关 → 环境变量 → 项目级 `.feishu2wx/config.json` → 用户级 `~/.feishu2wx/config.json` → 内置默认值。
+**配置来源**（优先级从高到低）：环境变量 → 用户级 `~/.feishu2wx/config.json` → 内置默认值。
 
 ## 运行方式
 
@@ -36,59 +36,18 @@ npm run cli -- --help
 
 ## 配置文件
 
-CLI 支持三种配置来源：
-
-- 项目级配置：当前工作目录下的 `.feishu2wx/config.json`
-- 用户级配置：`~/.feishu2wx/config.json`
-- 显式配置：通过 `--config <path>` 指定
-
-默认读取规则：
-
-1. 如果当前项目存在 `.feishu2wx/config.json`，优先使用项目级配置。
-2. 如果项目级配置不存在，回退到用户级配置。
-
-用户级配置文件：
+CLI 只使用用户级配置文件：
 
 ```text
 ~/.feishu2wx/config.json
 ```
 
-项目级配置文件：
-
-```text
-.feishu2wx/config.json
-```
-
-如需测试命令但不污染默认配置，可以使用 `--config`：
-
-```bash
-npm run cli -- --config /tmp/feishu2wx-cli-test.json theme status
-```
+设置页面导出的 `feishu2wx-config.json` 与此文件使用同一份 v1 结构，可直接互相导入。网页端只读写 `theme`、`editor`、`header`、`footer` 与 `wechatLinkAutoAdapt`；`wechat.appId` 和 `wechat.appSecret` 仅保留在用户级 CLI 配置，不会导出到浏览器文件。
 
 初始化用户级配置文件：
 
 ```bash
 npm run cli -- init
-```
-
-初始化当前项目级配置文件：
-
-```bash
-npm run cli -- init --project
-```
-
-后续在同一个项目目录中执行 CLI 时，会自动优先使用这个项目级配置。
-
-强制使用项目级配置：
-
-```bash
-npm run cli -- --project theme status
-```
-
-强制使用用户级配置：
-
-```bash
-npm run cli -- --user theme status
 ```
 
 初始化时指定主题：
@@ -113,9 +72,7 @@ npm run cli -- init --app-id <appid> --app-secret <secret>
 
 1. 命令行参数
 2. 环境变量
-3. 项目级配置文件
-4. 用户级配置文件
-5. 内置默认值
+3. 内置默认值
 
 支持的环境变量：
 
@@ -370,12 +327,6 @@ node --test cli/lib/config.test.mjs cli/lib/render-pipeline.test.mjs
 
 ```bash
 npm run cli -- render docs/research/cli-prd.md --theme teal --out /tmp/feishu2wx-test.html
-```
-
-未配置凭证的发布错误分支：
-
-```bash
-npm run cli -- --config /tmp/feishu2wx-empty.json publish docs/research/cli-prd.md --title 测试标题
 ```
 
 项目回归：
