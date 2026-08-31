@@ -16,6 +16,7 @@ interface Props {
   alignH1Left?: boolean;
   invertH2?: boolean;
   alignH2Left?: boolean;
+  showH2Underline?: boolean;
   imageBorderStyle?: 'border' | 'shadow' | 'default';
   imageBorderRadius?: boolean;
   tableShadow?: boolean;
@@ -39,6 +40,7 @@ const PreviewPane: React.FC<Props> = ({
   alignH1Left = false,
   invertH2 = false,
   alignH2Left = false,
+  showH2Underline = false,
   imageBorderStyle = 'border',
   imageBorderRadius = false,
   tableShadow = true,
@@ -147,7 +149,7 @@ const PreviewPane: React.FC<Props> = ({
       <div className="preview-content-wrapper">
         <div
           ref={setPreviewRef}
-          className={`preview-content article-layout-generic device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} blockquote-bg-${blockquoteBackgroundMode} blockquote-color-${blockquoteColorMode} blockquote-height-${blockquoteHeightMode} text-align-${textAlignMode} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
+          className={`preview-content article-layout-generic device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${showH2Underline ? 'show-h2-underline' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} blockquote-bg-${blockquoteBackgroundMode} blockquote-color-${blockquoteColorMode} blockquote-height-${blockquoteHeightMode} text-align-${textAlignMode} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
           style={{ ...fontStyle, '--marker-highlight-color': getMarkerHighlightColor(markerHighlightColor) } as React.CSSProperties}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />

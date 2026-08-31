@@ -130,6 +130,7 @@ test('uses the configured marker highlight color for wechat copy', () => {
     false,
     false,
     false,
+    false,
     true,
     'default',
     'loose',
@@ -190,13 +191,35 @@ test('matches orange preview heading colors for wechat copy and publish', () => 
   expect(h2Wrapper.style.color).toBe('rgb(255, 255, 255)');
 });
 
+test('shows the h2 underline only when enabled and not inverted', () => {
+  const html = '<h2>二级标题</h2>';
+  const baseArgs = [html, 'orange', 'default', true, 'border', false, 'classic', false];
+
+  const underlineHtml = formatForWeChat(...baseArgs, false, false, true);
+  const underlineContainer = document.createElement('div');
+  underlineContainer.innerHTML = underlineHtml;
+  expect(underlineContainer.querySelector('h2').style.borderBottom).toBe('1px solid #FD4606');
+  expect(underlineContainer.querySelector('h2').style.paddingBottom).toBe('8px');
+
+  const defaultContainer = document.createElement('div');
+  defaultContainer.innerHTML = formatForWeChat(...baseArgs);
+  // jsdom 将重置为 none 的边框序列化为空字符串
+  expect(defaultContainer.querySelector('h2').style.borderBottom).toBe('');
+  expect(defaultContainer.querySelector('h2').style.paddingBottom).toBe('0px');
+
+  const invertedContainer = document.createElement('div');
+  invertedContainer.innerHTML = formatForWeChat(...baseArgs, true, false, true);
+  expect(invertedContainer.querySelector('h2').style.borderBottom).toBe('');
+  expect(invertedContainer.querySelector('h2').style.paddingBottom).toBe('0px');
+});
+
 test('shares generic layout sizes with non-generic themes', () => {
   const html = '<h1>一级标题</h1><h2>二级标题</h2><h3>三级标题</h3><p>正文内容</p><blockquote><p>重点引用</p></blockquote>';
   const container = document.createElement('div');
   container.innerHTML = formatForWeChat(html, 'orange');
 
   expect(container.querySelector('h1')?.style.margin).toBe('0px 0px 14px 0px');
-  expect(container.querySelector('h1')?.style.padding).toBe('0px 0px 0px 0px');
+  expect(container.querySelector('h1')?.style.padding).toBe('0px 0px 8px 0px');
   expect(container.querySelector('h1')?.style.fontSize).toBe('24px');
   expect(container.querySelector('h1')?.style.letterSpacing).toBe('0.544px');
   expect(container.querySelector('h2')?.style.margin).toBe('65px 0px 27px 0px');
@@ -225,6 +248,7 @@ test('uses the generic or active theme color for blockquotes', () => {
     false,
     false,
     false,
+    false,
     true,
     'default'
   );
@@ -236,6 +260,7 @@ test('uses the generic or active theme color for blockquotes', () => {
     'default',
     false,
     'classic',
+    false,
     false,
     false,
     false,
@@ -265,6 +290,7 @@ test('formats independent blockquote background and height modes', () => {
     false,
     false,
     false,
+    false,
     true,
     'default',
     'compact',
@@ -278,6 +304,7 @@ test('formats independent blockquote background and height modes', () => {
     'default',
     false,
     'classic',
+    false,
     false,
     false,
     false,
@@ -313,6 +340,7 @@ test('applies orange theme blockquote background when following the theme', () =
     'default',
     false,
     'classic',
+    false,
     false,
     false,
     false,
@@ -355,6 +383,7 @@ test('applies the configured default text alignment to article elements', () => 
     false,
     false,
     false,
+    false,
     true,
     'default',
     'loose',
@@ -374,7 +403,7 @@ test('uses the shared link style for every theme', () => {
 
   ['teal', 'classic', 'orange', 'blue'].forEach((theme) => {
     const container = document.createElement('div');
-    container.innerHTML = formatForWeChat(html, theme, 'default', true, 'border', false, 'classic', false, false, false, true, 'default', 'loose', 'theme', 'left', false);
+    container.innerHTML = formatForWeChat(html, theme, 'default', true, 'border', false, 'classic', false, false, false, false, true, 'default', 'loose', 'theme', 'left', false);
     const link = container.querySelector('a');
 
     expect(link?.style.color).toBe(expectedColor);
@@ -402,6 +431,7 @@ test('can disable automatic WeChat link adaptation and keep the link', () => {
     'border',
     false,
     'classic',
+    false,
     false,
     false,
     false,
@@ -628,6 +658,8 @@ test('keeps ordered-list semantics and uses a 6px marker for unordered lists in 
   expect(bullet.style.height).toBe('6px');
   expect(bullet.style.overflow).toBe('hidden');
   expect(bullet.style.marginRight).toBe('10px');
+  // 3px 上移使圆点中心与 16px 首行文本墨迹中心垂直对齐（middle 偏低约 1.4px）
+  expect(bullet.style.verticalAlign).toBe('3px');
   expect(bullet.textContent).toBe('●');
   expect(container.querySelector('ol > li').textContent).toBe('第一项');
   expect(container.querySelector('ul > li').textContent).toBe('●无序项');
@@ -731,6 +763,7 @@ test('uses the saved custom theme color for the custom theme export', () => {
     false,
     false,
     false,
+    false,
     true,
     'theme',
     'loose',
@@ -762,6 +795,7 @@ test('falls back to the default palette when the custom theme color is empty', (
     'default',
     false,
     'classic',
+    false,
     false,
     false,
     false,

@@ -99,6 +99,7 @@ FEISHU2WX_THEME
 - `alignH1Left`
 - `invertH2`
 - `alignH2Left`
+- `showH2Underline`
 - `showHorizontalRule`
 - `tableShadow`
 

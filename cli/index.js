@@ -55,6 +55,8 @@ function addThemeOptions(command) {
     .addOption(new Option('--no-invert-h2', '禁用 H2 反显').hideHelp())
     .addOption(new Option('--align-h2-left', 'H2 左对齐').hideHelp())
     .addOption(new Option('--no-align-h2-left', 'H2 居中').hideHelp())
+    .addOption(new Option('--show-h2-underline', '显示 H2 底部横线').hideHelp())
+    .addOption(new Option('--no-show-h2-underline', '隐藏 H2 底部横线').hideHelp())
     .addOption(new Option('--show-horizontal-rule', '显示分割线').hideHelp())
     .addOption(new Option('--no-show-horizontal-rule', '隐藏分割线').hideHelp())
     .addOption(new Option('--table-shadow', '显示表格阴影').hideHelp())
@@ -76,7 +78,7 @@ const THEME_HELP_TEXT = [
   '  代码块/图片: --code-block-style <classic|modern>   --image-border-style <border|shadow|default>',
   '              --image-border-radius / --no-image-border-radius',
   '  H1/H2:      --invert-h1 / --no-invert-h1   --align-h1-left / --no-align-h1-left   （H2 同理: --invert-h2, --align-h2-left）',
-  '              --show-h1-underline / --no-show-h1-underline',
+  '              --show-h1-underline / --no-show-h1-underline   --show-h2-underline / --no-show-h2-underline',
   '  其他排版:   --show-horizontal-rule / --no-...   --table-shadow / --no-...',
   '  引用块/正文:--blockquote-background-mode <theme|none>   --blockquote-color-mode <theme|default>',
   '              --blockquote-height-mode <loose|compact>   --text-align-mode <left|justify>',

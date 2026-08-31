@@ -21,6 +21,8 @@ interface Props {
   onToggleInvertH2: () => void;
   alignH2Left: boolean;
   onToggleAlignH2Left: () => void;
+  showH2Underline: boolean;
+  onToggleH2Underline: () => void;
   blockquoteBackgroundMode: 'none' | 'theme';
   onChangeBlockquoteBackgroundMode: (mode: 'none' | 'theme') => void;
   blockquoteColorMode: 'default' | 'theme';
@@ -168,6 +170,8 @@ const SettingsPanel: React.FC<Props> = ({
   onToggleInvertH2,
   alignH2Left,
   onToggleAlignH2Left,
+  showH2Underline,
+  onToggleH2Underline,
   showHorizontalRule,
   onToggleHorizontalRule,
   showFrontMatter,
@@ -384,6 +388,7 @@ const SettingsPanel: React.FC<Props> = ({
           checked={alignH1Left}
           onClick={onToggleAlignH1Left}
         />
+        <ToggleSwitch label="H2 底线" checked={showH2Underline} onClick={onToggleH2Underline} />
         <ToggleSwitch label="H2 反色" checked={invertH2} onClick={onToggleInvertH2} />
         <ToggleSwitch
           label={alignH2Left ? 'H2 左对齐' : 'H2 居中'}

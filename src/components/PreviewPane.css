@@ -230,6 +230,11 @@
   border-bottom: none;
 }
 
+/* 底线可见（未隐藏、未反色）时与标题文字保持 8px 垂直间距；需覆盖通用排版的 padding: 0 */
+.preview-content:not(.hide-h1-underline):not(.invert-h1) h1 {
+  padding-bottom: 8px;
+}
+
 .preview-content.align-h1-left h1 {
   text-align: left;
 }
@@ -259,6 +264,20 @@
   background-color: var(--preview-primary-color, currentColor);
   color: #fff;
   border-radius: 0;
+}
+
+/* 只设置宽度/线型，颜色由各主题的 border-bottom-color 规则提供；限定 article-layout-generic
+   以覆盖通用排版的 padding: 0，底线与标题文字保持 8px 垂直间距 */
+.preview-content.article-layout-generic.show-h2-underline h2 {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  padding-bottom: 8px;
+}
+
+/* 反色色块与底线互斥；置于 show-h2-underline 之后以保证同开时底线隐藏 */
+.preview-content.article-layout-generic.invert-h2 h2 {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .preview-content.align-h2-left h2 {

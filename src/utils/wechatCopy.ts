@@ -588,6 +588,7 @@ export function formatForWeChat(
   invertH1: boolean = false,
   invertH2: boolean = false,
   alignH2Left: boolean = false,
+  showH2Underline: boolean = false,
   legacyShowBlockquoteBg: boolean = true,
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
@@ -609,7 +610,7 @@ export function formatForWeChat(
   if (wechatLinkAutoAdapt) {
     convertLinksToWechatText(tempDiv);
   }
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
 
   return tempDiv.innerHTML;
 }
@@ -828,6 +829,7 @@ function applyThemeStyles(
   invertH1: boolean,
   invertH2: boolean,
   alignH2Left: boolean,
+  showH2Underline: boolean,
   legacyShowBlockquoteBg: boolean = true,
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
@@ -1198,7 +1200,10 @@ function applyThemeStyles(
     h1El.style.borderTop = 'none';
     h1El.style.borderLeft = 'none';
     h1El.style.borderRight = 'none';
-    h1El.style.paddingBottom = themeStyles.h1Padding || '0';
+    // 底线可见时与标题文字保持 8px 垂直间距
+    h1El.style.paddingBottom = (showH1Underline && !invertH1)
+      ? '8px'
+      : (themeStyles.h1Padding || '0');
     h1El.style.paddingTop = '0';
     h1El.style.paddingLeft = '0';
     h1El.style.paddingRight = '0';
@@ -1239,11 +1244,14 @@ function applyThemeStyles(
     h2El.style.marginRight = '0';
     h2El.style.fontWeight = 'bold';
     h2El.style.lineHeight = themeStyles.h2LineHeight || '29px';
-    h2El.style.borderBottom = 'none';
+    // 与 H1 底线一致：反色块与底线互斥，避免色块下缘贴一条同色横线
+    h2El.style.borderBottom = (showH2Underline && !invertH2)
+      ? `1px solid ${themeStyles.headingColorH2}`
+      : 'none';
     h2El.style.borderTop = 'none';
     h2El.style.borderLeft = 'none';
     h2El.style.borderRight = 'none';
-    h2El.style.paddingBottom = '0';
+    h2El.style.paddingBottom = (showH2Underline && !invertH2) ? '8px' : '0';
     h2El.style.paddingTop = '0';
     h2El.style.paddingLeft = themeStyles.h2Padding || '0';
     h2El.style.paddingRight = themeStyles.h2Padding || '0';
@@ -1360,7 +1368,9 @@ function applyThemeStyles(
       bullet.style.color = '#333';
       bullet.style.fontSize = '6px';
       bullet.style.lineHeight = '6px';
-      bullet.style.verticalAlign = 'middle';
+      // overflow:hidden 的 inline-block 基线即底缘，3px 上移使圆点中心落在基线上方 6px，
+      // 与 16px 中英文首行文本的墨迹中心（约 5.6-5.9px）垂直居中；middle 会偏低约 1.4px
+      bullet.style.verticalAlign = '3px';
       item.insertBefore(bullet, item.firstChild);
     });
   });
@@ -1729,6 +1739,7 @@ export async function copySelectedToWeChat(
   invertH1: boolean = false,
   invertH2: boolean = false,
   alignH2Left: boolean = false,
+  showH2Underline: boolean = false,
   legacyShowBlockquoteBg: boolean = true,
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
@@ -1746,7 +1757,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
 }
 
 /**
@@ -1764,6 +1775,7 @@ export async function copyHtmlToWeChat(
   invertH1: boolean = false,
   invertH2: boolean = false,
   alignH2Left: boolean = false,
+  showH2Underline: boolean = false,
   legacyShowBlockquoteBg: boolean = true,
   blockquoteColorMode: 'default' | 'theme' = 'default',
   blockquoteHeightMode: 'loose' | 'compact' = 'loose',
@@ -1777,7 +1789,7 @@ export async function copyHtmlToWeChat(
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {

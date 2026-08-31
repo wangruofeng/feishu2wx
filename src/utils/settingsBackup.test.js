@@ -13,6 +13,7 @@ const settings = {
   alignH1Left: true,
   invertH2: false,
   alignH2Left: true,
+  showH2Underline: true,
   showHorizontalRule: false,
   showFrontMatter: true,
   tableShadow: false,
@@ -57,7 +58,7 @@ test('imports a unified CLI config and ignores credentials', () => {
     theme: {
       theme: 'teal', font: 'pingfang', codeBlockStyle: 'modern', imageBorderStyle: 'shadow',
       imageBorderRadius: true, showH1Underline: true, invertH1: false, alignH1Left: true,
-      invertH2: false, alignH2Left: true, showHorizontalRule: false, tableShadow: false,
+      invertH2: false, alignH2Left: true, showH2Underline: true, showHorizontalRule: false, tableShadow: false,
       blockquoteBackgroundMode: 'theme', blockquoteColorMode: 'default', blockquoteHeightMode: 'compact',
       textAlignMode: 'justify', markerHighlightColor: 'yellow',
     },

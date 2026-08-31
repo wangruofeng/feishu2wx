@@ -73,6 +73,34 @@ test('toggles h1 inverted style on preview content', () => {
   expect(previewContent.className.includes('invert-h1')).toBe(false);
 });
 
+test('toggles h2 underline style on preview content', () => {
+  localStorage.setItem('feishu2wx_markdown', '## 标题');
+
+  act(() => {
+    root.render(<App />);
+  });
+
+  const previewContent = container.querySelector('.preview-content');
+  expect(previewContent.className.includes('show-h2-underline')).toBe(false);
+
+  // 先打开设置面板
+  const settingsButton = container.querySelector('.settings-trigger');
+  act(() => {
+    settingsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+
+  // 点击 "H2 底线" 按钮
+  const underlineButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.textContent.includes('H2 底线')
+  );
+
+  act(() => {
+    if (underlineButton) underlineButton.click();
+  });
+  expect(previewContent.className.includes('show-h2-underline')).toBe(true);
+  expect(localStorage.getItem('feishu2wx_showH2Underline')).toBe('true');
+});
+
 test('configures and persists the marker highlight color', () => {
   localStorage.setItem('feishu2wx_markdown', '==荧光笔文字==');
 

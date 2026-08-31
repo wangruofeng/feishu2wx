@@ -11,6 +11,7 @@ export interface SettingsBackup {
   alignH1Left: boolean;
   invertH2: boolean;
   alignH2Left: boolean;
+  showH2Underline: boolean;
   showHorizontalRule: boolean;
   showFrontMatter: boolean;
   tableShadow: boolean;
@@ -47,7 +48,7 @@ const enumValues: Record<string, readonly string[]> = {
 
 const booleanFields = new Set([
   'shouldConvertPastedHtml', 'imageBorderRadius', 'showH1Underline', 'invertH1', 'alignH1Left',
-  'invertH2', 'alignH2Left', 'showHorizontalRule', 'showFrontMatter', 'tableShadow',
+  'invertH2', 'alignH2Left', 'showH2Underline', 'showHorizontalRule', 'showFrontMatter', 'tableShadow',
   'showHeaderTemplate', 'showFooterTemplate', 'wechatLinkAutoAdapt',
 ]);
 
@@ -55,9 +56,9 @@ const stringFields = new Set(['customThemeColor', 'font', 'headerTemplate', 'foo
 const settingKeys = new Set([...Object.keys(enumValues), ...Array.from(booleanFields), ...Array.from(stringFields)]);
 const themeFields = new Set([
   'theme', 'font', 'codeBlockStyle', 'imageBorderStyle', 'imageBorderRadius', 'showH1Underline',
-  'invertH1', 'alignH1Left', 'invertH2', 'alignH2Left', 'showHorizontalRule', 'tableShadow',
-  'blockquoteBackgroundMode', 'blockquoteColorMode', 'blockquoteHeightMode', 'textAlignMode',
-  'markerHighlightColor',
+  'invertH1', 'alignH1Left', 'invertH2', 'alignH2Left', 'showH2Underline', 'showHorizontalRule',
+  'tableShadow', 'blockquoteBackgroundMode', 'blockquoteColorMode', 'blockquoteHeightMode',
+  'textAlignMode', 'markerHighlightColor',
 ]);
 const editorFields = new Set([
   'customThemeColor', 'shouldConvertPastedHtml', 'showFrontMatter', 'showHeaderTemplate',

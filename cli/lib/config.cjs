@@ -27,6 +27,7 @@ const DEFAULT_THEME_CONFIG = {
   alignH1Left: false,
   invertH2: false,
   alignH2Left: false,
+  showH2Underline: false,
   showHorizontalRule: true,
   tableShadow: true,
   markerHighlightColor: 'purple',
@@ -92,6 +93,7 @@ function normalizeThemeConfig(theme = {}) {
     alignH1Left: Boolean(theme.alignH1Left),
     invertH2: Boolean(theme.invertH2),
     alignH2Left: Boolean(theme.alignH2Left),
+    showH2Underline: Boolean(theme.showH2Underline),
     showHorizontalRule: theme.showHorizontalRule !== false,
     tableShadow: theme.tableShadow !== false,
     markerHighlightColor: ['purple', 'yellow', 'green', 'blue', 'pink'].includes(theme.markerHighlightColor)
@@ -268,6 +270,7 @@ function mergeThemeOptions(config, options = {}) {
   if (typeof options.alignH1Left === 'boolean') patch.alignH1Left = options.alignH1Left;
   if (typeof options.invertH2 === 'boolean') patch.invertH2 = options.invertH2;
   if (typeof options.alignH2Left === 'boolean') patch.alignH2Left = options.alignH2Left;
+  if (typeof options.showH2Underline === 'boolean') patch.showH2Underline = options.showH2Underline;
   if (typeof options.showHorizontalRule === 'boolean') patch.showHorizontalRule = options.showHorizontalRule;
   if (typeof options.tableShadow === 'boolean') patch.tableShadow = options.tableShadow;
   if (options.markerHighlightColor) patch.markerHighlightColor = options.markerHighlightColor;
