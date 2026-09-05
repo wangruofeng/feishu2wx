@@ -782,6 +782,22 @@
   font-style: italic;
 }
 
+/* 全屏大纲跳转定位到的标题短暂高亮 */
+@keyframes outline-flash-fade {
+  from {
+    background-color: rgba(124, 58, 237, 0.14);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.preview-content h1.outline-flash,
+.preview-content h2.outline-flash,
+.preview-content h3.outline-flash {
+  animation: outline-flash-fade 1.2s ease-out;
+}
+
 /* 全屏预览模式 */
 .preview-pane.fullscreen {
   width: 100% !important;

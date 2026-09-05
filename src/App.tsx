@@ -8,8 +8,10 @@ import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import AiChatPanel from './components/ai/AiChatPanel';
 import ExportMenu, { ExportFormat } from './components/ExportMenu';
+import OutlinePopover from './components/OutlinePopover';
 import { Button, GearIcon } from './components/ui';
 import { renderMarkdown, renderMermaidBlocks, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
+import { parseOutline, type OutlineItem } from './utils/outline';
 import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, exportMarkdownToFile, exportHtmlToPdf, sanitizeFilename } from './utils/wechatCopy';
 import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHighlight';
@@ -237,6 +239,12 @@ const App: React.FC = () => {
     return h1Match ? h1Match[1].trim() : '未命名文章';
   }, [markdown]);
 
+  // 全屏预览大纲：解析组合后 Markdown（含首尾模板），点击项滚动预览区定位
+  const [previewOutlineOpen, setPreviewOutlineOpen] = useState<boolean>(false);
+  const [previewOutlinePos, setPreviewOutlinePos] = useState({ top: 0, left: 0 });
+  const previewOutlineAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const previewOutlineItems = useMemo(() => parseOutline(composedMarkdown), [composedMarkdown]);
+
   const articleCover = useMemo(() => getFrontMatterField(markdown, 'cover'), [markdown]);
 
   useEffect(() => {
@@ -385,10 +393,67 @@ const App: React.FC = () => {
     return () => preview.removeEventListener('scroll', handleScroll);
   }, [html]);
 
+  // 全屏预览大纲浮层定位：垂于锚点按钮下方，右侧空间不足时改为右缘对齐
+  const handleTogglePreviewOutline = useCallback(() => {
+    if (!previewOutlineOpen && previewOutlineAnchorRef.current) {
+      const rect = previewOutlineAnchorRef.current.getBoundingClientRect();
+      const rightAligned = window.innerWidth - rect.right < 280;
+      setPreviewOutlinePos({
+        top: rect.bottom + 6,
+        left: rightAligned ? rect.right - 280 : rect.left,
+      });
+    }
+    setPreviewOutlineOpen((v) => !v);
+  }, [previewOutlineOpen]);
+
+  // 全屏预览大纲跳转：大纲项与预览 DOM 的 h1-h3 按出现顺序与层级对位
+  // （frontmatter 卡片的 h2 带 data-preview-only，排除；Setext 标题等多出的 DOM 标题被跳过）
+  const handlePreviewOutlineJump = useCallback((item: OutlineItem) => {
+    const container = previewScrollRef.current;
+    setPreviewOutlineOpen(false);
+    if (!container) return;
+    const headings = Array.from(container.querySelectorAll<HTMLElement>('h1, h2, h3'))
+      .filter((el) => !el.closest('[data-preview-only]'));
+    const targetIndex = previewOutlineItems.indexOf(item);
+    let target: HTMLElement | null = null;
+    let domIdx = 0;
+    for (let i = 0; i <= targetIndex && domIdx < headings.length; i++) {
+      const level = previewOutlineItems[i].level;
+      while (domIdx < headings.length && headings[domIdx].tagName !== `H${level}`) {
+        domIdx += 1;
+      }
+      if (domIdx >= headings.length) break;
+      if (i === targetIndex) {
+        target = headings[domIdx];
+        break;
+      }
+      domIdx += 1;
+    }
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 短暂高亮定位到的标题（先移除再强制重排，保证连续跳转时动画重新触发）
+    target.classList.remove('outline-flash');
+    void target.offsetWidth;
+    target.classList.add('outline-flash');
+    window.setTimeout(() => target.classList.remove('outline-flash'), 1300);
+  }, [previewOutlineItems]);
+
+  // 退出全屏时同步收起大纲浮层
+  useEffect(() => {
+    if (!isFullscreen) {
+      setPreviewOutlineOpen(false);
+    }
+  }, [isFullscreen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
+        // 大纲浮层开着时优先收起浮层，而非退出全屏
+        if (previewOutlineOpen) {
+          setPreviewOutlineOpen(false);
+        } else {
+          setIsFullscreen(false);
+        }
       }
       if (e.altKey && e.code === 'KeyE' && !isMobile && !isFullscreen) {
         e.preventDefault();
@@ -398,7 +463,7 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, isMobile]);
+  }, [isFullscreen, isMobile, previewOutlineOpen]);
 
   const isDark = darkMode === 'system' ? isSystemDark : darkMode === 'dark';
   const displayTheme = theme === 'light' || theme === 'dark' ? (isDark ? 'dark' : 'light') : theme;
@@ -692,6 +757,25 @@ const App: React.FC = () => {
             onImportSettings={handleImportSettings}
           />
           {isFullscreen && (
+            <Button
+              ref={previewOutlineAnchorRef}
+              className="fullscreen-outline-btn"
+              onClick={handleTogglePreviewOutline}
+              active={previewOutlineOpen}
+              disabled={previewOutlineItems.length === 0}
+              title={previewOutlineItems.length === 0 ? '未发现标题（H1-H3）' : '文章大纲'}
+              aria-haspopup="dialog"
+              aria-expanded={previewOutlineOpen}
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+                <line x1="3" y1="4" x2="13" y2="4" />
+                <line x1="5" y1="8" x2="13" y2="8" />
+                <line x1="7" y1="12" x2="13" y2="12" />
+              </svg>
+              大纲
+            </Button>
+          )}
+          {isFullscreen && (
             <Button className="exit-btn" onClick={() => setIsFullscreen(false)}>
               退出
             </Button>
@@ -730,6 +814,17 @@ const App: React.FC = () => {
             onClose={() => setExportMenuOpen(false)}
             onExport={handleExport}
           />
+          {isFullscreen && (
+            <OutlinePopover
+              open={previewOutlineOpen}
+              items={previewOutlineItems}
+              position={previewOutlinePos}
+              placement="bottom"
+              anchorRef={previewOutlineAnchorRef}
+              onClose={() => setPreviewOutlineOpen(false)}
+              onSelect={handlePreviewOutlineJump}
+            />
+          )}
           <Button
             variant="outline"
             onClick={async () => {

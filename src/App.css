@@ -164,6 +164,13 @@
   padding: calc(var(--space-2) - 1px) calc(var(--space-6) - 1px);
 }
 
+/* 全屏预览顶栏「大纲」按钮：图标与文字基线对齐 */
+.fullscreen-outline-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
 /* ===== 主内容区 ===== */
 .main-container {
   display: flex;

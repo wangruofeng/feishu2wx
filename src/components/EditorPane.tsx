@@ -1,11 +1,12 @@
 import React, { useRef, useCallback, useState, useMemo, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import { shouldConvertPastedHtml, looksLikeSvgText } from '../utils/pasteDetection';
 import { isImageAttachmentFile, readImageFileAsMarkdown } from '../utils/imageAttachment';
 import { tokenizeMarkdown, getMdSyntaxCssVars, MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { archiveCurrentDoc, loadDocHistory, DocHistoryEntry } from '../utils/docHistory';
+import { parseOutline, OutlineItem } from '../utils/outline';
 import DocHistoryPopover from './DocHistoryPopover';
+import OutlinePopover from './OutlinePopover';
 import { Button } from './ui';
 import './EditorPane.css';
 
@@ -22,12 +23,6 @@ interface HistoryEntry {
   content: string;
   cursorStart: number;
   cursorEnd: number;
-}
-
-interface OutlineItem {
-  level: number;
-  text: string;
-  pos: number;
 }
 
 const MAX_HISTORY = 50;
@@ -130,7 +125,6 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [outlinePos, setOutlinePos] = useState({ top: 0, left: 0 });
   const outlineBtnRef = useRef<HTMLButtonElement>(null);
-  const outlinePopRef = useRef<HTMLDivElement>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyPos, setHistoryPos] = useState({ top: 0, left: 0 });
   const [historyCount, setHistoryCount] = useState(() => loadDocHistory().length);
@@ -526,41 +520,8 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     onLoadExample();
   }, [markdown, archiveAndRefresh, onLoadExample]);
 
-  // 解析文章大纲（H1-H3），跳过 frontmatter 与代码块
-  const outlineItems = useMemo<OutlineItem[]>(() => {
-    const items: OutlineItem[] = [];
-    const lines = markdown.split('\n');
-    let pos = 0;
-    let inFrontmatter = false;
-    let inCodeBlock = false;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmed = line.trim();
-      if (i === 0 && trimmed === '---') {
-        inFrontmatter = true;
-        pos += line.length + 1;
-        continue;
-      }
-      if (inFrontmatter && trimmed === '---') {
-        inFrontmatter = false;
-        pos += line.length + 1;
-        continue;
-      }
-      if (trimmed.startsWith('```')) {
-        inCodeBlock = !inCodeBlock;
-        pos += line.length + 1;
-        continue;
-      }
-      if (!inFrontmatter && !inCodeBlock) {
-        const m = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
-        if (m) {
-          items.push({ level: m[1].length, text: m[2], pos });
-        }
-      }
-      pos += line.length + 1;
-    }
-    return items;
-  }, [markdown]);
+  // 解析文章大纲（H1-H3，跳过 frontmatter 与代码块），解析逻辑共享自 utils/outline
+  const outlineItems = useMemo<OutlineItem[]>(() => parseOutline(markdown), [markdown]);
 
   // 点击大纲项，滚动 textarea 到对应标题
   const handleOutlineJump = useCallback((pos: number) => {
@@ -594,19 +555,6 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     setOutlineOpen(false);
     setHistoryOpen((v) => !v);
   }, [historyOpen]);
-
-  // 点击浮层外部关闭大纲
-  useEffect(() => {
-    if (!outlineOpen) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (outlinePopRef.current?.contains(target)) return;
-      if (outlineBtnRef.current?.contains(target)) return;
-      setOutlineOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [outlineOpen]);
 
   useEffect(() => {
     if (outlineItems.length === 0) {
@@ -731,37 +679,16 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
         </button>
       </div>
 
-      {/* 文章大纲浮层（portal 到 body，避免被 overflow:hidden 裁剪） */}
-      {outlineOpen && createPortal(
-        <div
-          ref={outlinePopRef}
-          className="editor-outline-pop"
-          role="dialog"
-          aria-label="文章大纲"
-          style={{ position: 'fixed', top: outlinePos.top, left: outlinePos.left }}
-        >
-          <div className="editor-outline-pop-header">
-            <span>文章大纲</span>
-            <button type="button" className="editor-outline-close" onClick={() => setOutlineOpen(false)} aria-label="关闭">&times;</button>
-          </div>
-          <div className="editor-outline-pop-body">
-            {outlineItems.length === 0 ? (
-              <div className="editor-outline-empty">未发现标题（H1-H3）</div>
-            ) : (
-              <ul className="editor-outline-list">
-                {outlineItems.map((item, idx) => (
-                  <li key={`${item.pos}-${idx}`} className={`editor-outline-item editor-outline-level-${item.level}`}>
-                    <button type="button" onClick={() => handleOutlineJump(item.pos)} title={item.text}>
-                      <span className="editor-outline-text">{item.text}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* 文章大纲浮层（portal 进 .app 根节点，避免被 overflow:hidden 裁剪） */}
+      <OutlinePopover
+        open={outlineOpen}
+        items={outlineItems}
+        position={outlinePos}
+        placement="top"
+        anchorRef={outlineBtnRef}
+        onClose={() => setOutlineOpen(false)}
+        onSelect={(item) => handleOutlineJump(item.pos)}
+      />
 
       {/* 历史文档浮层（portal 到 body） */}
       <DocHistoryPopover

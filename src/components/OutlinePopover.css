@@ -1,0 +1,92 @@
+/* 文章大纲浮层（编辑器底栏与全屏预览顶栏共用），fixed 定位坐标由组件内联 style 提供 */
+.outline-pop {
+  width: 280px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg-white);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* 悬于锚点上方（编辑器底栏按钮） */
+.outline-pop[data-placement='top'] {
+  transform: translateY(calc(-100% - 6px));
+}
+
+.outline-pop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  border-bottom: 1px solid var(--color-border-primary);
+  background-color: var(--color-bg-surface);
+}
+
+.outline-pop-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 0 var(--space-1);
+}
+
+.outline-pop-close:hover {
+  color: var(--color-text-primary);
+}
+
+.outline-pop-body {
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.outline-pop-empty {
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.outline-pop-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 2px;
+}
+
+.outline-pop-item > button {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: left;
+  transition: var(--transition-fast);
+}
+
+.outline-pop-item > button:hover {
+  background-color: var(--color-bg-hover-transparent);
+  color: var(--color-brand);
+}
+
+.outline-pop-level-1 > button { font-weight: 600; color: var(--color-text-primary); }
+.outline-pop-level-2 > button { padding-left: var(--space-6); }
+.outline-pop-level-3 > button { padding-left: var(--space-8); }
+
+.outline-pop-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

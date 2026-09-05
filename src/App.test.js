@@ -214,7 +214,7 @@ test('jumps to outline heading using measured textarea position', () => {
     outlineButton.click();
   });
 
-  const targetButton = Array.from(document.body.querySelectorAll('.editor-outline-item button')).find((button) =>
+  const targetButton = Array.from(document.body.querySelectorAll('.outline-pop-item button')).find((button) =>
     button.textContent.includes('目标标题')
   );
 
@@ -247,9 +247,61 @@ test('aligns outline popover with editor footer right edge', () => {
     outlineButton.click();
   });
 
-  const popover = document.body.querySelector('.editor-outline-pop');
+  const popover = document.body.querySelector('.outline-pop');
   expect(popover.style.left).toBe('280px');
   expect(popover.style.top).toBe('400px');
+});
+
+test('fullscreen outline entry jumps preview to the matched heading', () => {
+  localStorage.setItem('feishu2wx_markdown', '# 开头\n\n正文段落。\n\n## 目标标题\n\n结尾段落。');
+
+  act(() => {
+    root.render(<App />);
+  });
+
+  const fullscreenButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.getAttribute('title') === '全屏预览'
+  );
+  act(() => {
+    fullscreenButton.click();
+  });
+
+  const outlineButton = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.className.includes('fullscreen-outline-btn')
+  );
+  expect(outlineButton).toBeTruthy();
+  expect(outlineButton.disabled).toBe(false);
+
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 });
+  outlineButton.getBoundingClientRect = jest.fn(() => ({ top: 40, bottom: 56, left: 700, right: 780 }));
+
+  act(() => {
+    outlineButton.click();
+  });
+
+  const popover = container.querySelector('.outline-pop');
+  expect(popover).toBeTruthy();
+
+  const targetButton = Array.from(popover.querySelectorAll('button')).find((button) =>
+    button.textContent.includes('目标标题')
+  );
+
+  // jsdom 未实现 scrollIntoView，直接挂 mock
+  const scrollIntoViewMock = jest.fn();
+  const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+
+  act(() => {
+    targetButton.click();
+  });
+
+  const previewContent = container.querySelector('.preview-content');
+  const headings = Array.from(previewContent.querySelectorAll('h1, h2, h3'));
+  expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
+  expect(scrollIntoViewMock.mock.instances[0]).toBe(headings[1]);
+  expect(headings[1].className.includes('outline-flash')).toBe(true);
+
+  HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
 });
 
 test('shows frontmatter metadata by default and hides it from settings', async () => {
