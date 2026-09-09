@@ -20,9 +20,26 @@
 
 **配置来源**（优先级从高到低）：环境变量 → 用户级 `~/.feishu2wx/config.json` → 内置默认值。
 
+## 安装
+
+本项目未发布到 npm，在仓库内执行以下命令将 `feishu2wx` 链接为全局命令：
+
+```bash
+npm install
+npm link
+```
+
+安装后可在任意目录直接使用：
+
+```bash
+feishu2wx --help
+```
+
+软链接始终跟随仓库当前代码，切换 Node 版本后需重新执行 `npm link`。
+
 ## 运行方式
 
-在仓库内运行：
+不想全局安装时，在仓库内运行：
 
 ```bash
 npm run cli -- --help

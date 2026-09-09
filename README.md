@@ -76,11 +76,20 @@ npm run dev
 
 ## 💻 CLI 命令行
 
+安装（本项目未发布到 npm，在仓库内执行以下命令将 `feishu2wx` 链接为全局命令）：
+
 ```bash
-npm run cli -- init                      # 初始化用户级 CLI 配置
-npm run cli -- auth set --app-id <id> --app-secret <secret>  # 配置公众号凭证
-npm run cli -- render article.md --out article.html          # 渲染并导出 HTML
-npm run cli -- publish article.md --title "文章标题"          # 推送到公众号草稿箱
+npm install
+npm link
+```
+
+安装后可在任意目录直接使用 `feishu2wx`；软链接始终跟随仓库当前代码，切换 Node 版本后需重新执行 `npm link`。不想全局安装时，也可在仓库内用 `npm run cli -- <命令>` 运行。
+
+```bash
+feishu2wx init                      # 初始化用户级 CLI 配置
+feishu2wx auth set --app-id <id> --app-secret <secret>  # 配置公众号凭证
+feishu2wx render article.md --out article.html          # 渲染并导出 HTML
+feishu2wx publish article.md --title "文章标题"          # 推送到公众号草稿箱
 ```
 
 支持单次命令覆盖主题与排版项（如 `--theme blue --invert-h1 --text-align-mode justify`）。CLI 只读取用户级 `~/.feishu2wx/config.json`，凭证不应放入项目目录或提交到仓库。完整命令速查见 [cli/README.md](cli/README.md)。
