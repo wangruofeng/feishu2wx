@@ -229,9 +229,24 @@ test('shares generic layout sizes with non-generic themes', () => {
   expect(container.querySelector('p')?.style.margin).toBe('27px 0px');
   expect(container.querySelector('p')?.style.fontSize).toBe('16px');
   expect(container.querySelector('p')?.style.letterSpacing).toBe('0.544px');
-  expect(container.querySelector('blockquote')?.style.margin).toBe('26px 0px');
-  expect(container.querySelector('blockquote')?.style.fontSize).toBe('16px');
-  expect(container.querySelector('blockquote')?.style.letterSpacing).toBe('0.544px');
+  expect(container.querySelector('section')?.style.margin).toBe('26px 0px');
+  expect(container.querySelector('section')?.style.fontSize).toBe('16px');
+  expect(container.querySelector('section')?.style.letterSpacing).toBe('0.544px');
+});
+
+test('emits quote sections instead of blockquote tags for WeChat', () => {
+  const html = '<p>正文</p><blockquote><p>重点引用</p></blockquote>';
+  const container = document.createElement('div');
+  container.innerHTML = formatForWeChat(html, 'classic');
+
+  // 微信阅读器给 <blockquote> 注入 ::before 左侧灰条，与内联边框叠成双重条纹，
+  // 因此微信输出必须改为无默认样式的 <section>
+  expect(container.querySelector('blockquote')).toBeNull();
+  const quote = container.querySelector('section');
+  expect(quote).not.toBeNull();
+  expect(quote.tagName).toBe('SECTION');
+  expect(quote.style.borderLeft).toBe('4px solid #D8D8D8');
+  expect(quote.querySelector('p')?.textContent).toBe('重点引用');
 });
 
 test('uses the generic or active theme color for blockquotes', () => {
@@ -273,8 +288,8 @@ test('uses the generic or active theme color for blockquotes', () => {
   const themedQuote = document.createElement('div');
   themedQuote.innerHTML = themeHtml;
 
-  expect(genericQuote.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #D8D8D8');
-  expect(themedQuote.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #FD4606');
+  expect(genericQuote.querySelector('section')?.style.borderLeft).toBe('4px solid #D8D8D8');
+  expect(themedQuote.querySelector('section')?.style.borderLeft).toBe('4px solid #FD4606');
 });
 
 test('formats independent blockquote background and height modes', () => {
@@ -319,8 +334,8 @@ test('formats independent blockquote background and height modes', () => {
   const looseContainer = document.createElement('div');
   looseContainer.innerHTML = looseHtml;
 
-  const compactQuote = compactContainer.querySelector('blockquote');
-  const looseQuote = looseContainer.querySelector('blockquote');
+  const compactQuote = compactContainer.querySelector('section');
+  const looseQuote = looseContainer.querySelector('section');
   expect(compactQuote?.style.backgroundColor).toBe('transparent');
   expect(compactQuote?.style.paddingTop).toBe('0px');
   expect(compactQuote?.style.paddingBottom).toBe('0px');
@@ -351,7 +366,7 @@ test('applies orange theme blockquote background when following the theme', () =
     'left'
   );
 
-  expect(container.querySelector('blockquote')?.style.backgroundColor).toBe('rgb(255, 247, 237)');
+  expect(container.querySelector('section')?.style.backgroundColor).toBe('rgb(255, 247, 237)');
 });
 
 test('keeps table header backgrounds aligned with preview themes', () => {
@@ -394,7 +409,7 @@ test('applies the configured default text alignment to article elements', () => 
   expect(container.querySelector('p')?.style.textAlign).toBe('justify');
   expect(container.querySelector('ul')?.style.textAlign).toBe('justify');
   expect(container.querySelector('li')?.style.textAlign).toBe('justify');
-  expect(container.querySelector('blockquote')?.style.textAlign).toBe('justify');
+  expect(container.querySelector('section')?.style.textAlign).toBe('justify');
 });
 
 test('uses the shared link style for every theme', () => {
@@ -773,7 +788,7 @@ test('uses the saved custom theme color for the custom theme export', () => {
   localStorage.removeItem('feishu2wx_customThemeColor');
 
   const heading = container.querySelector('h2');
-  const quote = container.querySelector('blockquote');
+  const quote = container.querySelector('section');
 
   // 主色 #FD4606 推导出的深色标题色（rgb(157, 43, 4)）
   expect(heading?.style.color).toBe('rgb(157, 43, 4)');
@@ -806,5 +821,5 @@ test('falls back to the default palette when the custom theme color is empty', (
     'left'
   );
 
-  expect(container.querySelector('blockquote')?.style.borderLeft).toBe('4px solid #7c3aed');
+  expect(container.querySelector('section')?.style.borderLeft).toBe('4px solid #7c3aed');
 });

@@ -1536,6 +1536,17 @@ function applyThemeStyles(
     if (lastChild) {
       lastChild.style.marginBottom = '0';
     }
+
+    // 微信阅读器会给 <blockquote> 注入 ::before 左侧灰条（3px rgba(0,0,0,.1)），
+    // 与内联 border-left 叠成双重边框；改用无默认样式的 <section> 输出，保证与预览一致
+    const section = document.createElement('section');
+    Array.from(bqEl.attributes).forEach((attr) => {
+      section.setAttribute(attr.name, attr.value);
+    });
+    while (bqEl.firstChild) {
+      section.appendChild(bqEl.firstChild);
+    }
+    bqEl.parentNode?.replaceChild(section, bqEl);
   });
 
   // 处理链接（使用主题颜色）
