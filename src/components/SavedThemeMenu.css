@@ -4,6 +4,16 @@
 
 .saved-theme-menu-trigger {
   height: 26px;
+  gap: 6px;
+}
+
+.saved-theme-menu-chevron {
+  flex: 0 0 14px;
+  transition: transform 150ms ease;
+}
+
+.saved-theme-menu-chevron[data-open='true'] {
+  transform: rotate(90deg);
 }
 
 .saved-theme-menu-popover {

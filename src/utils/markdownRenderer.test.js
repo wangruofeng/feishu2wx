@@ -1,4 +1,19 @@
-import { renderMarkdown, setCodeBlockStyle, setShowHorizontalRule, extractFrontMatterTitle } from './markdownRenderer';
+import {
+  extractFrontMatterTitle,
+  renderMarkdown,
+  renderMermaidBlocks,
+  setCodeBlockStyle,
+  setShowHorizontalRule,
+} from './markdownRenderer';
+import mermaid from 'mermaid';
+
+jest.mock('mermaid', () => ({
+  __esModule: true,
+  default: {
+    initialize: jest.fn(),
+    render: jest.fn(),
+  },
+}));
 
 beforeEach(() => {
   setCodeBlockStyle('classic');
@@ -154,6 +169,24 @@ test('keeps normal code blocks unaffected by mermaid handling', () => {
 
   expect(container.querySelector('pre code.hljs')).not.toBeNull();
   expect(container.querySelector('.mermaid')).toBeNull();
+});
+
+test('keeps Mermaid styles and foreignObject labels while sanitizing executable content', async () => {
+  mermaid.render.mockResolvedValueOnce({
+    svg: '<svg xmlns="http://www.w3.org/2000/svg"><style>.node{fill:#fff}</style><foreignObject><div xmlns="http://www.w3.org/1999/xhtml" class="node" onclick="alert(1)"><span>管理员<br/>浏览器</span></div></foreignObject><script>alert(1)</script></svg>',
+  });
+  const placeholder = renderMarkdown('```mermaid\ngraph LR\nA-->B\n```');
+  const html = await renderMermaidBlocks(placeholder);
+  const container = document.createElement('div');
+  container.innerHTML = html;
+
+  expect(mermaid.initialize).toHaveBeenCalledWith(expect.objectContaining({
+    securityLevel: 'strict',
+  }));
+  expect(container.querySelector('svg style')?.textContent).toContain('.node{fill:#fff}');
+  expect(container.querySelector('svg foreignObject span')?.textContent).toBe('管理员浏览器');
+  expect(container.querySelector('[onclick]')).toBeNull();
+  expect(container.querySelector('script')).toBeNull();
 });
 
 test('renders base64 svg data uri image in preview html', () => {

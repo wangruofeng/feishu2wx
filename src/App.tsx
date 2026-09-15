@@ -152,6 +152,7 @@ const App: React.FC = () => {
     isError: false,
   });
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [settingsTarget, setSettingsTarget] = useState<'default' | 'custom-theme'>('default');
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [publishOpen, setPublishOpen] = useState<boolean>(false);
   const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
@@ -776,6 +777,12 @@ const App: React.FC = () => {
             customThemeColor={customThemeColor}
             savedThemes={savedThemes}
             onApplySavedTheme={handleApplySavedTheme}
+            onOpenPresetTheme={() => setSettingsOpen(false)}
+            onOpenCustomTheme={() => {
+              setSettingsTarget('custom-theme');
+              setSettingsOpen(true);
+            }}
+            customThemeOpen={settingsOpen && settingsTarget === 'custom-theme'}
           />}
         </div>
 
@@ -783,7 +790,10 @@ const App: React.FC = () => {
           <Button
             variant="settingsTrigger"
             active={settingsOpen}
-            onClick={() => setSettingsOpen(!settingsOpen)}
+            onClick={() => {
+              setSettingsTarget('default');
+              setSettingsOpen(!settingsOpen);
+            }}
             title="设置"
           >
             <GearIcon />
@@ -856,6 +866,9 @@ const App: React.FC = () => {
             aiPanelMode={aiPanelMode}
             onChangeAiPanelMode={setAiPanelMode}
             customThemeColor={customThemeColor}
+            theme={theme}
+            onChangeTheme={setTheme}
+            openTarget={settingsTarget}
             onChangeCustomThemeColor={handleCustomThemeColorChange}
             onResetCustomThemeColor={handleResetCustomThemeColor}
             onExportSettings={handleExportSettings}

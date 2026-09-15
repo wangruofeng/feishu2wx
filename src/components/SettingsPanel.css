@@ -98,13 +98,9 @@
 }
 
 .settings-category-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 18px;
+  height: 18px;
   flex: 0 0 18px;
-  font-size: var(--font-size-base);
-  line-height: 1;
 }
 
 .settings-category-panel {
@@ -677,4 +673,28 @@
 
 .theme-dark .settings-switch[aria-checked='true']::after {
   background: var(--color-bg-white);
+}
+.settings-preset-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.settings-preset-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-preset-theme-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(128, 128, 128, 0.2);
+}
+
+.settings-custom-theme-row:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
 }

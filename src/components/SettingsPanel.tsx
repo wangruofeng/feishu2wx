@@ -3,18 +3,18 @@ import { CodeBlockStyle } from '../utils/markdownRenderer';
 import { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { MarkerHighlightColor, markerHighlightOptions } from '../utils/markerHighlight';
 import { SavedArticleTheme } from '../utils/savedThemes';
-import { Button } from './ui';
+import { THEME_PRESETS, ThemePresetKey } from '../utils/themePresets';
+import { Button, SettingsCategoryIcon } from './ui';
+import type { SettingsCategory } from './ui';
 import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
 
-type SettingsCategory = 'appearance' | 'typography' | 'content' | 'editor' | 'publishing';
-
-const settingsCategories: Array<{ id: SettingsCategory; label: string; icon: string }> = [
-  { id: 'appearance', label: '主题与外观', icon: '◐' },
-  { id: 'typography', label: '文章排版', icon: '¶' },
-  { id: 'content', label: '内容样式', icon: '▦' },
-  { id: 'editor', label: '编辑体验', icon: '⌨' },
-  { id: 'publishing', label: '发布与数据', icon: '↑' },
+const settingsCategories: Array<{ id: SettingsCategory; label: string }> = [
+  { id: 'appearance', label: '主题与外观' },
+  { id: 'typography', label: '文章排版' },
+  { id: 'content', label: '内容样式' },
+  { id: 'editor', label: '编辑体验' },
+  { id: 'publishing', label: '发布与数据' },
 ];
 
 interface Props {
@@ -78,6 +78,9 @@ interface Props {
   aiPanelMode: 'drawer' | 'sidebar';
   onChangeAiPanelMode: (mode: 'drawer' | 'sidebar') => void;
   customThemeColor: string;
+  theme: string;
+  onChangeTheme: (theme: ThemePresetKey) => void;
+  openTarget: 'default' | 'custom-theme';
   onChangeCustomThemeColor: (color: string) => void;
   onResetCustomThemeColor: () => void;
   onExportSettings: () => void;
@@ -233,6 +236,9 @@ const SettingsPanel: React.FC<Props> = ({
   aiPanelMode,
   onChangeAiPanelMode,
   customThemeColor,
+  theme,
+  onChangeTheme,
+  openTarget,
   onChangeCustomThemeColor,
   onResetCustomThemeColor,
   onExportSettings,
@@ -248,6 +254,7 @@ const SettingsPanel: React.FC<Props> = ({
   const importInputRef = useRef<HTMLInputElement>(null);
   const themeImportInputRef = useRef<HTMLInputElement>(null);
   const categoryTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const customThemeRowRef = useRef<HTMLDivElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
   const [configTransferStatus, setConfigTransferStatus] = useState('');
   const [themeName, setThemeName] = useState('');
@@ -305,8 +312,12 @@ const SettingsPanel: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    if (isOpen) setActiveCategory('appearance');
-  }, [isOpen]);
+    if (!isOpen) return;
+    setActiveCategory('appearance');
+    if (openTarget !== 'custom-theme') return;
+    customThemeRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    customThemeRowRef.current?.focus({ preventScroll: true });
+  }, [isOpen, openTarget]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -346,7 +357,7 @@ const SettingsPanel: React.FC<Props> = ({
             onClick={() => selectCategory(category.id)}
             onKeyDown={(event) => handleCategoryKeyDown(event, index)}
           >
-            <span className="settings-category-icon" aria-hidden="true">{category.icon}</span>
+            <SettingsCategoryIcon category={category.id} />
             <span>{category.label}</span>
           </Button>
         ))}
@@ -456,6 +467,24 @@ const SettingsPanel: React.FC<Props> = ({
       <section className="settings-group" hidden={activeCategory !== 'appearance'}>
         <h3 className="settings-group-title">文章外观</h3>
         <div className="settings-row settings-row--block">
+          <span className="settings-row-label">预设主题</span>
+          <div className="settings-preset-themes" aria-label="预设主题">
+            {THEME_PRESETS.map((preset) => (
+              <Button
+                key={preset.key}
+                variant="toggle"
+                active={theme === preset.key}
+                className="settings-preset-theme"
+                onClick={() => onChangeTheme(preset.key)}
+                aria-pressed={theme === preset.key}
+              >
+                <span className="settings-preset-theme-dot" style={{ backgroundColor: preset.color }} aria-hidden="true" />
+                {preset.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="settings-row settings-row--block">
           <span className="settings-row-label">字体</span>
           <select
             className="settings-select"
@@ -470,7 +499,11 @@ const SettingsPanel: React.FC<Props> = ({
           </select>
         </div>
         {/* 自定义主题色：选择后自动切换为「自定」主题，清空则恢复预设 */}
-        <div className="settings-row settings-row--block">
+        <div
+          ref={customThemeRowRef}
+          className="settings-row settings-row--block settings-custom-theme-row"
+          tabIndex={-1}
+        >
           <span className="settings-row-label">自定义主题色</span>
           <div className="settings-custom-theme">
             <input

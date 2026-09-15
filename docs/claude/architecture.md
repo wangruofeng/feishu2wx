@@ -135,10 +135,10 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `App.tsx`：主容器与状态中心，含顶部控制栏（主题、设置面板、复制/导出/推送）。
 - `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、图片附件拖拽/粘贴插入为 data URI 图片（`src/utils/imageAttachment.ts`，后缀白名单优先识别 SVG，单图限 2MB）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式，含 `<svg>` 元素源码的标签/属性/属性值着色）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
-- `ThemeSwitcher.tsx`：横向主题按钮组（5 种主题：经典、橙色、蓝色、青绿、自定）。
+- `ThemeSwitcher.tsx`：顶栏文章主题双入口；「预设主题」弹层从 `src/utils/themePresets.ts` 读取经典、橙色、蓝色、青绿四个预设，「自定义主题」打开设置并定位到颜色编辑区域；两者复用 `App.tsx` 的主题状态与持久化逻辑。
 - `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换（当前由 `PreviewPane` 内联渲染，此组件已不再被外部 import）。
-- `SettingsPanel.tsx`：排版设置弹出面板，按通用 / 标题 / 正文 / 引用块 / 图片 / 代码块 / 模板 / 公众号分组，统一管理智能粘贴转换、源码配色、主题模式、H1/H2 样式、文本对齐、字体、分割线/元数据/表格阴影、引用块（背景/边框色/间距）、图片（样式/圆角）、代码块样式、首尾模板、公众号凭证。
+- `SettingsPanel.tsx`：排版设置弹出面板，按五个任务分类组织；主题与外观中包含共用数据源驱动的预设主题区和自定义颜色编辑区，并支持由顶栏自定义主题入口直接定位。其余区域统一管理智能粘贴转换、源码配色、主题模式、H1/H2 样式、文本对齐、字体、分割线/元数据/表格阴影、引用块（背景/边框色/间距）、图片（样式/圆角）、代码块样式、首尾模板、公众号凭证。
 - `ImageViewer.tsx`：图片查看器，支持键盘左右切换预览区所有图片，底部显示序号。
 - `ShortcutsDrawer.tsx`：快捷键抽屉面板，展示所有键盘快捷键（格式、编辑、视图三组），支持 ESC 关闭和遮罩点击关闭。
 - `PublishDialog.tsx`：推送对话框（标题、作者、封面）。
@@ -185,6 +185,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ### Mermaid 图表
 
 - ` ```mermaid ` 代码块通过两阶段渲染：`renderMarkdown()` 同步产出 `<div class="mermaid" data-mermaid-source>` 占位（非 `<pre>`），`renderMermaidBlocks()` 异步用动态 `import('mermaid')` + `mermaid.render()` 把占位替换为内联 `<svg>`。
+- Mermaid SVG 使用独立的 DOMPurify 配置：保留渲染所需的 `<style>`，并把 `<foreignObject>` 注册为 HTML 集成点以保留含 `<br/>` 的多行节点标签；`script`、事件属性等可执行内容仍会被清除。
 - `App.tsx` 的三个渲染 effect（`composedMarkdown`/`showHorizontalRule`/`codeBlockStyle` 变更）均改为 async，`await renderMermaidBlocks()` 后再 `setHtml`，并加 `cancelled` 标志防竞态。
 - 复制/导出/推送管线无需改动：`convertSvgImagesToPng()` 第一阶段自动把不在 `pre`/`code` 内的内联 `<svg>` 栅格化为 PNG `<img>`，mermaid SVG 天然命中。
 - 渲染失败时保留源码文本占位，不阻断其他内容。

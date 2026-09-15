@@ -50,8 +50,11 @@ test('organizes settings into five task-based categories and switches visible co
 
   const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
   expect(tabs.map((tab) => tab.textContent.trim())).toEqual([
-    '◐主题与外观', '¶文章排版', '▦内容样式', '⌨编辑体验', '↑发布与数据',
+    '主题与外观', '文章排版', '内容样式', '编辑体验', '发布与数据',
   ]);
+  expect(tabs.map((tab) => tab.querySelector('svg.settings-category-icon')?.getAttribute('aria-hidden')))
+    .toEqual(['true', 'true', 'true', 'true', 'true']);
+  expect(container.querySelector('.settings-category-nav').textContent).not.toMatch(/[◐¶▦⌨↑]/);
   expect(tabs[0].getAttribute('aria-selected')).toBe('true');
   expect(container.querySelector('.settings-category-nav')).not.toBeNull();
   expect(container.querySelector('.settings-category-panel')).not.toBeNull();
@@ -91,6 +94,60 @@ test('returns to theme and appearance when settings is reopened', () => {
   expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
 });
 
+test('uses separate preset and custom theme entries and moves presets into settings', async () => {
+  const scrollIntoView = jest.fn();
+  const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scrollIntoView;
+
+  act(() => root.render(<App />));
+
+  const presetTrigger = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.textContent.includes('预设主题')
+  );
+  const customTrigger = Array.from(container.querySelectorAll('button')).find((button) =>
+    button.textContent.includes('自定义主题')
+  );
+
+  expect(presetTrigger).toBeTruthy();
+  expect(customTrigger).toBeTruthy();
+  expect(presetTrigger.getAttribute('aria-haspopup')).toBe('menu');
+  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
+  expect(customTrigger.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(customTrigger.getAttribute('aria-expanded')).toBe('false');
+  expect(container.querySelectorAll('.preset-theme-trigger, .custom-theme-trigger')).toHaveLength(2);
+
+  act(() => presetTrigger.click());
+  expect(presetTrigger.getAttribute('aria-expanded')).toBe('true');
+  act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
+
+  act(() => presetTrigger.click());
+  act(() => document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
+  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
+
+  act(() => presetTrigger.click());
+  const orangePreset = Array.from(container.querySelectorAll('[role="menuitemradio"]')).find((button) =>
+    button.textContent.includes('橙色')
+  );
+  act(() => orangePreset.click());
+  expect(localStorage.getItem('feishu2wx_theme')).toBe('orange');
+  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
+
+  await act(async () => {
+    customTrigger.click();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  });
+  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
+  expect(customTrigger.getAttribute('aria-expanded')).toBe('true');
+  expect(container.querySelector('.settings-preset-themes')).not.toBeNull();
+  expect(Array.from(container.querySelectorAll('.settings-preset-theme')).map((button) => button.textContent.trim()))
+    .toEqual(['经典', '橙色', '蓝色', '青绿']);
+  expect(document.activeElement).toBe(container.querySelector('.settings-custom-theme-row'));
+  expect(scrollIntoView).toHaveBeenCalled();
+
+  HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+});
+
 test('saves and reapplies a complete article theme without mutating its snapshot', () => {
   localStorage.setItem('feishu2wx_theme', 'blue');
   localStorage.setItem('feishu2wx_font', 'pingfang');
@@ -115,14 +172,14 @@ test('saves and reapplies a complete article theme without mutating its snapshot
   expect(stored[0].settings).toMatchObject({ theme: 'blue', font: 'pingfang' });
   expect(Object.keys(stored[0].settings).sort()).toEqual(ARTICLE_THEME_SETTING_KEYS);
 
-  const orangeButton = Array.from(container.querySelectorAll('.theme-option')).find((button) => button.title === '橙色');
+  const orangeButton = Array.from(container.querySelectorAll('.settings-preset-theme')).find((button) => button.textContent.includes('橙色'));
   act(() => orangeButton.click());
   expect(orangeButton.classList.contains('active')).toBe(true);
 
   const savedRow = container.querySelector('.saved-theme-row');
   const applyButton = Array.from(savedRow.querySelectorAll('button')).find((button) => button.textContent === '应用');
   act(() => applyButton.click());
-  const blueButton = Array.from(container.querySelectorAll('.theme-option')).find((button) => button.title === '蓝色');
+  const blueButton = Array.from(container.querySelectorAll('.settings-preset-theme')).find((button) => button.textContent.includes('蓝色'));
   expect(blueButton.classList.contains('active')).toBe(true);
 
   const beforeEdit = localStorage.getItem('feishu2wx_savedThemes');
@@ -141,15 +198,19 @@ test('opens the saved theme menu and applies a persisted theme', () => {
   const menuButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent.includes('我的主题'));
   expect(menuButton.getAttribute('aria-haspopup')).toBe('menu');
   expect(menuButton.getAttribute('aria-expanded')).toBe('false');
+  const chevron = menuButton.querySelector('svg.saved-theme-menu-chevron');
+  expect(chevron).not.toBeNull();
+  expect(chevron.getAttribute('aria-hidden')).toBe('true');
+  expect(chevron.getAttribute('data-open')).toBe('false');
 
   act(() => menuButton.click());
   expect(menuButton.getAttribute('aria-expanded')).toBe('true');
+  expect(chevron.getAttribute('data-open')).toBe('true');
   const savedButton = container.querySelector('[role="menuitem"]');
   expect(savedButton.textContent).toBe('蓝色长文');
   act(() => savedButton.click());
 
-  const blueButton = Array.from(container.querySelectorAll('.theme-option')).find((button) => button.title === '蓝色');
-  expect(blueButton.classList.contains('active')).toBe(true);
+  expect(container.querySelector('.app').classList.contains('theme-blue')).toBe(true);
   expect(menuButton.getAttribute('aria-expanded')).toBe('false');
 });
 

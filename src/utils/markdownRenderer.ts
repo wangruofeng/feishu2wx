@@ -12,8 +12,19 @@ const SANITIZE_CONFIG = {
   FORBID_TAGS: ['base', 'embed', 'form', 'iframe', 'object', 'script', 'style'],
 };
 
+const MERMAID_SANITIZE_CONFIG = {
+  ...SANITIZE_CONFIG,
+  ADD_TAGS: ['foreignObject', 'style'],
+  HTML_INTEGRATION_POINTS: { foreignobject: true },
+  FORBID_TAGS: SANITIZE_CONFIG.FORBID_TAGS.filter((tag) => tag !== 'style'),
+};
+
 function sanitizeRenderedHtml(html: string): string {
   return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+}
+
+function sanitizeMermaidHtml(html: string): string {
+  return DOMPurify.sanitize(html, MERMAID_SANITIZE_CONFIG);
 }
 
 // 代码块样式类型
@@ -689,5 +700,5 @@ export async function renderMermaidBlocks(html: string): Promise<string> {
       console.warn('Mermaid 渲染失败，保留源码:', err);
     }
   }
-  return sanitizeRenderedHtml(container.innerHTML);
+  return sanitizeMermaidHtml(container.innerHTML);
 }

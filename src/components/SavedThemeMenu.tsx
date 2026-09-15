@@ -43,7 +43,21 @@ const SavedThemeMenu: React.FC<Props> = ({ themes, onApply }) => {
         onClick={() => setOpen((value) => !value)}
       >
         我的主题
-        <span aria-hidden="true">⌄</span>
+        <svg
+          className="saved-theme-menu-chevron"
+          data-open={open}
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
       </Button>
       {open && (
         <div className="saved-theme-menu-popover" role="menu" aria-label="我的主题">
