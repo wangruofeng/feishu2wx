@@ -52,44 +52,46 @@ const FindReplaceBar = React.forwardRef<HTMLInputElement, Props>(({
 
   return (
     <div className="find-replace-bar" role="search" aria-label="Markdown 查找替换">
-      <div className="find-replace-row">
-        <input
-          ref={ref}
-          className="find-replace-input"
-          aria-label="查找内容"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          onKeyDown={handleInputKeyDown}
-          placeholder="查找"
-          spellCheck={false}
-        />
-        <span className="find-replace-count" aria-live="polite">{total ? current + 1 : 0}/{total}</span>
-        <Button variant="editorToolbar" className="find-replace-icon-btn" aria-label="上一个匹配" title="上一个匹配（Shift+Enter）" disabled={disabled} onClick={onPrevious}>↑</Button>
-        <Button variant="editorToolbar" className="find-replace-icon-btn" aria-label="下一个匹配" title="下一个匹配（Enter）" disabled={disabled} onClick={onNext}>↓</Button>
-        <label className="find-replace-option">
-          <input type="checkbox" aria-label="区分大小写" checked={caseSensitive} onChange={(event) => onCaseSensitiveChange(event.target.checked)} />
-          区分大小写
-        </label>
-        <label className="find-replace-option">
-          <input type="checkbox" aria-label="使用正则表达式" checked={regexMode} onChange={(event) => onRegexModeChange(event.target.checked)} />
-          正则
-        </label>
-        {error && <span className="find-replace-error" role="status">正则表达式无效</span>}
-        <Button variant="editorToolbar" className="find-replace-icon-btn" aria-label="关闭查找替换" title="关闭（Esc）" onClick={onClose}>×</Button>
+      <div className="find-replace-fields">
+        <div className="find-replace-row">
+          <input
+            ref={ref}
+            className="find-replace-input"
+            aria-label="查找内容"
+            value={query}
+            onChange={(event) => onQueryChange(event.target.value)}
+            onKeyDown={handleInputKeyDown}
+            placeholder="查找"
+            spellCheck={false}
+          />
+          <span className="find-replace-count" aria-live="polite">{total ? current + 1 : 0}/{total}</span>
+          <Button variant="editorToolbar" className="find-replace-icon-btn" aria-label="上一个匹配" title="上一个匹配（Shift+Enter）" disabled={disabled} onClick={onPrevious}>↑</Button>
+          <Button variant="editorToolbar" className="find-replace-icon-btn" aria-label="下一个匹配" title="下一个匹配（Enter）" disabled={disabled} onClick={onNext}>↓</Button>
+          <label className="find-replace-option">
+            <input type="checkbox" aria-label="区分大小写" checked={caseSensitive} onChange={(event) => onCaseSensitiveChange(event.target.checked)} />
+            区分大小写
+          </label>
+          <label className="find-replace-option">
+            <input type="checkbox" aria-label="使用正则表达式" checked={regexMode} onChange={(event) => onRegexModeChange(event.target.checked)} />
+            正则
+          </label>
+          {error && <span className="find-replace-error" role="status">正则表达式无效</span>}
+        </div>
+        <div className="find-replace-row">
+          <input
+            className="find-replace-input"
+            aria-label="替换内容"
+            value={replacement}
+            onChange={(event) => onReplacementChange(event.target.value)}
+            onKeyDown={handleInputKeyDown}
+            placeholder="替换为"
+            spellCheck={false}
+          />
+          <Button variant="editorToolbar" className="find-replace-action-btn" aria-label="替换当前项" disabled={disabled} onClick={onReplace}>替换</Button>
+          <Button variant="editorToolbar" className="find-replace-action-btn" aria-label="全部替换" disabled={disabled} onClick={onReplaceAll}>全部替换</Button>
+        </div>
       </div>
-      <div className="find-replace-row">
-        <input
-          className="find-replace-input"
-          aria-label="替换内容"
-          value={replacement}
-          onChange={(event) => onReplacementChange(event.target.value)}
-          onKeyDown={handleInputKeyDown}
-          placeholder="替换为"
-          spellCheck={false}
-        />
-        <Button variant="editorToolbar" className="find-replace-action-btn" aria-label="替换当前项" disabled={disabled} onClick={onReplace}>替换</Button>
-        <Button variant="editorToolbar" className="find-replace-action-btn" aria-label="全部替换" disabled={disabled} onClick={onReplaceAll}>全部替换</Button>
-      </div>
+      <Button variant="editorToolbar" className="find-replace-close" aria-label="关闭查找替换" title="关闭（Esc）" onClick={onClose}>×</Button>
     </div>
   );
 });

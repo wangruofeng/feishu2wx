@@ -47,10 +47,18 @@
 
 /* Markdown 原文查找替换 */
 .find-replace-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   flex-shrink: 0;
   padding: var(--space-2) var(--space-6);
   background: var(--color-bg-surface);
   border-bottom: 1px solid var(--color-border-primary);
+}
+
+.find-replace-fields {
+  flex: 1;
+  min-width: 0;
 }
 
 .find-replace-row {
@@ -123,6 +131,24 @@
 .find-replace-action-btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+.find-replace-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-tertiary);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.find-replace-close:hover {
+  color: var(--color-text-primary);
 }
 
 /* 编辑区 */
@@ -345,7 +371,7 @@
     overflow-x: auto;
   }
 
-  .find-replace-bar {
+  .find-replace-fields {
     overflow-x: auto;
   }
 
