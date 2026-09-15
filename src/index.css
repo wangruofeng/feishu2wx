@@ -2,6 +2,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-secondary) transparent;
 }
 
 body {
@@ -20,4 +22,27 @@ code {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+/* 全局细滚动条：参考 stablecoin.wangruofeng007.com，随主题 token 自适应明暗 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-secondary);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-placeholder);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

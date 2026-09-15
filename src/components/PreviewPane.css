@@ -8,43 +8,6 @@
   height: 100%;
 }
 
-/* 简化的预览栏头部 */
-.preview-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-6);
-  background-color: var(--color-bg-surface);
-  border-bottom: 1px solid var(--color-border-primary);
-  flex-shrink: 0;
-  height: 36px;
-  box-sizing: border-box;
-}
-
-.preview-header-btn {
-  padding: var(--space-1) var(--space-2);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  color: var(--color-text-tertiary);
-  font-size: var(--font-size-lg);
-  transition: var(--transition-normal);
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-header-btn:hover {
-  background-color: var(--color-bg-hover-transparent);
-}
-
-.preview-header-btn.active {
-  color: var(--color-brand);
-}
-
 .preview-content-wrapper {
   position: relative;
   flex: 1;
@@ -54,48 +17,13 @@
 }
 
 .preview-content {
-  width: 100%;
+  width: min(100%, 800px);
   height: 100%;
   overflow-y: auto;
   padding: var(--space-6) 24px;
   background-color: white;
   box-sizing: border-box;
-}
-
-.preview-content.device-mobile {
-  max-width: 375px;
   margin: 0 auto;
-  padding: 16px;
-  min-width: 320px;
-}
-
-.preview-content.device-mobile .frontmatter-preview {
-  padding: 12px 14px;
-  border-radius: 10px;
-}
-
-.preview-content.device-mobile .frontmatter-row {
-  grid-template-columns: 1fr;
-  gap: 4px;
-  margin-top: 10px;
-}
-
-.preview-content.device-mobile .frontmatter-row dt,
-.preview-content.device-mobile .frontmatter-row dd {
-  font-size: 13px;
-}
-
-/* 全屏模式下保持手机预览的合理宽度 */
-.preview-pane.fullscreen .preview-content.device-mobile {
-  max-width: 100%;
-  min-width: 0;
-  width: 100%;
-}
-
-.preview-content.device-desktop {
-  max-width: 800px;
-  margin: 0 auto;
-  min-width: 400px;
 }
 
 .empty-preview {
@@ -423,13 +351,13 @@
 }
 
 .preview-content pre {
-  background-color: #f5f5f5;
+  background-color: var(--code-bg, #f5f5f5);
   padding: 0;
   border-radius: 6px;
   overflow-x: auto;
   margin-bottom: 16px;
   white-space: pre;
-  color: #333;
+  color: var(--code-text, #333);
 }
 
 .preview-content pre code {
@@ -441,24 +369,25 @@
   color: #333;
 }
 
-/* 极简代码块使用适配浅背景的高对比语法色，避免复用深色主题后文字发浅 */
+/* 极简代码块使用适配浅背景的高对比语法色，避免复用深色主题后文字发浅；
+   颜色走 --code-tok-* 主题变量（源码配色），未注入时回落到默认浅色系 */
 .preview-content pre:not(.modern-code-block) code.hljs {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 14px;
   line-height: 1.65;
-  color: #1f2937;
+  color: var(--code-text, #1f2937);
   background-color: transparent;
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-comment,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-quote {
-  color: #5b6472;
+  color: var(--code-tok-comment, #5b6472);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-doctag,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-keyword,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-formula {
-  color: #7c3aed;
+  color: var(--code-tok-keyword, #7c3aed);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-section,
@@ -466,11 +395,11 @@
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-tag,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-deletion,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-subst {
-  color: #b42318;
+  color: var(--code-tok-section, #b42318);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-literal {
-  color: #0f766e;
+  color: var(--code-tok-literal, #0f766e);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-string,
@@ -478,7 +407,7 @@
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-addition,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-attribute,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-meta .hljs-string {
-  color: #166534;
+  color: var(--code-tok-string, #166534);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-attr,
@@ -489,7 +418,7 @@
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-attr,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-pseudo,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-number {
-  color: #92400e;
+  color: var(--code-tok-attr, #92400e);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-symbol,
@@ -498,18 +427,19 @@
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-meta,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-selector-id,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-title {
-  color: #1d4ed8;
+  color: var(--code-tok-symbol, #1d4ed8);
 }
 
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-built_in,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-title.class_,
 .preview-content pre:not(.modern-code-block) code.hljs .hljs-class .hljs-title {
-  color: #854d0e;
+  color: var(--code-tok-builtin, #854d0e);
 }
 
-/* 现代代码块样式 - 带语言标签 */
+/* 现代代码块同样消费 --code-* 主题变量；未注入时表面沿用 Atom One Dark 默认。
+   token 色需在此声明以覆盖 App.tsx 全局引入的 highlight.js atom-one-dark 样式 */
 .preview-content pre.modern-code-block {
-  background-color: var(--modern-code-block-bg);
+  background-color: var(--code-bg, var(--modern-code-block-bg));
   border-radius: var(--modern-code-block-radius);
   overflow: hidden;
   margin-bottom: 16px;
@@ -520,7 +450,7 @@
 }
 
 .preview-content pre.modern-code-block .code-block-header {
-  background-color: var(--modern-code-block-header-bg);
+  background-color: var(--code-header-bg, var(--modern-code-block-header-bg));
   padding: var(--modern-code-block-header-padding);
   display: flex;
   align-items: center;
@@ -554,7 +484,65 @@
 
 /* highlight.js 语法高亮样式会在预览中自动应用 */
 .preview-content pre.modern-code-block .code-block-content > code.hljs {
-  color: var(--modern-code-block-text-color);
+  color: var(--code-text, var(--modern-code-block-text-color));
+}
+
+/* 现代代码块 token 色：覆盖全局 atom-one-dark 样式，未注入主题变量时回落 Atom One Dark */
+.preview-content pre.modern-code-block code.hljs .hljs-comment,
+.preview-content pre.modern-code-block code.hljs .hljs-quote {
+  color: var(--code-tok-comment, #7f848e);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-doctag,
+.preview-content pre.modern-code-block code.hljs .hljs-keyword,
+.preview-content pre.modern-code-block code.hljs .hljs-formula {
+  color: var(--code-tok-keyword, #c678dd);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-section,
+.preview-content pre.modern-code-block code.hljs .hljs-name,
+.preview-content pre.modern-code-block code.hljs .hljs-selector-tag,
+.preview-content pre.modern-code-block code.hljs .hljs-deletion,
+.preview-content pre.modern-code-block code.hljs .hljs-subst {
+  color: var(--code-tok-section, #e06c75);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-literal {
+  color: var(--code-tok-literal, #56b6c2);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-string,
+.preview-content pre.modern-code-block code.hljs .hljs-regexp,
+.preview-content pre.modern-code-block code.hljs .hljs-addition,
+.preview-content pre.modern-code-block code.hljs .hljs-attribute,
+.preview-content pre.modern-code-block code.hljs .hljs-meta .hljs-string {
+  color: var(--code-tok-string, #98c379);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-attr,
+.preview-content pre.modern-code-block code.hljs .hljs-variable,
+.preview-content pre.modern-code-block code.hljs .hljs-template-variable,
+.preview-content pre.modern-code-block code.hljs .hljs-type,
+.preview-content pre.modern-code-block code.hljs .hljs-selector-class,
+.preview-content pre.modern-code-block code.hljs .hljs-selector-attr,
+.preview-content pre.modern-code-block code.hljs .hljs-selector-pseudo,
+.preview-content pre.modern-code-block code.hljs .hljs-number {
+  color: var(--code-tok-attr, #d19a66);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-symbol,
+.preview-content pre.modern-code-block code.hljs .hljs-bullet,
+.preview-content pre.modern-code-block code.hljs .hljs-link,
+.preview-content pre.modern-code-block code.hljs .hljs-meta,
+.preview-content pre.modern-code-block code.hljs .hljs-selector-id,
+.preview-content pre.modern-code-block code.hljs .hljs-title {
+  color: var(--code-tok-symbol, #61afef);
+}
+
+.preview-content pre.modern-code-block code.hljs .hljs-built_in,
+.preview-content pre.modern-code-block code.hljs .hljs-title.class_,
+.preview-content pre.modern-code-block code.hljs .hljs-class .hljs-title {
+  color: var(--code-tok-builtin, #e6c07b);
 }
 
 .preview-content pre.modern-code-block .code-block-dot {
@@ -582,7 +570,7 @@
   font-size: var(--modern-code-block-font-size);
   line-height: var(--modern-code-block-line-height);
   font-family: var(--modern-code-block-font-family);
-  color: var(--modern-code-block-text-color);
+  color: var(--code-text, var(--modern-code-block-text-color));
   background-color: transparent;
   font-weight: normal;
 }
@@ -782,67 +770,6 @@
   font-style: italic;
 }
 
-/* 全屏大纲跳转定位到的标题短暂高亮 */
-@keyframes outline-flash-fade {
-  from {
-    background-color: rgba(124, 58, 237, 0.14);
-  }
-  to {
-    background-color: transparent;
-  }
-}
-
-.preview-content h1.outline-flash,
-.preview-content h2.outline-flash,
-.preview-content h3.outline-flash {
-  animation: outline-flash-fade 1.2s ease-out;
-}
-
-/* 全屏预览模式 */
-.preview-pane.fullscreen {
-  width: 100% !important;
-  height: 100%;
-  position: relative;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1001;
-  background-color: transparent;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-
-.preview-pane.fullscreen .preview-header {
-  display: none;
-}
-
-.preview-pane.fullscreen .preview-content-wrapper {
-  width: 60%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0;
-  margin-top: 0;
-  height: 100%;
-}
-
-/* 全屏手机预览模式下，内容包装器保持合理的宽度 */
-.main-container.device-mobile.fullscreen .preview-pane.fullscreen .preview-content-wrapper {
-  width: 100%;
-  max-width: 420px;
-}
-
-.preview-pane.fullscreen .preview-content {
-  max-width: 100%;
-  padding: 40px;
-  margin-top: 0;
-}
-
-.preview-content.fullscreen-content {
-  padding: 40px !important;
-}
-
 @media (max-width: 768px) {
   .preview-pane {
     width: 100%;
@@ -856,51 +783,4 @@
     padding: 16px;
   }
 
-  .preview-content.fullscreen-content {
-    padding: 20px !important;
-  }
-
-  .preview-pane.fullscreen .preview-header,
-  .preview-pane.fullscreen .preview-content-wrapper {
-    width: 95%;
-    max-width: 95%;
-  }
-
-  .main-container.device-mobile.fullscreen .preview-pane.fullscreen .preview-content-wrapper {
-    width: 100%;
-    max-width: 420px;
-  }
-
-  .preview-pane.fullscreen .preview-content-wrapper .preview-content.device-mobile {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .preview-pane.fullscreen .preview-header {
-    display: none;
-  }
-
-  .preview-pane.fullscreen {
-    height: 100%;
-    background-color: transparent;
-  }
-
-  .preview-pane.fullscreen .preview-content-wrapper {
-    height: 100%;
-    margin-top: 0;
-  }
-
-  .main-container.device-mobile.fullscreen .preview-pane.fullscreen .preview-content-wrapper {
-    width: 100% !important;
-    max-width: 420px !important;
-  }
-
-  .preview-pane.fullscreen .preview-content {
-    margin-top: 0;
-  }
-
-  .preview-pane.fullscreen .preview-content.device-mobile {
-    max-width: 100% !important;
-    width: 100% !important;
-  }
 }

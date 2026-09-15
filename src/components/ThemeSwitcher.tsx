@@ -82,11 +82,11 @@ const ThemeSwitcher: React.FC<Props> = ({
               <span key={preset.key} style={{ backgroundColor: preset.color }} />
             ))}
           </span>
-          <span className="theme-name">预设主题</span>
+          <span className="theme-name">预设主题色</span>
           <ChevronIcon />
         </Button>
         {presetOpen && (
-          <div id="preset-theme-menu" className="preset-theme-menu" role="menu" aria-label="预设主题">
+          <div id="preset-theme-menu" className="preset-theme-menu" role="menu" aria-label="预设主题色">
             {THEME_PRESETS.map((preset) => (
               <button
                 key={preset.key}

@@ -714,6 +714,29 @@ test('formats modern code blocks with the same key visual styles as preview', ()
   expect(code.style.padding).toBe('16px');
 });
 
+test('applies syntax theme surfaces to modern and classic code blocks', () => {
+  const modernHtml = '<pre class="modern-code-block"><div class="code-block-header"><span class="code-block-dot red"></span></div><div class="code-block-content"><code class="hljs language-js"><span class="hljs-keyword">const</span> a = 1;</code></div></pre>';
+  const classicHtml = '<pre><code class="hljs language-js"><span class="hljs-keyword">const</span> a = 1;</code></pre>';
+
+  const modern = document.createElement('div');
+  modern.innerHTML = formatForWeChat(modernHtml, 'green', 'default', true, 'border', false, 'modern', false, false, false, false, false, 'default', 'loose', 'theme', 'left', true, 'purple', 'dracula');
+  const classic = document.createElement('div');
+  classic.innerHTML = formatForWeChat(classicHtml, 'green', 'default', true, 'border', false, 'classic', false, false, false, false, false, 'default', 'loose', 'theme', 'left', true, 'purple', 'dracula');
+
+  const modernPre = modern.querySelector('pre');
+  const modernHeader = modern.querySelector('pre > div');
+  const modernCode = modern.querySelector('code');
+  expect(modernPre.style.backgroundColor).toBe('rgb(40, 42, 54)');
+  expect(modernHeader.style.backgroundColor).toBe('rgb(33, 34, 44)');
+  expect(modernCode.style.color).toBe('rgb(248, 248, 242)');
+
+  const classicPre = classic.querySelector('pre');
+  const classicCode = classic.querySelector('code');
+  expect(classicPre.style.backgroundColor).toBe('rgb(40, 42, 54)');
+  expect(classicPre.style.color).toBe('rgb(248, 248, 242)');
+  expect(classicCode.style.color).toBe('rgb(248, 248, 242)');
+});
+
 test('formats modern code block header dots as non-empty elements for wechat paste', () => {
   const html = '<pre class="modern-code-block"><div class="code-block-header"><span class="code-block-dot red"></span><span class="code-block-dot orange"></span><span class="code-block-dot green"></span></div><div class="code-block-content"><code>const answer = 42;</code></div></pre>';
 

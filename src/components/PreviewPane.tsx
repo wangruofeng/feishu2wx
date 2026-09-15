@@ -1,15 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fonts } from './FontSelector';
 import { getModernCodeBlockCssVars } from '../utils/codeBlockStyles';
+import { getCodeThemeCssVars } from '../utils/codeHighlightThemes';
+import type { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { getMarkerHighlightColor, MarkerHighlightColor } from '../utils/markerHighlight';
-import { Button } from './ui';
 import ImageViewer from './ImageViewer';
 import './PreviewPane.css';
 
 interface Props {
   html: string;
-  device: 'desktop' | 'mobile';
-  isFullscreen?: boolean;
   font?: string;
   showH1Underline?: boolean;
   invertH1?: boolean;
@@ -25,15 +24,12 @@ interface Props {
   blockquoteHeightMode?: 'loose' | 'compact';
   textAlignMode?: 'left' | 'justify';
   markerHighlightColor?: MarkerHighlightColor;
+  syntaxTheme?: MdSyntaxThemeKey;
   scrollRef?: React.Ref<HTMLDivElement>;
-  onDeviceChange?: (device: 'desktop' | 'mobile') => void;
-  onToggleFullscreen?: () => void;
 }
 
 const PreviewPane: React.FC<Props> = ({
   html,
-  device,
-  isFullscreen = false,
   font = 'default',
   showH1Underline = true,
   invertH1 = false,
@@ -49,9 +45,8 @@ const PreviewPane: React.FC<Props> = ({
   blockquoteHeightMode = 'loose',
   textAlignMode = 'left',
   markerHighlightColor = 'purple',
+  syntaxTheme = 'none',
   scrollRef,
-  onDeviceChange,
-  onToggleFullscreen,
 }) => {
   const previewRef = useRef<HTMLDivElement>(null);
   const [imageViewerSrc, setImageViewerSrc] = useState<string | null>(null);
@@ -111,45 +106,15 @@ const PreviewPane: React.FC<Props> = ({
   const fontStyle = {
     fontFamily: currentFont.value,
     ...getModernCodeBlockCssVars(),
+    ...getCodeThemeCssVars(syntaxTheme),
   } as React.CSSProperties;
 
   return (
-    <div className={`preview-pane ${isFullscreen ? 'fullscreen' : ''}`}>
-      <div className="preview-header">
-        {onDeviceChange && (
-          <>
-            <Button
-              variant="ghost"
-              active={device === 'desktop'}
-              onClick={() => onDeviceChange('desktop')}
-              title="电脑预览"
-            >
-              💻
-            </Button>
-            <Button
-              variant="ghost"
-              active={device === 'mobile'}
-              onClick={() => onDeviceChange('mobile')}
-              title="手机预览"
-            >
-              📱
-            </Button>
-          </>
-        )}
-        {onToggleFullscreen && (
-          <Button
-            variant="ghost"
-            onClick={onToggleFullscreen}
-            title={isFullscreen ? '退出全屏' : '全屏预览'}
-          >
-            {isFullscreen ? '✕' : '⛶'}
-          </Button>
-        )}
-      </div>
+    <div className="preview-pane">
       <div className="preview-content-wrapper">
         <div
           ref={setPreviewRef}
-          className={`preview-content article-layout-generic device-${device} ${isFullscreen ? 'fullscreen-content' : ''} ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${showH2Underline ? 'show-h2-underline' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} blockquote-bg-${blockquoteBackgroundMode} blockquote-color-${blockquoteColorMode} blockquote-height-${blockquoteHeightMode} text-align-${textAlignMode} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
+          className={`preview-content article-layout-generic ${!showH1Underline ? 'hide-h1-underline' : ''} ${invertH1 ? 'invert-h1' : ''} ${alignH1Left ? 'align-h1-left' : ''} ${invertH2 ? 'invert-h2' : ''} ${alignH2Left ? 'align-h2-left' : ''} ${showH2Underline ? 'show-h2-underline' : ''} ${!tableShadow ? 'hide-table-shadow' : ''} blockquote-bg-${blockquoteBackgroundMode} blockquote-color-${blockquoteColorMode} blockquote-height-${blockquoteHeightMode} text-align-${textAlignMode} image-${imageBorderStyle}${imageBorderRadius ? ' image-radius' : ''}`}
           style={{ ...fontStyle, '--marker-highlight-color': getMarkerHighlightColor(markerHighlightColor) } as React.CSSProperties}
           dangerouslySetInnerHTML={{ __html: html || '<p class="empty-preview">预览内容将显示在这里...</p>' }}
         />

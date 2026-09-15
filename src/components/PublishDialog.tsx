@@ -78,7 +78,7 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, htmlConte
   };
 
   return (
-    <div className="publish-overlay" onClick={onClose}>
+    <div className="publish-overlay keep-settings-open" onClick={onClose}>
       <div className="publish-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="publish-header">
           <h3>推送到草稿箱</h3>

@@ -3,15 +3,15 @@ import './Button.css';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /** 按钮变体，映射到项目中已有的 CSS 类名，不改变原始样式 */
-  variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'danger' | 'tab'
+  variant?: 'default' | 'primary' | 'outline' | 'danger'
     | 'toggle' | 'toolbar' | 'toolbarPrimary' | 'footer' | 'themeOption'
     | 'wechatConfig' | 'settingsTrigger' | 'publishClose' | 'wcDialogClose'
     | 'publishBtnCancel' | 'publishBtnPrimary'
     | 'wcDialogBtnCancel' | 'wcDialogBtnSave' | 'wcDialogBtnDanger'
     | 'imageViewerClose' | 'imageViewerArrow' | 'editorToolbar'
-    | 'deviceBtn' | 'aiIconBtn' | 'aiApplyBtn' | 'aiSendBtn'
+    | 'aiIconBtn' | 'aiApplyBtn' | 'aiSendBtn'
     | 'settingsCategory';
-  /** toggle/ghost/themeOption/tab 变体支持 active 状态 */
+  /** toggle/themeOption 变体支持 active 状态 */
   active?: boolean;
 }
 
@@ -20,9 +20,7 @@ const variantClassMap: Record<string, string> = {
   default: 'edit-toggle-btn',
   primary: 'copy-btn',
   outline: 'publish-btn-top',
-  ghost: 'preview-header-btn',
   danger: 'wc-dialog-btn--danger',
-  tab: 'mobile-tab',
   toggle: 'settings-toggle',
   toolbar: 'toolbar-btn',
   toolbarPrimary: 'toolbar-btn toolbar-btn-primary',
@@ -39,7 +37,6 @@ const variantClassMap: Record<string, string> = {
   wcDialogBtnDanger: 'wc-dialog-btn wc-dialog-btn--danger',
   imageViewerClose: 'image-viewer-close',
   imageViewerArrow: 'image-viewer-arrow',
-  deviceBtn: 'device-btn',
   editorToolbar: '', // 无独立类名，由 .editor-toolbar button 祖先选择器控制
   aiIconBtn: 'ai-icon-btn',
   aiApplyBtn: 'ai-apply-btn',

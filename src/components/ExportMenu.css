@@ -9,7 +9,8 @@
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
-  z-index: 1000;
+  /* 高于设置侧栏(1500)：设置面板打开时菜单右缘伸入其区域，需浮在面板上方 */
+  z-index: 1600;
   animation: export-menu-in 0.12s ease-out;
 }
 

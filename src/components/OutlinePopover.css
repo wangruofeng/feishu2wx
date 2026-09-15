@@ -1,4 +1,4 @@
-/* 文章大纲浮层（编辑器底栏与全屏预览顶栏共用），fixed 定位坐标由组件内联 style 提供 */
+/* 文章大纲浮层，fixed 定位坐标由组件内联 style 提供 */
 .outline-pop {
   width: 280px;
   max-height: 60vh;

@@ -7,10 +7,8 @@ import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
 import AiChatPanel from './components/ai/AiChatPanel';
 import ExportMenu, { ExportFormat } from './components/ExportMenu';
-import OutlinePopover from './components/OutlinePopover';
-import { Button, GearIcon } from './components/ui';
+import { Button, GearIcon, WorkspaceModeIcon } from './components/ui';
 import { renderMarkdown, renderMermaidBlocks, setCodeBlockStyle, CodeBlockStyle, setShowHorizontalRule, getFrontMatterField } from './utils/markdownRenderer';
-import { parseOutline, type OutlineItem } from './utils/outline';
 import { MdSyntaxThemeKey } from './utils/mdSourceHighlight';
 import { copyHtmlToWeChat, copySelectedToWeChat, formatForWeChat, convertSvgImagesToPng, exportHtmlToFile, exportMarkdownToFile, exportHtmlToPdf, sanitizeFilename } from './utils/wechatCopy';
 import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHighlight';
@@ -112,13 +110,11 @@ const App: React.FC = () => {
   const [html, setHtml] = useState<string>('');
   const [theme, setTheme] = useState<string>(savedTheme);
   const [customThemeColor, setCustomThemeColor] = useState<string>(savedCustomThemeColor);
-  const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [isCopying, setIsCopying] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportMenuOpen, setExportMenuOpen] = useState<boolean>(false);
   const exportAnchorRef = useRef<HTMLButtonElement | null>(null);
-  const [showEditor, setShowEditor] = useState<boolean>(true);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [workspaceMode, setWorkspaceMode] = useState<'split' | 'editor' | 'preview'>('split');
   const [font, setFont] = useState<string>(savedFont);
   const [shouldConvertPastedHtml, setShouldConvertPastedHtml] = useState<boolean>(savedShouldConvertPastedHtml);
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
@@ -151,7 +147,6 @@ const App: React.FC = () => {
     isError: false,
   });
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-  const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [publishOpen, setPublishOpen] = useState<boolean>(false);
   const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
   const [publishHtml, setPublishHtml] = useState<string>('');
@@ -180,7 +175,7 @@ const App: React.FC = () => {
 
     editorScrollFrameRef.current = null;
 
-    if (!editor || !preview || !showEditor || isFullscreen) {
+    if (!editor || !preview || workspaceMode !== 'split') {
       return;
     }
 
@@ -204,7 +199,7 @@ const App: React.FC = () => {
     if (Math.abs(preview.scrollTop - targetScrollTop) > 1) {
       preview.scrollTop = targetScrollTop;
     }
-  }, [isFullscreen, showEditor]);
+  }, [workspaceMode]);
 
   const handleEditorScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
     pendingEditorScrollRef.current = e.currentTarget;
@@ -249,12 +244,6 @@ const App: React.FC = () => {
     const h1Match = markdown.match(/^#\s+(.+)$/m);
     return h1Match ? h1Match[1].trim() : '未命名文章';
   }, [markdown]);
-
-  // 全屏预览大纲：解析组合后 Markdown（含首尾模板），点击项滚动预览区定位
-  const [previewOutlineOpen, setPreviewOutlineOpen] = useState<boolean>(false);
-  const [previewOutlinePos, setPreviewOutlinePos] = useState({ top: 0, left: 0 });
-  const previewOutlineAnchorRef = useRef<HTMLButtonElement | null>(null);
-  const previewOutlineItems = useMemo(() => parseOutline(composedMarkdown), [composedMarkdown]);
 
   const articleCover = useMemo(() => getFrontMatterField(markdown, 'cover'), [markdown]);
 
@@ -404,78 +393,6 @@ const App: React.FC = () => {
     return () => preview.removeEventListener('scroll', handleScroll);
   }, [html]);
 
-  // 全屏预览大纲浮层定位：垂于锚点按钮下方，右侧空间不足时改为右缘对齐
-  const handleTogglePreviewOutline = useCallback(() => {
-    if (!previewOutlineOpen && previewOutlineAnchorRef.current) {
-      const rect = previewOutlineAnchorRef.current.getBoundingClientRect();
-      const rightAligned = window.innerWidth - rect.right < 280;
-      setPreviewOutlinePos({
-        top: rect.bottom + 6,
-        left: rightAligned ? rect.right - 280 : rect.left,
-      });
-    }
-    setPreviewOutlineOpen((v) => !v);
-  }, [previewOutlineOpen]);
-
-  // 全屏预览大纲跳转：大纲项与预览 DOM 的 h1-h3 按出现顺序与层级对位
-  // （frontmatter 卡片的 h2 带 data-preview-only，排除；Setext 标题等多出的 DOM 标题被跳过）
-  const handlePreviewOutlineJump = useCallback((item: OutlineItem) => {
-    const container = previewScrollRef.current;
-    setPreviewOutlineOpen(false);
-    if (!container) return;
-    const headings = Array.from(container.querySelectorAll<HTMLElement>('h1, h2, h3'))
-      .filter((el) => !el.closest('[data-preview-only]'));
-    const targetIndex = previewOutlineItems.indexOf(item);
-    let target: HTMLElement | null = null;
-    let domIdx = 0;
-    for (let i = 0; i <= targetIndex && domIdx < headings.length; i++) {
-      const level = previewOutlineItems[i].level;
-      while (domIdx < headings.length && headings[domIdx].tagName !== `H${level}`) {
-        domIdx += 1;
-      }
-      if (domIdx >= headings.length) break;
-      if (i === targetIndex) {
-        target = headings[domIdx];
-        break;
-      }
-      domIdx += 1;
-    }
-    if (!target) return;
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    // 短暂高亮定位到的标题（先移除再强制重排，保证连续跳转时动画重新触发）
-    target.classList.remove('outline-flash');
-    void target.offsetWidth;
-    target.classList.add('outline-flash');
-    window.setTimeout(() => target.classList.remove('outline-flash'), 1300);
-  }, [previewOutlineItems]);
-
-  // 退出全屏时同步收起大纲浮层
-  useEffect(() => {
-    if (!isFullscreen) {
-      setPreviewOutlineOpen(false);
-    }
-  }, [isFullscreen]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        // 大纲浮层开着时优先收起浮层，而非退出全屏
-        if (previewOutlineOpen) {
-          setPreviewOutlineOpen(false);
-        } else {
-          setIsFullscreen(false);
-        }
-      }
-      if (e.altKey && e.code === 'KeyE' && !isMobile && !isFullscreen) {
-        e.preventDefault();
-        setShowEditor((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, isMobile, previewOutlineOpen]);
-
   const isDark = darkMode === 'system' ? isSystemDark : darkMode === 'dark';
   const displayTheme = theme === 'light' || theme === 'dark' ? (isDark ? 'dark' : 'light') : theme;
   const wechatTheme = displayTheme;
@@ -576,7 +493,8 @@ const App: React.FC = () => {
     const link = document.createElement('a');
     link.href = url;
     link.download = savedThemeFilename(saved.name);
-    link.click();
+    // 合成 click 不冒泡，避免被「点击外部关闭」类浮层误判为用户交互
+    link.dispatchEvent(new MouseEvent('click', { bubbles: false }));
     URL.revokeObjectURL(url);
     return { success: true };
   }, [savedThemes]);
@@ -606,7 +524,8 @@ const App: React.FC = () => {
     const link = document.createElement('a');
     link.href = url;
     link.download = 'feishu2wx-config.json';
-    link.click();
+    // 合成 click 不冒泡，避免被「点击外部关闭」类浮层误判为用户交互
+    link.dispatchEvent(new MouseEvent('click', { bubbles: false }));
     URL.revokeObjectURL(url);
   }, [theme, customThemeColor, font, shouldConvertPastedHtml, codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate, showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode, syntaxTheme, aiPanelMode]);
 
@@ -668,7 +587,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -679,7 +598,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
       }
 
       setCopyStatus({
@@ -697,7 +616,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
+  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme]);
 
   const handleExport = useCallback(async (format: ExportFormat) => {
     if (!html.trim()) {
@@ -713,7 +632,7 @@ const App: React.FC = () => {
         return;
       }
       const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
       if (format === 'html') {
         exportHtmlToFile(formatted, `${filename}.html`);
         setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
@@ -727,7 +646,7 @@ const App: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
-  }, [html, composedMarkdown, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor]);
+  }, [html, composedMarkdown, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -736,25 +655,21 @@ const App: React.FC = () => {
   // 主内容区的类名
   const mainClasses = [
     'main-container',
-    `device-${device}`,
-    isFullscreen ? 'fullscreen' : '',
-    // 桌面端：由 showEditor 控制
-    !isMobile && !showEditor ? 'editor-hidden' : '',
-    // 移动端：由 mobileTab 控制
-    isMobile && mobileTab === 'edit' ? 'preview-hidden' : '',
-    isMobile && mobileTab === 'preview' ? 'editor-hidden' : '',
+    workspaceMode === 'editor' ? 'preview-hidden' : '',
+    workspaceMode === 'preview' ? 'editor-hidden' : '',
   ].filter(Boolean).join(' ');
 
   // 侧栏模式：AI 面板占据右侧布局位，顶栏与主内容区左移避让（移动端始终为抽屉）
   const aiSidebarOpen = aiOpen && aiPanelMode === 'sidebar' && !isMobile;
+  const settingsSidebarOpen = settingsOpen && !isMobile;
 
   return (
     <div
-      className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}${aiSidebarOpen ? ' ai-sidebar-open' : ''}`}
+      className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}${aiSidebarOpen ? ' ai-sidebar-open' : ''}${settingsSidebarOpen ? ' settings-sidebar-open' : ''}`}
       style={customThemeVars}
     >
       {/* 顶栏 */}
-      <div className={`top-bar ${isFullscreen ? 'fullscreen-bar' : ''}`}>
+      <div className="top-bar">
         <span className="top-bar-brand" title="飞书文档转公众号排版一键排版工具，秒级完成排版，效率起飞还免费">feishu<span className="brand-accent">2wx</span></span>
         <a
           className="github-link"
@@ -769,14 +684,6 @@ const App: React.FC = () => {
         </a>
 
         <div className="top-bar-right">
-          <Button
-            variant="settingsTrigger"
-            active={settingsOpen}
-            onClick={() => setSettingsOpen(!settingsOpen)}
-            title="设置"
-          >
-            <GearIcon />
-          </Button>
           <SettingsPanel
             font={font}
             setFont={setFont}
@@ -859,42 +766,41 @@ const App: React.FC = () => {
             onExportSavedTheme={handleExportSavedTheme}
             onImportSavedTheme={handleImportSavedTheme}
           />
-          {isFullscreen && (
+          <div className="workspace-mode-switch" aria-label="工作区显示模式">
             <Button
-              ref={previewOutlineAnchorRef}
-              className="fullscreen-outline-btn"
-              onClick={handleTogglePreviewOutline}
-              active={previewOutlineOpen}
-              disabled={previewOutlineItems.length === 0}
-              title={previewOutlineItems.length === 0 ? '未发现标题（H1-H3）' : '文章大纲'}
-              aria-haspopup="dialog"
-              aria-expanded={previewOutlineOpen}
+              variant="toggle"
+              className="workspace-mode-btn"
+              active={workspaceMode === 'editor'}
+              aria-pressed={workspaceMode === 'editor'}
+              aria-label="仅编辑"
+              title="仅编辑"
+              onClick={() => setWorkspaceMode((mode) => mode === 'editor' ? 'split' : 'editor')}
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
-                <line x1="3" y1="4" x2="13" y2="4" />
-                <line x1="5" y1="8" x2="13" y2="8" />
-                <line x1="7" y1="12" x2="13" y2="12" />
-              </svg>
-              大纲
+              <WorkspaceModeIcon mode="editor" />
             </Button>
-          )}
-          {isFullscreen && (
-            <Button className="exit-btn" onClick={() => setIsFullscreen(false)}>
-              退出
+            <Button
+              variant="toggle"
+              className="workspace-mode-btn"
+              active={workspaceMode === 'preview'}
+              aria-pressed={workspaceMode === 'preview'}
+              aria-label="仅预览"
+              title="仅预览"
+              onClick={() => setWorkspaceMode((mode) => mode === 'preview' ? 'split' : 'preview')}
+            >
+              <WorkspaceModeIcon mode="preview" />
             </Button>
-          )}
-          {!showEditor && !isFullscreen && (
-            <Button onClick={() => setShowEditor(true)}>
-              编辑
-            </Button>
-          )}
-          {showEditor && !isFullscreen && (
-            <Button onClick={() => setShowEditor(false)}>
-              预览
-            </Button>
-          )}
+          </div>
+          <Button
+            variant="settingsTrigger"
+            active={settingsOpen}
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            title="设置"
+          >
+            <GearIcon />
+          </Button>
           <Button
             variant="primary"
+            className="keep-settings-open"
             onClick={handleCopyToWeChat}
             disabled={isCopying || !composedMarkdown.trim()}
           >
@@ -902,6 +808,7 @@ const App: React.FC = () => {
           </Button>
           <Button
             variant="outline"
+            className="keep-settings-open"
             ref={exportAnchorRef}
             onClick={() => setExportMenuOpen((open) => !open)}
             disabled={isExporting || !composedMarkdown.trim()}
@@ -917,22 +824,12 @@ const App: React.FC = () => {
             onClose={() => setExportMenuOpen(false)}
             onExport={handleExport}
           />
-          {isFullscreen && (
-            <OutlinePopover
-              open={previewOutlineOpen}
-              items={previewOutlineItems}
-              position={previewOutlinePos}
-              placement="bottom"
-              anchorRef={previewOutlineAnchorRef}
-              onClose={() => setPreviewOutlineOpen(false)}
-              onSelect={handlePreviewOutlineJump}
-            />
-          )}
           <Button
             variant="outline"
+            className="keep-settings-open"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
@@ -943,26 +840,6 @@ const App: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      {/* 移动端 Tab 切换栏 */}
-      {!isFullscreen && (
-        <div className="mobile-tab-bar">
-          <Button
-            variant="tab"
-            active={mobileTab === 'edit'}
-            onClick={() => setMobileTab('edit')}
-          >
-            编辑
-          </Button>
-          <Button
-            variant="tab"
-            active={mobileTab === 'preview'}
-            onClick={() => setMobileTab('preview')}
-          >
-            预览
-          </Button>
-        </div>
-      )}
 
       {/* 主内容区 */}
       <main className={mainClasses}>
@@ -977,8 +854,6 @@ const App: React.FC = () => {
         />
         <PreviewPane
           html={html}
-          device={device}
-          isFullscreen={isFullscreen}
           font={font}
           showH1Underline={showH1Underline}
           invertH1={invertH1}
@@ -994,9 +869,8 @@ const App: React.FC = () => {
           markerHighlightColor={markerHighlightColor}
           imageBorderStyle={imageBorderStyle}
           imageBorderRadius={imageBorderRadius}
+          syntaxTheme={syntaxTheme}
           scrollRef={previewScrollRef}
-          onDeviceChange={setDevice}
-          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
         />
       </main>
 

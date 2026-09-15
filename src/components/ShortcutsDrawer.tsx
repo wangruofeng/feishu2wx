@@ -36,8 +36,6 @@ const shortcutGroups: ShortcutGroup[] = [
     title: '视图',
     items: [
       { keys: [mod, 'F'], description: '查找与替换' },
-      { keys: ['⌥', 'E'], description: '编辑 / 预览' },
-      { keys: ['Esc'], description: '退出全屏' },
     ],
   },
 ];

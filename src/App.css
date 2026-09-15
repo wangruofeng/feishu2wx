@@ -142,7 +142,42 @@
   cursor: not-allowed;
 }
 
-/* 编辑/预览切换按钮 (编辑器隐藏时显示) */
+.workspace-mode-switch {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+/* 扁平图标按钮：无底色无边框，悬停/激活仅图标变色 */
+.workspace-mode-switch .workspace-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+}
+
+.workspace-mode-switch .workspace-mode-btn:hover {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+.workspace-mode-switch .workspace-mode-btn.active,
+.workspace-mode-switch .workspace-mode-btn.active:hover {
+  background: transparent;
+  border: none;
+  color: var(--color-brand);
+}
+
+.workspace-mode-switch .workspace-mode-btn:focus-visible {
+  outline: 2px solid var(--color-brand-focus-ring);
+  outline-offset: 1px;
+}
+
 .edit-toggle-btn {
   padding: var(--space-2) var(--space-4);
   background: transparent;
@@ -160,17 +195,6 @@
   color: var(--color-brand);
 }
 
-.exit-btn {
-  padding: calc(var(--space-2) - 1px) calc(var(--space-6) - 1px);
-}
-
-/* 全屏预览顶栏「大纲」按钮：图标与文字基线对齐 */
-.fullscreen-outline-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
 /* ===== 主内容区 ===== */
 .main-container {
   display: flex;
@@ -183,38 +207,13 @@
   display: none;
 }
 
-.main-container.editor-hidden .preview-pane {
-  width: 100%;
-}
-
-/* 全屏模式 */
-.top-bar.fullscreen-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1002;
-}
-
-.main-container.fullscreen {
-  position: fixed;
-  top: var(--top-bar-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-  background: #f6f6f2;
-  height: calc(100vh - var(--top-bar-height));
-}
-
-.main-container.fullscreen .editor-pane {
+.main-container.preview-hidden .preview-pane {
   display: none;
 }
 
-.main-container.fullscreen .preview-pane {
+.main-container.editor-hidden .preview-pane,
+.main-container.preview-hidden .editor-pane {
   width: 100%;
-  height: 100%;
-  top: 0;
 }
 
 /* ===== AI 侧栏模式：面板占据最右侧，顶栏/主内容区避让不重叠 ===== */
@@ -234,59 +233,37 @@
   display: none;
 }
 
-/* 全屏预览态为 fixed 定位（left/right 铺满），改为收 right 边 */
-.top-bar.fullscreen-bar,
-.main-container.fullscreen {
-  transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.app.ai-sidebar-open .top-bar.fullscreen-bar,
-.app.ai-sidebar-open .main-container.fullscreen {
-  right: 420px;
-}
-
 /* 浮动按钮组左移到面板左侧，避免被面板盖住 */
 .app.ai-sidebar-open .fab-group {
   right: 440px;
 }
 
-.main-container.device-mobile .preview-pane {
-  max-width: 375px;
-  margin: 0 auto;
-  border-left: 2px solid var(--color-border-primary);
-  border-right: 2px solid var(--color-border-primary);
+/* ===== 设置侧栏：桌面端占据右侧布局位，移动端保留抽屉 ===== */
+.app.settings-sidebar-open .top-bar,
+.app.settings-sidebar-open .main-container {
+  margin-right: 420px;
 }
 
-.main-container.fullscreen.device-mobile .preview-pane {
-  max-width: 420px;
-  border-left: none;
-  border-right: none;
+.app.settings-sidebar-open .top-bar {
+  z-index: 1500;
 }
 
-/* ===== 移动端 Tab 切换 ===== */
-.mobile-tab-bar {
-  display: none;
-  background: var(--color-bg-white);
-  border-bottom: 1px solid var(--color-border-primary);
-  flex-shrink: 0;
+.app.settings-sidebar-open .fab-group {
+  right: 440px;
 }
 
-.mobile-tab {
-  flex: 1;
-  padding: 10px 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-size-base);
-  color: var(--color-text-tertiary);
-  font-weight: var(--font-weight-medium);
-  border-bottom: 2px solid transparent;
-  transition: var(--transition-normal);
+/* 两个侧栏同时打开时并排显示，避免彼此遮挡。 */
+.app.ai-sidebar-open.settings-sidebar-open .top-bar,
+.app.ai-sidebar-open.settings-sidebar-open .main-container {
+  margin-right: 840px;
 }
 
-.mobile-tab.active {
-  color: var(--color-brand);
-  border-bottom-color: var(--color-brand);
+.app.settings-sidebar-open .ai-chat-overlay {
+  right: 420px;
+}
+
+.app.ai-sidebar-open.settings-sidebar-open .fab-group {
+  right: 860px;
 }
 
 /* ===== Toast ===== */
@@ -343,7 +320,9 @@
 .fab-group {
   position: fixed;
   right: 20px;
-  bottom: 24px;
+  /* 停靠在编辑器底栏(43px)上方，不再贴屏幕底缘与底栏重叠；
+     底栏高度变化时需同步调整 */
+  bottom: 56px;
   z-index: 900;
   display: flex;
   flex-direction: column;
@@ -378,6 +357,20 @@
 
 /* ===== 响应式 ===== */
 @media (max-width: 768px) {
+  .app.settings-sidebar-open .top-bar,
+  .app.settings-sidebar-open .main-container {
+    margin-right: 0;
+  }
+
+  .app.settings-sidebar-open .fab-group {
+    right: var(--space-5);
+  }
+
+  /* 移动端编辑器底栏不贴屏幕底（编辑/预览上下分区），FAB 维持贴底缘 */
+  .fab-group {
+    bottom: 24px;
+  }
+
   .top-bar {
     height: var(--top-bar-height-mobile);
     padding: 0 10px;
@@ -406,10 +399,6 @@
     font-size: var(--font-size-lg);
   }
 
-  .mobile-tab-bar {
-    display: flex;
-  }
-
   .main-container {
     flex-direction: column;
   }
@@ -424,30 +413,7 @@
     border-bottom: 1px solid var(--color-border-primary);
   }
 
-  .main-container.editor-hidden .editor-pane {
-    display: none;
-  }
-
-  .main-container.preview-hidden .preview-pane {
-    display: none;
-  }
-
-  .main-container.device-mobile .preview-pane {
-    max-width: 100%;
-    border: none;
-  }
-
-  .main-container.fullscreen {
-    top: var(--top-bar-height-mobile);
-    height: calc(100vh - var(--top-bar-height-mobile));
-  }
-
-  .edit-toggle-btn {
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--font-size-xs);
-  }
-
-  .exit-btn {
-    padding: 4px calc(var(--space-4) - 1px);
+  .workspace-mode-switch {
+    margin-left: 0;
   }
 }

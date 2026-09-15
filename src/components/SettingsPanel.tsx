@@ -318,25 +318,51 @@ const SettingsPanel: React.FC<Props> = ({
     if (isOpen) setActiveCategory('appearance');
   }, [isOpen]);
 
+  // latest-ref：onClose 是 App 每次渲染新建的内联函数，若直接进依赖数组，
+  // 按钮 onClick 触发的同步重渲染会移除 document 上的 click 监听器，
+  // 导致「点击外部关闭面板」失效。关闭函数走 ref，监听器只随 isOpen 挂载/卸载。
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+
   useEffect(() => {
     if (!isOpen) return;
 
+    // 设置侧栏打开时顶栏避让 420px。若在 mousedown 时立即关闭面板，
+    // 顶栏布局回弹会把按钮移出指针下方，本次 click 落空（表现为
+    // 无法直接切换工作区模式）。因此改为在 click 冒泡阶段关闭：
+    // 先让被点击按钮的 onClick 完成，再关闭面板。
+    let pointerDownInside = false;
+
+    const handlePointerDown = (e: MouseEvent) => {
+      pointerDownInside = !!panelRef.current?.contains(e.target as Node);
+    };
+
     const handleClickOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        onClose();
+      // mousedown 从面板内开始（如拖选模板文本）时，即使松手在面板外也不关闭
+      if (pointerDownInside) return;
+      const target = e.target as Node;
+      if (panelRef.current && !panelRef.current.contains(target)) {
+        // 顶栏局部操作不收起设置侧栏：切换工作区显示模式（仅编辑/仅预览）、
+        // 复制内容等，方便在「仅预览 + 设置打开」下边调排版边复制
+        if (target instanceof Element
+          && target.closest('.workspace-mode-switch, .keep-settings-open')) return;
+        onCloseRef.current();
       }
     };
 
     // 延迟绑定，避免触发按钮的点击立刻关闭
     const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('mousedown', handlePointerDown);
+      document.addEventListener('click', handleClickOutside);
     }, 0);
 
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -367,10 +393,6 @@ const SettingsPanel: React.FC<Props> = ({
         aria-labelledby={`settings-tab-${activeCategory}`}
         className="settings-category-panel"
       >
-        <h2 className="settings-category-title">
-          {settingsCategories.find((category) => category.id === activeCategory)?.label}
-        </h2>
-
       {/* ===== 通用 ===== */}
       <section className="settings-group" hidden={activeCategory !== 'editor'}>
         <h3 className="settings-group-title">编辑设置</h3>
@@ -379,7 +401,7 @@ const SettingsPanel: React.FC<Props> = ({
           checked={shouldConvertPastedHtml}
           onClick={onToggleShouldConvertPastedHtml}
         />
-        {/* 源码配色：编辑器 Markdown 源码语法高亮配色方案 */}
+        {/* 源码配色：编辑器 Markdown 源码、预览代码块与复制/导出内容的语法高亮配色方案 */}
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">源码配色</span>
           <div className="settings-toggles">
@@ -412,6 +434,7 @@ const SettingsPanel: React.FC<Props> = ({
               无
             </Button>
           </div>
+          <span className="settings-row-hint">同时作用于编辑器源码、预览代码块与复制/导出内容；「无」表示不做语法高亮</span>
         </div>
         {/* AI 面板交互方式：抽屉浮层 or 右侧侧栏（内容避让不重叠） */}
         <div className="settings-row settings-row--block">
@@ -503,11 +526,11 @@ const SettingsPanel: React.FC<Props> = ({
               恢复预设
             </Button>
           </div>
-          <span className="settings-row-hint">选择颜色后自动启用「自定」主题，清空输入并点击「恢复预设」可回到预设主题</span>
+          <span className="settings-row-hint">选择颜色后自动启用「自定」主题，清空输入并点击「恢复预设」可回到预设主题色</span>
         </div>
         <div className="settings-row settings-row--block">
-          <span className="settings-row-label">预设主题</span>
-          <div className="settings-preset-themes" aria-label="预设主题">
+          <span className="settings-row-label">预设主题色</span>
+          <div className="settings-preset-themes" aria-label="预设主题色">
             {THEME_PRESETS.map((preset) => (
               <Button
                 key={preset.key}
@@ -734,19 +757,23 @@ const SettingsPanel: React.FC<Props> = ({
                 key={savedTheme.id}
                 aria-current={isCurrent ? 'true' : undefined}
               >
-                <span className="saved-theme-name" title={savedTheme.name}>
+                <button
+                  type="button"
+                  className="saved-theme-name"
+                  title={`应用主题「${savedTheme.name}」`}
+                  onClick={() => {
+                    const result = onApplySavedTheme(savedTheme.id);
+                    setThemeStatus(result.success ? `已应用主题“${savedTheme.name}”。` : result.error || '主题应用失败。');
+                  }}
+                >
                   {savedTheme.name}
                   {isCurrent && (
                     <span className="saved-theme-current-mark">
                       <span aria-hidden="true">✓</span> 当前
                     </span>
                   )}
-                </span>
+                </button>
                 <div className="saved-theme-actions">
-                  <Button variant="toggle" onClick={() => {
-                    const result = onApplySavedTheme(savedTheme.id);
-                    setThemeStatus(result.success ? `已应用主题“${savedTheme.name}”。` : result.error || '主题应用失败。');
-                  }}>应用</Button>
                   <Button variant="toggle" onClick={() => {
                     const result = onExportSavedTheme(savedTheme.id);
                     setThemeStatus(result.success ? '主题已导出。' : result.error || '主题导出失败。');

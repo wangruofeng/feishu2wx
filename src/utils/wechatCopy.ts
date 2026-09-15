@@ -1,5 +1,7 @@
 import { CodeBlockStyle } from './markdownRenderer';
 import { modernCodeBlockStyles } from './codeBlockStyles';
+import { getCodeThemeSurfaces, CodeThemeSurfaces } from './codeHighlightThemes';
+import type { MdSyntaxThemeKey } from './mdSourceHighlight';
 import { WECHAT_IMAGE_CAPTION_TAG, WECHAT_IMAGE_WRAPPER_TAG } from './wechatTagWhitelist';
 import { getMarkerHighlightGradient, MarkerHighlightColor } from './markerHighlight';
 import { buildCustomThemePalette } from './themeColor';
@@ -595,10 +597,13 @@ export function formatForWeChat(
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
   wechatLinkAutoAdapt: boolean = true,
-  markerHighlightColor: MarkerHighlightColor = 'purple'
+  markerHighlightColor: MarkerHighlightColor = 'purple',
+  syntaxTheme: MdSyntaxThemeKey = 'none'
 ): string {
   const themeStyles = getThemeStyles(theme);
   const fontFamily = getFontFamily(font);
+  // 源码配色主题的代码块表面色；none 时为 null，各样式沿用默认底色
+  const codeThemeSurfaces = getCodeThemeSurfaces(syntaxTheme);
 
   // 创建临时容器处理HTML
   const tempDiv = document.createElement('div');
@@ -610,7 +615,7 @@ export function formatForWeChat(
   if (wechatLinkAutoAdapt) {
     convertLinksToWechatText(tempDiv);
   }
-  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+  applyThemeStyles(tempDiv, theme, themeStyles, fontFamily, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, codeThemeSurfaces);
 
   return tempDiv.innerHTML;
 }
@@ -836,7 +841,8 @@ function applyThemeStyles(
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
   wechatLinkAutoAdapt: boolean = true,
-  markerHighlightColor: MarkerHighlightColor = 'purple'
+  markerHighlightColor: MarkerHighlightColor = 'purple',
+  codeThemeSurfaces: CodeThemeSurfaces | null = null
 ): void {
   // 首先设置容器的字体，作为默认字体
   container.style.fontFamily = fontFamily;
@@ -960,7 +966,7 @@ function applyThemeStyles(
       const headerEl = headerClone;
       
       // 头部容器样式 - 固定在顶部，横向滚动时不动
-      headerEl.style.backgroundColor = modernCodeBlockStyles.headerBackgroundColor;
+      headerEl.style.backgroundColor = codeThemeSurfaces?.headerBackground ?? modernCodeBlockStyles.headerBackgroundColor;
       headerEl.style.padding = modernCodeBlockStyles.headerPadding;
       headerEl.style.display = 'flex';
       headerEl.style.alignItems = 'center';
@@ -1018,8 +1024,8 @@ function applyThemeStyles(
     newCodeEl.setAttribute('data-preserve-whitespace', 'true');
 
     if (isModern) {
-      // 现代样式：深色背景，类似 IDE（Atom One Dark 主题）
-      preEl.style.backgroundColor = modernCodeBlockStyles.preBackgroundColor;
+      // 现代样式：类似 IDE 的卡片代码块，配色跟随「源码配色」主题（默认 Atom One Dark）
+      preEl.style.backgroundColor = codeThemeSurfaces?.background ?? modernCodeBlockStyles.preBackgroundColor;
       preEl.style.padding = '0';
       preEl.style.borderRadius = modernCodeBlockStyles.borderRadius;
       preEl.style.marginBottom = '16px';
@@ -1044,7 +1050,7 @@ function applyThemeStyles(
       newCodeEl.style.backgroundColor = 'transparent';
       newCodeEl.style.padding = modernCodeBlockStyles.codePadding;
       newCodeEl.style.display = 'block';
-      newCodeEl.style.color = modernCodeBlockStyles.codeTextColor;
+      newCodeEl.style.color = codeThemeSurfaces?.text ?? modernCodeBlockStyles.codeTextColor;
       newCodeEl.style.borderRadius = '0';
       newCodeEl.style.fontSize = modernCodeBlockStyles.fontSize;
       newCodeEl.style.lineHeight = modernCodeBlockStyles.lineHeight;
@@ -1072,8 +1078,8 @@ function applyThemeStyles(
       // 将可滚动容器添加到 pre（在头部之后）
       preEl.appendChild(codeContainer);
     } else {
-      // 经典样式：浅色背景
-      preEl.style.backgroundColor = '#f5f5f5';
+      // 经典样式：默认浅色背景，深色主题时跟随「源码配色」切换底色
+      preEl.style.backgroundColor = codeThemeSurfaces?.background ?? '#f5f5f5';
       preEl.style.padding = '16px';
       preEl.style.borderRadius = '6px';
       preEl.style.overflowX = 'auto';
@@ -1081,14 +1087,14 @@ function applyThemeStyles(
       preEl.style.fontSize = '14px';
       preEl.style.lineHeight = '1.5';
       preEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
-      preEl.style.color = '#333';
+      preEl.style.color = codeThemeSurfaces?.text ?? '#333';
       preEl.style.whiteSpace = 'pre';
       preEl.style.textAlign = 'left';
 
       // code 元素样式
       newCodeEl.style.backgroundColor = 'transparent';
       newCodeEl.style.padding = '0';
-      newCodeEl.style.color = '#333';
+      newCodeEl.style.color = codeThemeSurfaces?.text ?? '#333';
       newCodeEl.style.borderRadius = '0';
       newCodeEl.style.fontSize = '14px';
       newCodeEl.style.fontFamily = 'Consolas, Monaco, "Courier New", monospace';
@@ -1757,7 +1763,8 @@ export async function copySelectedToWeChat(
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
   wechatLinkAutoAdapt: boolean = true,
-  markerHighlightColor: MarkerHighlightColor = 'purple'
+  markerHighlightColor: MarkerHighlightColor = 'purple',
+  syntaxTheme: MdSyntaxThemeKey = 'none'
 ): Promise<{ success: boolean; message: string }> {
   const selectedHtml = getSelectedHtmlFromPreview();
 
@@ -1768,7 +1775,7 @@ export async function copySelectedToWeChat(
     };
   }
 
-  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+  return copyHtmlToWeChat(selectedHtml, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
 }
 
 /**
@@ -1793,14 +1800,15 @@ export async function copyHtmlToWeChat(
   blockquoteBackgroundMode: 'none' | 'theme' = legacyShowBlockquoteBg ? 'theme' : 'none',
   textAlignMode: 'left' | 'justify' = 'left',
   wechatLinkAutoAdapt: boolean = true,
-  markerHighlightColor: MarkerHighlightColor = 'purple'
+  markerHighlightColor: MarkerHighlightColor = 'purple',
+  syntaxTheme: MdSyntaxThemeKey = 'none'
 ): Promise<{ success: boolean; message: string }> {
   if (!html || !html.trim()) {
     return { success: false, message: '没有内容可复制' };
   }
 
   const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor);
+  const formattedHtml = formatForWeChat(htmlWithRasterizedSvg, theme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, legacyShowBlockquoteBg, blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
   
   // 方法1: 优先使用 Clipboard API（现代浏览器，支持富文本）
   if (navigator.clipboard && navigator.clipboard.write && window.isSecureContext) {
@@ -2019,7 +2027,8 @@ function downloadBlob(blob: Blob, filename: string): void {
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
-  a.click();
+  // 合成 click 不冒泡，避免被「点击外部关闭」类浮层误判为用户交互
+  a.dispatchEvent(new MouseEvent('click', { bubbles: false }));
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }

@@ -15,7 +15,7 @@ interface Props {
   onSelect: (item: OutlineItem, index: number) => void;
 }
 
-/** 文章大纲浮层（编辑器底栏与全屏预览顶栏共用）：portal 进 .app 根节点继承暗黑/自定义主题 token */
+/** 文章大纲浮层：portal 进 .app 根节点继承暗黑/自定义主题 token */
 const OutlinePopover: React.FC<Props> = ({
   open,
   items,
@@ -40,7 +40,7 @@ const OutlinePopover: React.FC<Props> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [open, anchorRef, onClose]);
 
-  // Esc 关闭（先于 App 全屏态的 Esc 退出全屏生效）
+  // Esc 关闭浮层
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {

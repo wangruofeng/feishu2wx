@@ -111,7 +111,7 @@ const ExportMenu: React.FC<Props> = ({ open, anchorRef, onClose, onExport }) => 
   return createPortal(
     <div
       ref={popRef}
-      className="export-menu"
+      className="export-menu keep-settings-open"
       role="menu"
       aria-label="导出格式"
       style={{ position: 'fixed', top: position.top, left: position.left }}

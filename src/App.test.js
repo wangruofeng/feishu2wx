@@ -65,7 +65,7 @@ test('organizes settings into five task-based categories and switches visible co
   expect(tabs[0].getAttribute('aria-selected')).toBe('true');
   expect(container.querySelector('.settings-category-nav')).not.toBeNull();
   expect(container.querySelector('.settings-category-panel')).not.toBeNull();
-  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
+  expect(container.querySelector('[role="tab"][aria-selected="true"]').textContent).toBe('主题与外观');
   expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('文章外观');
   expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('主题管理'))).toBe(true);
   expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('H1 底线'))).toBe(false);
@@ -85,7 +85,7 @@ test('supports arrow-key navigation between settings categories', () => {
 
   expect(tabs[1].getAttribute('aria-selected')).toBe('true');
   expect(document.activeElement).toBe(tabs[1]);
-  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('文章排版');
+  expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('标题');
 });
 
 test('returns to theme and appearance when settings is reopened', () => {
@@ -93,12 +93,22 @@ test('returns to theme and appearance when settings is reopened', () => {
   const settingsTrigger = container.querySelector('.settings-trigger');
   act(() => settingsTrigger.click());
   act(() => container.querySelector('[role="tab"][aria-controls="settings-panel-editor"]').click());
-  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('编辑体验');
+  expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('编辑设置');
 
   act(() => settingsTrigger.click());
   act(() => settingsTrigger.click());
 
-  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
+  expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('文章外观');
+});
+
+test('opens settings as a desktop sidebar and shifts the workspace aside', () => {
+  act(() => root.render(<App />));
+
+  act(() => container.querySelector('.settings-trigger').click());
+
+  const app = container.querySelector('.app');
+  expect(app.className.includes('settings-sidebar-open')).toBe(true);
+  expect(container.querySelector('.settings-panel')).not.toBeNull();
 });
 
 test('keeps all theme controls in settings and orders custom color before presets', () => {
@@ -111,17 +121,21 @@ test('keeps all theme controls in settings and orders custom color before preset
   const appearanceLabels = Array.from(
     container.querySelectorAll('.settings-group:not([hidden]) .settings-row-label')
   ).map((label) => label.textContent.trim());
-  expect(appearanceLabels.slice(0, 3)).toEqual(['字体', '自定义主题色', '预设主题']);
+  expect(appearanceLabels.slice(0, 3)).toEqual(['字体', '自定义主题色', '预设主题色']);
   expect(container.querySelector('.settings-preset-themes')).not.toBeNull();
   expect(Array.from(container.querySelectorAll('.settings-preset-theme')).map((button) => button.textContent.trim()))
     .toEqual(['经典', '橙色', '蓝色', '青绿']);
 });
 
-test('keeps settings content scrollable and removes the selected-category rail', () => {
+test('keeps settings content scrollable under top tabs', () => {
   const css = fs.readFileSync(path.join(__dirname, 'components/SettingsPanel.css'), 'utf8');
-  expect(css).toMatch(/\.settings-panel\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)/s);
+  expect(css).toMatch(/\.settings-panel\s*\{[^}]*grid-template-rows:\s*auto\s+minmax\(0,\s*1fr\)/s);
+  expect(css).toMatch(/\.settings-category-nav\s*\{[^}]*flex-direction:\s*row[^}]*overflow-x:\s*auto/s);
+  expect(css).toMatch(/\.settings-category-nav\s*\{[^}]*height:\s*var\(--top-bar-height\)/s);
+  expect(css).not.toContain('.settings-category-title');
+  expect(css).toMatch(/\.settings-group:not\(\[hidden\]\)\s*~\s*\.settings-group:not\(\[hidden\]\)\s*\{[^}]*border-top/s);
+  expect(css).not.toMatch(/\.settings-group\s*\{[^}]*border-bottom/s);
   expect(css).toMatch(/\.settings-category-panel\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/s);
-  expect(css).not.toMatch(/\.settings-category-tab\[aria-selected=['"]true['"]\]::before/);
 });
 
 test('saves and reapplies a complete article theme without mutating its snapshot', () => {
@@ -159,7 +173,7 @@ test('saves and reapplies a complete article theme without mutating its snapshot
   expect(savedRow.hasAttribute('aria-current')).toBe(false);
   expect(savedRow.querySelector('.saved-theme-current-mark')).toBeNull();
 
-  const applyButton = Array.from(savedRow.querySelectorAll('button')).find((button) => button.textContent === '应用');
+  const applyButton = savedRow.querySelector('.saved-theme-name');
   act(() => applyButton.click());
   const blueButton = Array.from(container.querySelectorAll('.settings-preset-theme')).find((button) => button.textContent.includes('蓝色'));
   expect(blueButton.classList.contains('active')).toBe(true);
@@ -181,7 +195,7 @@ test('applies a persisted theme from settings', () => {
   act(() => container.querySelector('.settings-trigger').click());
   const savedRow = container.querySelector('.saved-theme-row');
   expect(savedRow.textContent).toContain('蓝色长文');
-  const applyButton = Array.from(savedRow.querySelectorAll('button')).find((button) => button.textContent === '应用');
+  const applyButton = savedRow.querySelector('.saved-theme-name');
   act(() => applyButton.click());
 
   expect(container.querySelector('.app').classList.contains('theme-blue')).toBe(true);
@@ -406,56 +420,57 @@ test('aligns outline popover with editor footer right edge', () => {
   expect(popover.style.top).toBe('400px');
 });
 
-test('fullscreen outline entry jumps preview to the matched heading', () => {
-  localStorage.setItem('feishu2wx_markdown', '# 开头\n\n正文段落。\n\n## 目标标题\n\n结尾段落。');
+test('toggles mutually exclusive editor-only and preview-only modes without device or fullscreen controls', () => {
+  act(() => root.render(<App />));
 
-  act(() => {
-    root.render(<App />);
-  });
+  const editorOnly = Array.from(container.querySelectorAll('button')).find((button) => button.getAttribute('aria-label') === '仅编辑');
+  const previewOnly = Array.from(container.querySelectorAll('button')).find((button) => button.getAttribute('aria-label') === '仅预览');
+  expect(editorOnly.querySelector('svg.workspace-mode-icon')).not.toBeNull();
+  expect(previewOnly.querySelector('svg.workspace-mode-icon')).not.toBeNull();
+  expect(editorOnly.textContent).not.toContain('仅编辑');
+  expect(previewOnly.textContent).not.toContain('仅预览');
+  expect(editorOnly.getAttribute('aria-pressed')).toBe('false');
+  expect(previewOnly.getAttribute('aria-pressed')).toBe('false');
+  expect(container.querySelector('[title="电脑预览"]')).toBeNull();
+  expect(container.querySelector('[title="手机预览"]')).toBeNull();
+  expect(container.querySelector('[title="全屏预览"]')).toBeNull();
 
-  const fullscreenButton = Array.from(container.querySelectorAll('button')).find((button) =>
-    button.getAttribute('title') === '全屏预览'
-  );
-  act(() => {
-    fullscreenButton.click();
-  });
+  act(() => editorOnly.click());
+  expect(container.querySelector('.main-container').className).toContain('preview-hidden');
+  expect(editorOnly.getAttribute('aria-pressed')).toBe('true');
+  expect(previewOnly.getAttribute('aria-pressed')).toBe('false');
 
-  const outlineButton = Array.from(container.querySelectorAll('button')).find((button) =>
-    button.className.includes('fullscreen-outline-btn')
-  );
-  expect(outlineButton).toBeTruthy();
-  expect(outlineButton.disabled).toBe(false);
+  act(() => previewOnly.click());
+  expect(container.querySelector('.main-container').className).toContain('editor-hidden');
+  expect(previewOnly.getAttribute('aria-pressed')).toBe('true');
+  expect(editorOnly.getAttribute('aria-pressed')).toBe('false');
 
-  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1000 });
-  outlineButton.getBoundingClientRect = jest.fn(() => ({ top: 40, bottom: 56, left: 700, right: 780 }));
+  act(() => previewOnly.click());
+  expect(container.querySelector('.main-container').className).not.toMatch(/editor-hidden|preview-hidden/);
+  expect(previewOnly.getAttribute('aria-pressed')).toBe('false');
+});
 
-  act(() => {
-    outlineButton.click();
-  });
+test('applies the syntax theme to preview code blocks', () => {
+  act(() => root.render(<App />));
 
-  const popover = container.querySelector('.outline-pop');
-  expect(popover).toBeTruthy();
+  const preview = container.querySelector('.preview-content');
+  // 默认 github：注入代码块主题变量
+  expect(preview.style.getPropertyValue('--code-bg')).toBe('#f6f8fa');
+  expect(preview.style.getPropertyValue('--code-tok-keyword')).toBe('#cf222e');
 
-  const targetButton = Array.from(popover.querySelectorAll('button')).find((button) =>
-    button.textContent.includes('目标标题')
-  );
+  act(() => container.querySelector('.settings-trigger').click());
+  act(() => container.querySelector('[role="tab"][aria-controls="settings-panel-editor"]').click());
 
-  // jsdom 未实现 scrollIntoView，直接挂 mock
-  const scrollIntoViewMock = jest.fn();
-  const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
-  HTMLElement.prototype.scrollIntoView = scrollIntoViewMock;
+  const dracula = Array.from(container.querySelectorAll('.settings-toggle'))
+    .find((button) => button.textContent.trim() === 'Dracula');
+  act(() => dracula.click());
+  expect(preview.style.getPropertyValue('--code-bg')).toBe('#282a36');
+  expect(preview.style.getPropertyValue('--code-tok-keyword')).toBe('#ff79c6');
 
-  act(() => {
-    targetButton.click();
-  });
-
-  const previewContent = container.querySelector('.preview-content');
-  const headings = Array.from(previewContent.querySelectorAll('h1, h2, h3'));
-  expect(scrollIntoViewMock).toHaveBeenCalledTimes(1);
-  expect(scrollIntoViewMock.mock.instances[0]).toBe(headings[1]);
-  expect(headings[1].className.includes('outline-flash')).toBe(true);
-
-  HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+  const none = Array.from(container.querySelectorAll('.settings-toggle'))
+    .find((button) => button.textContent.trim() === '无');
+  act(() => none.click());
+  expect(preview.style.getPropertyValue('--code-bg')).toBe('');
 });
 
 test('shows frontmatter metadata by default and hides it from settings', async () => {

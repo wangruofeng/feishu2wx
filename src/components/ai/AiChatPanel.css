@@ -228,6 +228,9 @@
   display: flex;
   flex-direction: column;
   max-width: 92%;
+  /* flex 子项 min-width:auto 会被代码块最长行撑开，压过 max-width 并把
+     消息列表顶出横向滚动；置 0 让宽度约束传导到 pre 的 overflow-x */
+  min-width: 0;
 }
 
 .ai-msg--user {
@@ -246,6 +249,11 @@
   font-size: var(--font-size-sm);
   line-height: 1.7;
   word-break: break-word;
+  /* 消息行 align-items 为 flex-start/flex-end，气泡宽度收缩为内容宽；
+     封顶到消息宽度，长代码行才会落进 pre 的内部横向滚动 */
+  max-width: 100%;
+  /* 同为 flex 子项，避免长代码行把气泡撑出消息宽度 */
+  min-width: 0;
 }
 
 .ai-msg--user .ai-msg-bubble {
