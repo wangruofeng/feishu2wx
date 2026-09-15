@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { ARTICLE_THEME_SETTING_KEYS } from './utils/savedThemes';
 
 let container;
 let root;
@@ -32,6 +33,77 @@ afterEach(() => {
     root.unmount();
   });
   container.remove();
+});
+
+const articleThemeSettings = {
+  theme: 'blue', customThemeColor: '', font: 'pingfang', codeBlockStyle: 'modern',
+  imageBorderStyle: 'border', imageBorderRadius: false, showH1Underline: true,
+  invertH1: false, alignH1Left: false, invertH2: false, alignH2Left: false,
+  showH2Underline: true, showHorizontalRule: true, showFrontMatter: true,
+  tableShadow: true, blockquoteBackgroundMode: 'theme', blockquoteColorMode: 'default',
+  blockquoteHeightMode: 'loose', textAlignMode: 'left', markerHighlightColor: 'purple',
+};
+
+test('saves and reapplies a complete article theme without mutating its snapshot', () => {
+  localStorage.setItem('feishu2wx_theme', 'blue');
+  localStorage.setItem('feishu2wx_font', 'pingfang');
+  localStorage.setItem('feishu2wx_showH1Underline', 'true');
+  localStorage.setItem('feishu2wx_showH2Underline', 'true');
+
+  act(() => root.render(<App />));
+  act(() => container.querySelector('.settings-trigger').click());
+
+  const nameInput = container.querySelector('[aria-label="主题名称"]');
+  act(() => {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(nameInput, '技术文章');
+    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  const saveButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === '保存当前配置');
+  act(() => saveButton.click());
+
+  const stored = JSON.parse(localStorage.getItem('feishu2wx_savedThemes'));
+  expect(stored).toHaveLength(1);
+  expect(stored[0].name).toBe('技术文章');
+  expect(stored[0].settings).toMatchObject({ theme: 'blue', font: 'pingfang' });
+  expect(Object.keys(stored[0].settings).sort()).toEqual(ARTICLE_THEME_SETTING_KEYS);
+
+  const orangeButton = Array.from(container.querySelectorAll('.theme-option')).find((button) => button.title === '橙色');
+  act(() => orangeButton.click());
+  expect(orangeButton.classList.contains('active')).toBe(true);
+
+  const savedRow = container.querySelector('.saved-theme-row');
+  const applyButton = Array.from(savedRow.querySelectorAll('button')).find((button) => button.textContent === '应用');
+  act(() => applyButton.click());
+  const blueButton = Array.from(container.querySelectorAll('.theme-option')).find((button) => button.title === '蓝色');
+  expect(blueButton.classList.contains('active')).toBe(true);
+
+  const beforeEdit = localStorage.getItem('feishu2wx_savedThemes');
+  const invertButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent.includes('H1 反色'));
+  act(() => invertButton.click());
+  expect(localStorage.getItem('feishu2wx_savedThemes')).toBe(beforeEdit);
+});
+
+test('opens the saved theme menu and applies a persisted theme', () => {
+  localStorage.setItem('feishu2wx_theme', 'orange');
+  localStorage.setItem('feishu2wx_savedThemes', JSON.stringify([{
+    id: 'saved-blue', name: '蓝色长文', createdAt: 1, updatedAt: 1, settings: articleThemeSettings,
+  }]));
+
+  act(() => root.render(<App />));
+  const menuButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent.includes('我的主题'));
+  expect(menuButton.getAttribute('aria-haspopup')).toBe('menu');
+  expect(menuButton.getAttribute('aria-expanded')).toBe('false');
+
+  act(() => menuButton.click());
+  expect(menuButton.getAttribute('aria-expanded')).toBe('true');
+  const savedButton = container.querySelector('[role="menuitem"]');
+  expect(savedButton.textContent).toBe('蓝色长文');
+  act(() => savedButton.click());
+
+  const blueButton = Array.from(container.querySelectorAll('.theme-option')).find((button) => button.title === '蓝色');
+  expect(blueButton.classList.contains('active')).toBe(true);
+  expect(menuButton.getAttribute('aria-expanded')).toBe('false');
 });
 
 test('toggles h1 inverted style on preview content', () => {

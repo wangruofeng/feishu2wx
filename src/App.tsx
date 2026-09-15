@@ -18,6 +18,17 @@ import { isMarkerHighlightColor, MarkerHighlightColor } from './utils/markerHigh
 import { buildCustomThemePalette, isValidHexColor } from './utils/themeColor';
 import { fetchWechatConfig, saveWechatConfig, deleteWechatConfig } from './utils/publishApi';
 import { createSettingsBackup, parseSettingsBackup, type SettingsBackup } from './utils/settingsBackup';
+import {
+  deleteSavedTheme,
+  loadSavedThemes,
+  parseSavedTheme,
+  persistSavedThemes,
+  saveThemeSnapshot,
+  savedThemeFilename,
+  serializeSavedTheme,
+  type ArticleThemeSettings,
+  type SavedArticleTheme,
+} from './utils/savedThemes';
 import exampleMd from './data/example';
 import './App.css';
 import './styles/themes.css';
@@ -134,6 +145,7 @@ const App: React.FC = () => {
   const [showFooterTemplate, setShowFooterTemplate] = useState<boolean>(savedShowFooterTemplate);
   const [wechatLinkAutoAdapt, setWechatLinkAutoAdapt] = useState<boolean>(savedWechatLinkAutoAdapt);
   const [markerHighlightColor, setMarkerHighlightColor] = useState<MarkerHighlightColor>(savedMarkerHighlightColor);
+  const [savedThemes, setSavedThemes] = useState<SavedArticleTheme[]>(() => loadSavedThemes());
   const [copyStatus, setCopyStatus] = useState<{ visible: boolean; message: string; isError: boolean }>({
     visible: false,
     message: '',
@@ -495,6 +507,93 @@ const App: React.FC = () => {
     setTheme('classic');
   }, []);
 
+  const currentArticleThemeSettings = useMemo<ArticleThemeSettings>(() => ({
+    theme: theme as ArticleThemeSettings['theme'], customThemeColor, font, codeBlockStyle,
+    imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2,
+    alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow,
+    blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode,
+    markerHighlightColor,
+  }), [theme, customThemeColor, font, codeBlockStyle, imageBorderStyle, imageBorderRadius,
+    showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showH2Underline,
+    showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode,
+    blockquoteColorMode, blockquoteHeightMode, textAlignMode, markerHighlightColor]);
+
+  const applyArticleThemeSettings = useCallback((settings: ArticleThemeSettings) => {
+    setTheme(settings.theme);
+    setCustomThemeColor(settings.customThemeColor);
+    setFont(settings.font);
+    setCodeBlockStyleState(settings.codeBlockStyle);
+    setImageBorderStyle(settings.imageBorderStyle);
+    setImageBorderRadius(settings.imageBorderRadius);
+    setShowH1Underline(settings.showH1Underline);
+    setInvertH1(settings.invertH1);
+    setAlignH1Left(settings.alignH1Left);
+    setInvertH2(settings.invertH2);
+    setAlignH2Left(settings.alignH2Left);
+    setShowH2Underline(settings.showH2Underline);
+    setShowHorizontalRuleState(settings.showHorizontalRule);
+    setShowFrontMatter(settings.showFrontMatter);
+    setTableShadow(settings.tableShadow);
+    setBlockquoteBackgroundMode(settings.blockquoteBackgroundMode);
+    setBlockquoteColorMode(settings.blockquoteColorMode);
+    setBlockquoteHeightMode(settings.blockquoteHeightMode);
+    setTextAlignMode(settings.textAlignMode);
+    setMarkerHighlightColor(settings.markerHighlightColor);
+  }, []);
+
+  const handleSaveTheme = useCallback((name: string, allowOverwrite = false) => {
+    const normalizedName = name.trim();
+    if (!normalizedName) return { success: false, error: '请输入主题名称。' };
+    if (!allowOverwrite && savedThemes.some((item) => item.name === normalizedName)) {
+      return { success: false, needsOverwrite: true };
+    }
+    const result = saveThemeSnapshot(savedThemes, normalizedName, currentArticleThemeSettings);
+    const persisted = persistSavedThemes(result.themes);
+    if (!persisted.success) return persisted;
+    setSavedThemes(result.themes);
+    return { success: true };
+  }, [savedThemes, currentArticleThemeSettings]);
+
+  const handleApplySavedTheme = useCallback((id: string) => {
+    const saved = savedThemes.find((item) => item.id === id);
+    if (!saved) return { success: false, error: '主题不存在或已被删除。' };
+    applyArticleThemeSettings(saved.settings);
+    return { success: true };
+  }, [savedThemes, applyArticleThemeSettings]);
+
+  const handleDeleteSavedTheme = useCallback((id: string) => {
+    if (!savedThemes.some((item) => item.id === id)) return { success: false, error: '主题不存在或已被删除。' };
+    const nextThemes = deleteSavedTheme(savedThemes, id);
+    const persisted = persistSavedThemes(nextThemes);
+    if (!persisted.success) return persisted;
+    setSavedThemes(nextThemes);
+    return { success: true };
+  }, [savedThemes]);
+
+  const handleExportSavedTheme = useCallback((id: string) => {
+    const saved = savedThemes.find((item) => item.id === id);
+    if (!saved) return { success: false, error: '主题不存在或已被删除。' };
+    const url = URL.createObjectURL(new Blob([serializeSavedTheme(saved)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = savedThemeFilename(saved.name);
+    link.click();
+    URL.revokeObjectURL(url);
+    return { success: true };
+  }, [savedThemes]);
+
+  const handleImportSavedTheme = useCallback(async (file: File, allowOverwrite = false) => {
+    const parsed = parseSavedTheme(await file.text());
+    if ('error' in parsed) return { success: false, error: parsed.error };
+    const existing = savedThemes.find((item) => item.name === parsed.theme.name);
+    if (existing && !allowOverwrite) return { success: false, needsOverwrite: true };
+    const result = saveThemeSnapshot(savedThemes, parsed.theme.name, parsed.theme.settings);
+    const persisted = persistSavedThemes(result.themes);
+    if (!persisted.success) return persisted;
+    setSavedThemes(result.themes);
+    return { success: true };
+  }, [savedThemes]);
+
   const handleExportSettings = useCallback(() => {
     const backup: SettingsBackup = {
       theme: theme as SettingsBackup['theme'], customThemeColor, font, shouldConvertPastedHtml,
@@ -671,7 +770,13 @@ const App: React.FC = () => {
         </a>
 
         <div className="top-bar-center">
-          {!isFullscreen && <ThemeSwitcher theme={theme} setTheme={setTheme} customThemeColor={customThemeColor} />}
+          {!isFullscreen && <ThemeSwitcher
+            theme={theme}
+            setTheme={setTheme}
+            customThemeColor={customThemeColor}
+            savedThemes={savedThemes}
+            onApplySavedTheme={handleApplySavedTheme}
+          />}
         </div>
 
         <div className="top-bar-right">
@@ -755,6 +860,12 @@ const App: React.FC = () => {
             onResetCustomThemeColor={handleResetCustomThemeColor}
             onExportSettings={handleExportSettings}
             onImportSettings={handleImportSettings}
+            savedThemes={savedThemes}
+            onSaveTheme={handleSaveTheme}
+            onApplySavedTheme={handleApplySavedTheme}
+            onDeleteSavedTheme={handleDeleteSavedTheme}
+            onExportSavedTheme={handleExportSavedTheme}
+            onImportSavedTheme={handleImportSavedTheme}
           />
           {isFullscreen && (
             <Button

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
 import { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { MarkerHighlightColor, markerHighlightOptions } from '../utils/markerHighlight';
+import { SavedArticleTheme } from '../utils/savedThemes';
 import { Button } from './ui';
 import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
@@ -71,6 +72,12 @@ interface Props {
   onResetCustomThemeColor: () => void;
   onExportSettings: () => void;
   onImportSettings: (file: File) => Promise<{ success: boolean; error?: string }>;
+  savedThemes: SavedArticleTheme[];
+  onSaveTheme: (name: string, allowOverwrite?: boolean) => { success: boolean; error?: string; needsOverwrite?: boolean };
+  onApplySavedTheme: (id: string) => { success: boolean; error?: string };
+  onDeleteSavedTheme: (id: string) => { success: boolean; error?: string };
+  onExportSavedTheme: (id: string) => { success: boolean; error?: string };
+  onImportSavedTheme: (file: File, allowOverwrite?: boolean) => Promise<{ success: boolean; error?: string; needsOverwrite?: boolean }>;
 }
 
 const fonts = [
@@ -220,11 +227,20 @@ const SettingsPanel: React.FC<Props> = ({
   onResetCustomThemeColor,
   onExportSettings,
   onImportSettings,
+  savedThemes,
+  onSaveTheme,
+  onApplySavedTheme,
+  onDeleteSavedTheme,
+  onExportSavedTheme,
+  onImportSavedTheme,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const themeImportInputRef = useRef<HTMLInputElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
   const [configTransferStatus, setConfigTransferStatus] = useState('');
+  const [themeName, setThemeName] = useState('');
+  const [themeStatus, setThemeStatus] = useState('');
 
   const handleImportSettings = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -232,6 +248,26 @@ const SettingsPanel: React.FC<Props> = ({
     if (!file) return;
     const result = await onImportSettings(file);
     setConfigTransferStatus(result.success ? '配置已导入。' : result.error || '配置导入失败。');
+  };
+
+  const handleSaveTheme = () => {
+    let result = onSaveTheme(themeName);
+    if (result.needsOverwrite && window.confirm('已存在同名主题，是否覆盖？')) {
+      result = onSaveTheme(themeName, true);
+    }
+    if (result.success) setThemeName('');
+    setThemeStatus(result.success ? '主题已保存。' : result.needsOverwrite ? '已取消覆盖。' : result.error || '主题保存失败。');
+  };
+
+  const handleImportTheme = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    let result = await onImportSavedTheme(file);
+    if (result.needsOverwrite && window.confirm('已存在同名主题，是否覆盖？')) {
+      result = await onImportSavedTheme(file, true);
+    }
+    setThemeStatus(result.success ? '主题已导入。' : result.needsOverwrite ? '已取消覆盖。' : result.error || '主题导入失败。');
   };
 
   useEffect(() => {
@@ -572,6 +608,56 @@ const SettingsPanel: React.FC<Props> = ({
             </Button>
           </div>
         </div>
+      </section>
+
+      {/* ===== 主题管理 ===== */}
+      <section className="settings-group saved-theme-manager">
+        <h3 className="settings-group-title">主题管理</h3>
+        <div className="saved-theme-create-row">
+          <input
+            className="saved-theme-name-input"
+            value={themeName}
+            onChange={(event) => setThemeName(event.target.value)}
+            placeholder="输入主题名称"
+            aria-label="主题名称"
+          />
+          <Button variant="toggle" onClick={handleSaveTheme}>保存当前配置</Button>
+        </div>
+        <div className="saved-theme-list">
+          {savedThemes.length === 0 ? (
+            <span className="saved-theme-empty">还没有保存的主题</span>
+          ) : savedThemes.map((savedTheme) => (
+            <div className="saved-theme-row" key={savedTheme.id}>
+              <span className="saved-theme-name" title={savedTheme.name}>{savedTheme.name}</span>
+              <div className="saved-theme-actions">
+                <Button variant="toggle" onClick={() => {
+                  const result = onApplySavedTheme(savedTheme.id);
+                  setThemeStatus(result.success ? `已应用主题“${savedTheme.name}”。` : result.error || '主题应用失败。');
+                }}>应用</Button>
+                <Button variant="toggle" onClick={() => {
+                  const result = onExportSavedTheme(savedTheme.id);
+                  setThemeStatus(result.success ? '主题已导出。' : result.error || '主题导出失败。');
+                }}>导出</Button>
+                <Button variant="toggle" onClick={() => {
+                  if (!window.confirm(`确定删除主题“${savedTheme.name}”吗？`)) return;
+                  const result = onDeleteSavedTheme(savedTheme.id);
+                  setThemeStatus(result.success ? '主题已删除。' : result.error || '主题删除失败。');
+                }}>删除</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button variant="toggle" onClick={() => themeImportInputRef.current?.click()}>导入主题 JSON</Button>
+        <input
+          ref={themeImportInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="settings-theme-import-input"
+          aria-label="导入主题 JSON"
+          onChange={handleImportTheme}
+        />
+        <span className="settings-row-hint">主题仅保存文章排版，不包含正文、模板、应用偏好或任何凭证。</span>
+        {themeStatus && <span className="settings-row-hint" role="status">{themeStatus}</span>}
       </section>
 
       {/* ===== 模板 ===== */}

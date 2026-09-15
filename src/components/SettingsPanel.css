@@ -64,6 +64,18 @@
   display: none;
 }
 
+.settings-theme-import-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ========== 行：标签 + 控件 ========== */
 
 .settings-row {
@@ -328,6 +340,86 @@
   font-size: 12px;
   line-height: 1.5;
   color: var(--color-text-tertiary);
+}
+
+/* ========== 保存的文章主题 ========== */
+
+.saved-theme-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.saved-theme-manager .settings-group-title {
+  margin-bottom: 0;
+}
+
+.saved-theme-create-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.saved-theme-name-input {
+  flex: 1;
+  min-width: 130px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-white);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  outline: none;
+}
+
+.saved-theme-name-input:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px var(--color-brand-focus-ring);
+}
+
+.saved-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.saved-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+}
+
+.saved-theme-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-theme-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+.saved-theme-actions .settings-toggle {
+  padding-inline: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.saved-theme-empty {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  text-align: center;
 }
 
 /* ========== 字体下拉（保留原样式） ========== */

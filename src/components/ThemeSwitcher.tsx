@@ -1,11 +1,15 @@
 import React from 'react';
+import { SavedArticleTheme } from '../utils/savedThemes';
 import { Button } from './ui';
+import SavedThemeMenu from './SavedThemeMenu';
 import './ThemeSwitcher.css';
 
 interface Props {
   theme: string;
   setTheme: (theme: string) => void;
   customThemeColor?: string;
+  savedThemes: SavedArticleTheme[];
+  onApplySavedTheme: (id: string) => void;
 }
 
 interface ThemeIconProps {
@@ -18,7 +22,7 @@ const ThemeIcon: React.FC<ThemeIconProps> = ({ color }) => (
   </svg>
 );
 
-const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme, customThemeColor = '' }) => {
+const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme, customThemeColor = '', savedThemes, onApplySavedTheme }) => {
   const themes = [
     { key: 'classic', name: '经典', icon: <ThemeIcon color="#000000e6" /> },
     { key: 'orange', name: '橙色', icon: <ThemeIcon color="#FD4606" /> },
@@ -40,6 +44,7 @@ const ThemeSwitcher: React.FC<Props> = ({ theme, setTheme, customThemeColor = ''
           <span className="theme-name">{t.name}</span>
         </Button>
       ))}
+      <SavedThemeMenu themes={savedThemes} onApply={onApplySavedTheme} />
     </div>
   );
 };
