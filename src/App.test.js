@@ -8,6 +8,11 @@ const path = require('path');
 let container;
 let root;
 
+const setInputValue = (input, value) => {
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
 beforeEach(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;
   localStorage.clear();
@@ -764,4 +769,57 @@ test('switches AI panel to sidebar mode from settings and shifts content aside',
   });
   expect(app.className.includes('ai-sidebar-open')).toBe(false);
   expect(localStorage.getItem('feishu2wx_aiPanelMode')).toBe('sidebar');
+});
+
+test('opens Markdown find and replace with the selected source text', async () => {
+  localStorage.setItem('feishu2wx_markdown', 'foo bar foo');
+  act(() => root.render(<App />));
+
+  const editor = container.querySelector('.markdown-editor');
+  editor.setSelectionRange(0, 3);
+  act(() => editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', metaKey: true, bubbles: true })));
+
+  await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
+  expect(container.querySelector('[aria-label="查找内容"]').value).toBe('foo');
+  expect(document.activeElement).toBe(container.querySelector('[aria-label="查找内容"]'));
+  expect(container.querySelector('.find-replace-count').textContent).toBe('1/2');
+  expect(container.querySelectorAll('.md-find-match')).toHaveLength(2);
+  expect(container.querySelectorAll('.md-find-match.is-current')).toHaveLength(1);
+});
+
+test('supports regex replace all and restores it with one undo', async () => {
+  localStorage.setItem('feishu2wx_markdown', 'a1 a2');
+  act(() => root.render(<App />));
+
+  const editor = container.querySelector('.markdown-editor');
+  act(() => editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, bubbles: true })));
+  const findInput = container.querySelector('[aria-label="查找内容"]');
+  const replaceInput = container.querySelector('[aria-label="替换内容"]');
+
+  act(() => {
+    setInputValue(findInput, 'a(\\d)');
+    setInputValue(replaceInput, 'b$1');
+    container.querySelector('[aria-label="使用正则表达式"]').click();
+  });
+  act(() => container.querySelector('[aria-label="全部替换"]').click());
+  expect(editor.value).toBe('b1 b2');
+
+  act(() => editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true })));
+  expect(editor.value).toBe('a1 a2');
+});
+
+test('shows an invalid-regex error and disables replacement', () => {
+  localStorage.setItem('feishu2wx_markdown', 'abc');
+  act(() => root.render(<App />));
+  const editor = container.querySelector('.markdown-editor');
+  act(() => editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', ctrlKey: true, bubbles: true })));
+
+  const findInput = container.querySelector('[aria-label="查找内容"]');
+  act(() => {
+    setInputValue(findInput, '[');
+    container.querySelector('[aria-label="使用正则表达式"]').click();
+  });
+
+  expect(container.querySelector('.find-replace-error').textContent).toContain('无效');
+  expect(container.querySelector('[aria-label="全部替换"]').disabled).toBe(true);
 });

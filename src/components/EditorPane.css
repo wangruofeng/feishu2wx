@@ -45,6 +45,86 @@
   margin: 0 var(--space-1);
 }
 
+/* Markdown 原文查找替换 */
+.find-replace-bar {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-6);
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.find-replace-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: max-content;
+}
+
+.find-replace-row + .find-replace-row {
+  margin-top: var(--space-2);
+}
+
+.find-replace-input {
+  width: min(280px, 42vw);
+  height: 28px;
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  outline: none;
+  color: var(--color-text-primary);
+  background: var(--color-bg-white);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+}
+
+.find-replace-input:focus {
+  border-color: var(--color-brand);
+}
+
+.find-replace-count,
+.find-replace-option,
+.find-replace-error {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.find-replace-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+}
+
+.find-replace-error {
+  color: var(--color-danger, #dc2626);
+}
+
+.find-replace-icon-btn,
+.find-replace-action-btn {
+  height: 28px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+.find-replace-icon-btn:hover:not(:disabled),
+.find-replace-action-btn:hover:not(:disabled) {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.find-replace-icon-btn:disabled,
+.find-replace-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* 编辑区 */
 .editor-container {
   position: relative;
@@ -96,6 +176,12 @@
   background-color: transparent;
 }
 
+.md-find-active .markdown-editor {
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+}
+
 .md-highlight-active .markdown-editor::selection {
   background-color: rgba(13, 148, 136, 0.25);
 }
@@ -119,6 +205,38 @@
   word-wrap: break-word;
   color: var(--color-text-primary);
   will-change: transform;
+}
+
+/* 查找命中背景层：位于语法着色层之上、textarea 之下 */
+.md-find-highlight-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  padding: var(--space-6);
+  box-sizing: border-box;
+}
+
+.md-find-highlight-content {
+  color: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  will-change: transform;
+}
+
+.md-find-match {
+  color: transparent;
+  background: color-mix(in srgb, var(--color-brand) 22%, transparent);
+  border-radius: 2px;
+}
+
+.md-find-match.is-current {
+  background: color-mix(in srgb, var(--color-brand) 42%, transparent);
+  outline: 1px solid var(--color-brand);
 }
 
 /* Markdown 元素 token 着色（颜色由配色方案注入的 CSS 变量控制） */
@@ -225,5 +343,13 @@
 
   .editor-toolbar {
     overflow-x: auto;
+  }
+
+  .find-replace-bar {
+    overflow-x: auto;
+  }
+
+  .find-replace-input {
+    width: 190px;
   }
 }

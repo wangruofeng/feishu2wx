@@ -5,7 +5,9 @@ import { isImageAttachmentFile, readImageFileAsMarkdown } from '../utils/imageAt
 import { tokenizeMarkdown, getMdSyntaxCssVars, MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { archiveCurrentDoc, loadDocHistory, DocHistoryEntry } from '../utils/docHistory';
 import { parseOutline, OutlineItem } from '../utils/outline';
+import { findMatches, replaceAllMatches, replaceMatch } from '../utils/findReplace';
 import DocHistoryPopover from './DocHistoryPopover';
+import FindReplaceBar from './FindReplaceBar';
 import OutlinePopover from './OutlinePopover';
 import { Button } from './ui';
 import './EditorPane.css';
@@ -116,6 +118,8 @@ export interface EditorPaneHandle {
 const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMarkdown, shouldConvertPastedHtml: shouldConvertPastedHtmlEnabled, onScroll, onLoadExample, syntaxTheme }, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = useRef<HTMLDivElement>(null);
+  const findHighlightLayerRef = useRef<HTMLDivElement>(null);
+  const findInputRef = useRef<HTMLInputElement>(null);
   const historyRef = useRef<HistoryEntry[]>([]);
   const redoStackRef = useRef<HistoryEntry[]>([]);
   const isUndoRef = useRef(false);
@@ -131,6 +135,31 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
   const historyBtnRef = useRef<HTMLButtonElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const dragDepthRef = useRef(0);
+  const [findOpen, setFindOpen] = useState(false);
+  const [findQuery, setFindQuery] = useState('');
+  const [replaceValue, setReplaceValue] = useState('');
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [regexMode, setRegexMode] = useState(false);
+  const [activeMatchIndex, setActiveMatchIndex] = useState(0);
+
+  const findResult = useMemo(
+    () => findMatches(markdown, findQuery, { caseSensitive, regex: regexMode }),
+    [markdown, findQuery, caseSensitive, regexMode]
+  );
+  const matches = findResult.matches;
+
+  useEffect(() => {
+    setActiveMatchIndex((current) => Math.min(current, Math.max(0, matches.length - 1)));
+  }, [matches.length]);
+
+  useEffect(() => {
+    if (!findOpen) return;
+    const timer = window.setTimeout(() => {
+      findInputRef.current?.focus();
+      findInputRef.current?.select();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [findOpen]);
 
   // 保存当前状态到历史
   const pushHistory = useCallback(() => {
@@ -294,9 +323,78 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     }
   }, [markdown, setMarkdown, pushHistory]);
 
+  const closeFind = useCallback(() => {
+    setFindOpen(false);
+    window.setTimeout(() => textareaRef.current?.focus(), 0);
+  }, []);
+
+  const openFind = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+      setFindQuery(markdown.slice(textarea.selectionStart, textarea.selectionEnd));
+      setActiveMatchIndex(0);
+    }
+    setFindOpen(true);
+  }, [markdown]);
+
+  const selectMatch = useCallback((index: number) => {
+    if (matches.length === 0) return;
+    const normalized = (index + matches.length) % matches.length;
+    const match = matches[normalized];
+    setActiveMatchIndex(normalized);
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.setSelectionRange(match.start, match.end);
+    textarea.scrollTop = getOutlineScrollTop(textarea, markdown, match.start);
+  }, [matches, markdown]);
+
+  const handleFindQueryChange = useCallback((value: string) => {
+    setFindQuery(value);
+    const cursor = textareaRef.current?.selectionStart ?? 0;
+    const nextResult = findMatches(markdown, value, { caseSensitive, regex: regexMode });
+    const nextIndex = nextResult.matches.findIndex((match) => match.start >= cursor);
+    setActiveMatchIndex(nextIndex >= 0 ? nextIndex : 0);
+  }, [markdown, caseSensitive, regexMode]);
+
+  const handleReplaceCurrent = useCallback(() => {
+    const match = matches[activeMatchIndex];
+    if (!match) return;
+    pushHistory();
+    const nextMarkdown = replaceMatch(markdown, match, replaceValue, regexMode);
+    const insertedLength = nextMarkdown.length - (markdown.length - match.text.length);
+    const nextMatches = findMatches(nextMarkdown, findQuery, { caseSensitive, regex: regexMode }).matches;
+    const nextIndex = nextMatches.findIndex((item) => item.start >= match.start + insertedLength);
+    setMarkdown(nextMarkdown);
+    setActiveMatchIndex(nextIndex >= 0 ? nextIndex : 0);
+    window.setTimeout(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+      const position = match.start + insertedLength;
+      textarea.setSelectionRange(position, position);
+    }, 0);
+  }, [matches, activeMatchIndex, pushHistory, markdown, findQuery, replaceValue, caseSensitive, regexMode, setMarkdown]);
+
+  const handleReplaceAll = useCallback(() => {
+    const result = replaceAllMatches(markdown, findQuery, replaceValue, { caseSensitive, regex: regexMode });
+    if (result.error || result.value === markdown) return;
+    pushHistory();
+    setMarkdown(result.value);
+    setActiveMatchIndex(0);
+  }, [markdown, findQuery, replaceValue, caseSensitive, regexMode, pushHistory, setMarkdown]);
+
   // 键盘快捷键
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape' && findOpen) {
+      e.preventDefault();
+      closeFind();
+      return;
+    }
     if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+      if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        openFind();
+        return;
+      }
       if (e.key === 'z') {
         e.preventDefault();
         const history = historyRef.current;
@@ -384,7 +482,7 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
         isUndoRef.current = false;
       }, 0);
     }
-  }, [markdown, setMarkdown, toggleMarkdown, pushHistory]);
+  }, [markdown, setMarkdown, toggleMarkdown, pushHistory, findOpen, closeFind, openFind]);
 
   // 普通 onChange：编辑前保存快照（非撤销时）
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -569,12 +667,32 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     [markdown, highlightEnabled]
   );
 
+  const findHighlightContent = useMemo(() => {
+    if (!findOpen || matches.length === 0) return markdown;
+    const content: React.ReactNode[] = [];
+    let cursor = 0;
+    matches.forEach((match, index) => {
+      content.push(markdown.slice(cursor, match.start));
+      content.push(
+        <span key={`${match.start}-${match.end}-${index}`} className={`md-find-match${index === activeMatchIndex ? ' is-current' : ''}`}>
+          {markdown.slice(match.start, match.end)}
+        </span>
+      );
+      cursor = match.end;
+    });
+    content.push(markdown.slice(cursor));
+    return content;
+  }, [findOpen, matches, markdown, activeMatchIndex]);
+
   // textarea 滚动时同步高亮层位移，并透传外部 onScroll（保留预览同步）
   const handleEditorScroll = useCallback((e: React.UIEvent<HTMLTextAreaElement>) => {
+    const { scrollLeft, scrollTop } = e.currentTarget;
     const layer = highlightLayerRef.current;
     if (layer) {
-      const { scrollLeft, scrollTop } = e.currentTarget;
       layer.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`;
+    }
+    if (findHighlightLayerRef.current) {
+      findHighlightLayerRef.current.style.transform = `translate(${-scrollLeft}px, ${-scrollTop}px)`;
     }
     onScroll?.(e);
   }, [onScroll]);
@@ -599,9 +717,31 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
         <Button variant="editorToolbar" onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</Button>
       </div>
 
+      {findOpen && (
+        <FindReplaceBar
+          ref={findInputRef}
+          query={findQuery}
+          replacement={replaceValue}
+          caseSensitive={caseSensitive}
+          regexMode={regexMode}
+          current={activeMatchIndex}
+          total={matches.length}
+          error={findResult.error}
+          onQueryChange={handleFindQueryChange}
+          onReplacementChange={setReplaceValue}
+          onCaseSensitiveChange={setCaseSensitive}
+          onRegexModeChange={setRegexMode}
+          onPrevious={() => selectMatch(activeMatchIndex - 1)}
+          onNext={() => selectMatch(activeMatchIndex + 1)}
+          onReplace={handleReplaceCurrent}
+          onReplaceAll={handleReplaceAll}
+          onClose={closeFind}
+        />
+      )}
+
       {/* 中间：编辑区（高亮层在 textarea 下方，文字透明仅 caret 可见；支持拖拽 .md 导入与图片附件插入） */}
       <div
-        className={`editor-container${highlightEnabled ? ' md-highlight-active' : ''}${isDragOver ? ' is-dragover' : ''}`}
+        className={`editor-container${highlightEnabled ? ' md-highlight-active' : ''}${findOpen ? ' md-find-active' : ''}${isDragOver ? ' is-dragover' : ''}`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -615,6 +755,13 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
               style={getMdSyntaxCssVars(syntaxTheme) as React.CSSProperties}
               dangerouslySetInnerHTML={{ __html: highlightedHtml }}
             />
+          </div>
+        )}
+        {findOpen && matches.length > 0 && (
+          <div className="md-find-highlight-layer" aria-hidden="true">
+            <div ref={findHighlightLayerRef} className="md-find-highlight-content">
+              {findHighlightContent}
+            </div>
           </div>
         )}
         <textarea
