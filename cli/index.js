@@ -117,10 +117,12 @@ function printInitGuide(configPath) {
 }
 
 async function main() {
+  const { version } = require('../package.json');
   const program = new Command();
   program
     .name('feishu2wx')
-    .description('飞书/Markdown 转微信公众号排版 CLI');
+    .description('飞书/Markdown 转微信公众号排版 CLI')
+    .version(version, '-v, --version', '输出版本号');
 
   program.command('init')
     .description('初始化 CLI 配置文件并显示后续引导')

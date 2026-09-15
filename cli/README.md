@@ -6,6 +6,7 @@
 
 | 命令 | 作用 | 示例 |
 |------|------|------|
+| `-v` / `--version` | 输出版本号，与根目录 `package.json` 同步 | `feishu2wx -v` |
 | `init` | 初始化用户级配置文件 | `feishu2wx init` |
 | `auth set\|status\|test\|clear` | 管理公众号 AppID/AppSecret | `feishu2wx auth set --app-id <id> --app-secret <s>` |
 | `theme list\|set\|status` | 管理默认主题与排版项 | `feishu2wx theme set blue` |
