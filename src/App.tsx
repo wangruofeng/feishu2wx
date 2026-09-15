@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import EditorPane from './components/EditorPane';
 import type { EditorPaneHandle } from './components/EditorPane';
 import PreviewPane from './components/PreviewPane';
-import ThemeSwitcher from './components/ThemeSwitcher';
 import SettingsPanel from './components/SettingsPanel';
 import PublishDialog from './components/PublishDialog';
 import ShortcutsDrawer from './components/ShortcutsDrawer';
@@ -152,7 +151,6 @@ const App: React.FC = () => {
     isError: false,
   });
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-  const [settingsTarget, setSettingsTarget] = useState<'default' | 'custom-theme'>('default');
   const [mobileTab, setMobileTab] = useState<'edit' | 'preview'>('edit');
   const [publishOpen, setPublishOpen] = useState<boolean>(false);
   const [wechatConfigured, setWechatConfigured] = useState<boolean>(false);
@@ -770,30 +768,11 @@ const App: React.FC = () => {
           </svg>
         </a>
 
-        <div className="top-bar-center">
-          {!isFullscreen && <ThemeSwitcher
-            theme={theme}
-            setTheme={setTheme}
-            customThemeColor={customThemeColor}
-            savedThemes={savedThemes}
-            onApplySavedTheme={handleApplySavedTheme}
-            onOpenPresetTheme={() => setSettingsOpen(false)}
-            onOpenCustomTheme={() => {
-              setSettingsTarget('custom-theme');
-              setSettingsOpen(true);
-            }}
-            customThemeOpen={settingsOpen && settingsTarget === 'custom-theme'}
-          />}
-        </div>
-
         <div className="top-bar-right">
           <Button
             variant="settingsTrigger"
             active={settingsOpen}
-            onClick={() => {
-              setSettingsTarget('default');
-              setSettingsOpen(!settingsOpen);
-            }}
+            onClick={() => setSettingsOpen(!settingsOpen)}
             title="设置"
           >
             <GearIcon />
@@ -868,7 +847,7 @@ const App: React.FC = () => {
             customThemeColor={customThemeColor}
             theme={theme}
             onChangeTheme={setTheme}
-            openTarget={settingsTarget}
+            currentThemeSettings={currentArticleThemeSettings}
             onChangeCustomThemeColor={handleCustomThemeColorChange}
             onResetCustomThemeColor={handleResetCustomThemeColor}
             onExportSettings={handleExportSettings}

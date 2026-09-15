@@ -11,7 +11,9 @@
   box-shadow: var(--shadow-lg);
   display: grid;
   grid-template-columns: 168px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   width: min(680px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 96px));
   max-height: min(560px, calc(100vh - 96px));
   overflow: hidden;
   overscroll-behavior: contain;
@@ -35,7 +37,9 @@
     right: -8px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
     width: min(360px, calc(100vw - 24px));
+    height: min(640px, calc(100vh - 80px));
     max-height: min(640px, calc(100vh - 80px));
   }
 }
@@ -81,17 +85,6 @@
   font-weight: var(--font-weight-semibold);
 }
 
-.settings-category-tab[aria-selected='true']::before {
-  content: '';
-  position: absolute;
-  top: var(--space-2);
-  bottom: var(--space-2);
-  left: 0;
-  width: 3px;
-  border-radius: 999px;
-  background: var(--color-brand);
-}
-
 .settings-category-tab:focus-visible {
   outline: 2px solid var(--color-brand-focus-ring);
   outline-offset: 1px;
@@ -105,6 +98,7 @@
 
 .settings-category-panel {
   min-width: 0;
+  min-height: 0;
   padding: var(--space-6);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -138,15 +132,6 @@
     min-width: max-content;
     min-height: 44px;
     padding-inline: var(--space-3);
-  }
-
-  .settings-category-tab[aria-selected='true']::before {
-    top: auto;
-    right: var(--space-3);
-    bottom: 1px;
-    left: var(--space-3);
-    width: auto;
-    height: 2px;
   }
 
   .settings-category-panel {
@@ -513,6 +498,12 @@
   padding: var(--space-2);
   border-radius: var(--radius-lg);
   background: var(--color-bg-subtle);
+  border: 1px solid transparent;
+}
+
+.saved-theme-row--current {
+  border-color: color-mix(in srgb, var(--color-brand) 32%, transparent);
+  background: var(--color-brand-subtle);
 }
 
 .saved-theme-name {
@@ -522,6 +513,16 @@
   font-size: var(--font-size-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.saved-theme-current-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: var(--space-2);
+  color: var(--color-brand);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .saved-theme-actions {
@@ -691,10 +692,4 @@
   height: 10px;
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(128, 128, 128, 0.2);
-}
-
-.settings-custom-theme-row:focus {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
-  outline-offset: 4px;
-  border-radius: var(--radius-md);
 }

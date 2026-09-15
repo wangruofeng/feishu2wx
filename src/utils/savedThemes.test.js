@@ -1,5 +1,6 @@
 import {
   ARTICLE_THEME_SETTING_KEYS,
+  articleThemeSettingsEqual,
   deleteSavedTheme,
   loadSavedThemes,
   parseSavedTheme,
@@ -82,4 +83,14 @@ test('declares exactly the supported article theme fields', () => {
     'markdown', 'headerTemplate', 'footerTemplate', 'wechatLinkAutoAdapt', 'darkMode',
     'syntaxTheme', 'aiPanelMode', 'appId', 'appSecret', 'apiKey', 'shouldConvertPastedHtml',
   ]));
+});
+
+test('matches saved themes by every supported article setting', () => {
+  expect(articleThemeSettingsEqual(settings, { ...settings })).toBe(true);
+  expect(articleThemeSettingsEqual(settings, { ...settings, font: 'arial' })).toBe(false);
+  expect(articleThemeSettingsEqual(settings, { ...settings, theme: 'blue' })).toBe(false);
+  expect(articleThemeSettingsEqual(
+    settings,
+    Object.fromEntries(Object.entries(settings).reverse()),
+  )).toBe(true);
 });

@@ -2,7 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
 import { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
 import { MarkerHighlightColor, markerHighlightOptions } from '../utils/markerHighlight';
-import { SavedArticleTheme } from '../utils/savedThemes';
+import {
+  articleThemeSettingsEqual,
+  ArticleThemeSettings,
+  SavedArticleTheme,
+} from '../utils/savedThemes';
 import { THEME_PRESETS, ThemePresetKey } from '../utils/themePresets';
 import { Button, SettingsCategoryIcon } from './ui';
 import type { SettingsCategory } from './ui';
@@ -80,7 +84,7 @@ interface Props {
   customThemeColor: string;
   theme: string;
   onChangeTheme: (theme: ThemePresetKey) => void;
-  openTarget: 'default' | 'custom-theme';
+  currentThemeSettings: ArticleThemeSettings;
   onChangeCustomThemeColor: (color: string) => void;
   onResetCustomThemeColor: () => void;
   onExportSettings: () => void;
@@ -238,7 +242,7 @@ const SettingsPanel: React.FC<Props> = ({
   customThemeColor,
   theme,
   onChangeTheme,
-  openTarget,
+  currentThemeSettings,
   onChangeCustomThemeColor,
   onResetCustomThemeColor,
   onExportSettings,
@@ -254,7 +258,6 @@ const SettingsPanel: React.FC<Props> = ({
   const importInputRef = useRef<HTMLInputElement>(null);
   const themeImportInputRef = useRef<HTMLInputElement>(null);
   const categoryTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const customThemeRowRef = useRef<HTMLDivElement>(null);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
   const [configTransferStatus, setConfigTransferStatus] = useState('');
   const [themeName, setThemeName] = useState('');
@@ -312,12 +315,8 @@ const SettingsPanel: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
-    setActiveCategory('appearance');
-    if (openTarget !== 'custom-theme') return;
-    customThemeRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    customThemeRowRef.current?.focus({ preventScroll: true });
-  }, [isOpen, openTarget]);
+    if (isOpen) setActiveCategory('appearance');
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -467,24 +466,6 @@ const SettingsPanel: React.FC<Props> = ({
       <section className="settings-group" hidden={activeCategory !== 'appearance'}>
         <h3 className="settings-group-title">文章外观</h3>
         <div className="settings-row settings-row--block">
-          <span className="settings-row-label">预设主题</span>
-          <div className="settings-preset-themes" aria-label="预设主题">
-            {THEME_PRESETS.map((preset) => (
-              <Button
-                key={preset.key}
-                variant="toggle"
-                active={theme === preset.key}
-                className="settings-preset-theme"
-                onClick={() => onChangeTheme(preset.key)}
-                aria-pressed={theme === preset.key}
-              >
-                <span className="settings-preset-theme-dot" style={{ backgroundColor: preset.color }} aria-hidden="true" />
-                {preset.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div className="settings-row settings-row--block">
           <span className="settings-row-label">字体</span>
           <select
             className="settings-select"
@@ -499,11 +480,7 @@ const SettingsPanel: React.FC<Props> = ({
           </select>
         </div>
         {/* 自定义主题色：选择后自动切换为「自定」主题，清空则恢复预设 */}
-        <div
-          ref={customThemeRowRef}
-          className="settings-row settings-row--block settings-custom-theme-row"
-          tabIndex={-1}
-        >
+        <div className="settings-row settings-row--block settings-custom-theme-row">
           <span className="settings-row-label">自定义主题色</span>
           <div className="settings-custom-theme">
             <input
@@ -527,6 +504,24 @@ const SettingsPanel: React.FC<Props> = ({
             </Button>
           </div>
           <span className="settings-row-hint">选择颜色后自动启用「自定」主题，清空输入并点击「恢复预设」可回到预设主题</span>
+        </div>
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">预设主题</span>
+          <div className="settings-preset-themes" aria-label="预设主题">
+            {THEME_PRESETS.map((preset) => (
+              <Button
+                key={preset.key}
+                variant="toggle"
+                active={theme === preset.key}
+                className="settings-preset-theme"
+                onClick={() => onChangeTheme(preset.key)}
+                aria-pressed={theme === preset.key}
+              >
+                <span className="settings-preset-theme-dot" style={{ backgroundColor: preset.color }} aria-hidden="true" />
+                {preset.name}
+              </Button>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -731,26 +726,40 @@ const SettingsPanel: React.FC<Props> = ({
         <div className="saved-theme-list">
           {savedThemes.length === 0 ? (
             <span className="saved-theme-empty">还没有保存的主题</span>
-          ) : savedThemes.map((savedTheme) => (
-            <div className="saved-theme-row" key={savedTheme.id}>
-              <span className="saved-theme-name" title={savedTheme.name}>{savedTheme.name}</span>
-              <div className="saved-theme-actions">
-                <Button variant="toggle" onClick={() => {
-                  const result = onApplySavedTheme(savedTheme.id);
-                  setThemeStatus(result.success ? `已应用主题“${savedTheme.name}”。` : result.error || '主题应用失败。');
-                }}>应用</Button>
-                <Button variant="toggle" onClick={() => {
-                  const result = onExportSavedTheme(savedTheme.id);
-                  setThemeStatus(result.success ? '主题已导出。' : result.error || '主题导出失败。');
-                }}>导出</Button>
-                <Button variant="toggle" onClick={() => {
-                  if (!window.confirm(`确定删除主题“${savedTheme.name}”吗？`)) return;
-                  const result = onDeleteSavedTheme(savedTheme.id);
-                  setThemeStatus(result.success ? '主题已删除。' : result.error || '主题删除失败。');
-                }}>删除</Button>
+          ) : savedThemes.map((savedTheme) => {
+            const isCurrent = articleThemeSettingsEqual(savedTheme.settings, currentThemeSettings);
+            return (
+              <div
+                className={`saved-theme-row${isCurrent ? ' saved-theme-row--current' : ''}`}
+                key={savedTheme.id}
+                aria-current={isCurrent ? 'true' : undefined}
+              >
+                <span className="saved-theme-name" title={savedTheme.name}>
+                  {savedTheme.name}
+                  {isCurrent && (
+                    <span className="saved-theme-current-mark">
+                      <span aria-hidden="true">✓</span> 当前
+                    </span>
+                  )}
+                </span>
+                <div className="saved-theme-actions">
+                  <Button variant="toggle" onClick={() => {
+                    const result = onApplySavedTheme(savedTheme.id);
+                    setThemeStatus(result.success ? `已应用主题“${savedTheme.name}”。` : result.error || '主题应用失败。');
+                  }}>应用</Button>
+                  <Button variant="toggle" onClick={() => {
+                    const result = onExportSavedTheme(savedTheme.id);
+                    setThemeStatus(result.success ? '主题已导出。' : result.error || '主题导出失败。');
+                  }}>导出</Button>
+                  <Button variant="toggle" onClick={() => {
+                    if (!window.confirm(`确定删除主题“${savedTheme.name}”吗？`)) return;
+                    const result = onDeleteSavedTheme(savedTheme.id);
+                    setThemeStatus(result.success ? '主题已删除。' : result.error || '主题删除失败。');
+                  }}>删除</Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <Button variant="toggle" onClick={() => themeImportInputRef.current?.click()}>导入主题 JSON</Button>
         <input

@@ -52,6 +52,16 @@ const stringFields = new Set(['customThemeColor', 'font']);
 export const ARTICLE_THEME_SETTING_KEYS = [
   ...Object.keys(enumFields), ...Array.from(booleanFields), ...Array.from(stringFields),
 ].sort();
+
+export function articleThemeSettingsEqual(
+  a: ArticleThemeSettings,
+  b: ArticleThemeSettings,
+): boolean {
+  return ARTICLE_THEME_SETTING_KEYS.every((key) => Object.is(
+    a[key as keyof ArticleThemeSettings],
+    b[key as keyof ArticleThemeSettings],
+  ));
+}
 const settingKeySet = new Set(ARTICLE_THEME_SETTING_KEYS);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

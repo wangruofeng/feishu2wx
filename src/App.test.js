@@ -2,6 +2,8 @@ import React, { act } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ARTICLE_THEME_SETTING_KEYS } from './utils/savedThemes';
+const fs = require('fs');
+const path = require('path');
 
 let container;
 let root;
@@ -94,58 +96,27 @@ test('returns to theme and appearance when settings is reopened', () => {
   expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
 });
 
-test('uses separate preset and custom theme entries and moves presets into settings', async () => {
-  const scrollIntoView = jest.fn();
-  const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
-  HTMLElement.prototype.scrollIntoView = scrollIntoView;
-
+test('keeps all theme controls in settings and orders custom color before presets', () => {
   act(() => root.render(<App />));
+  expect(container.querySelector('.top-bar-center')).toBeNull();
+  expect(container.querySelector('.theme-switcher')).toBeNull();
+  expect(container.textContent).not.toContain('我的主题');
 
-  const presetTrigger = Array.from(container.querySelectorAll('button')).find((button) =>
-    button.textContent.includes('预设主题')
-  );
-  const customTrigger = Array.from(container.querySelectorAll('button')).find((button) =>
-    button.textContent.includes('自定义主题')
-  );
-
-  expect(presetTrigger).toBeTruthy();
-  expect(customTrigger).toBeTruthy();
-  expect(presetTrigger.getAttribute('aria-haspopup')).toBe('menu');
-  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
-  expect(customTrigger.getAttribute('aria-haspopup')).toBe('dialog');
-  expect(customTrigger.getAttribute('aria-expanded')).toBe('false');
-  expect(container.querySelectorAll('.preset-theme-trigger, .custom-theme-trigger')).toHaveLength(2);
-
-  act(() => presetTrigger.click());
-  expect(presetTrigger.getAttribute('aria-expanded')).toBe('true');
-  act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
-  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
-
-  act(() => presetTrigger.click());
-  act(() => document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
-  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
-
-  act(() => presetTrigger.click());
-  const orangePreset = Array.from(container.querySelectorAll('[role="menuitemradio"]')).find((button) =>
-    button.textContent.includes('橙色')
-  );
-  act(() => orangePreset.click());
-  expect(localStorage.getItem('feishu2wx_theme')).toBe('orange');
-  expect(presetTrigger.getAttribute('aria-expanded')).toBe('false');
-
-  await act(async () => {
-    customTrigger.click();
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  });
-  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
-  expect(customTrigger.getAttribute('aria-expanded')).toBe('true');
+  act(() => container.querySelector('.settings-trigger').click());
+  const appearanceLabels = Array.from(
+    container.querySelectorAll('.settings-group:not([hidden]) .settings-row-label')
+  ).map((label) => label.textContent.trim());
+  expect(appearanceLabels.slice(0, 3)).toEqual(['字体', '自定义主题色', '预设主题']);
   expect(container.querySelector('.settings-preset-themes')).not.toBeNull();
   expect(Array.from(container.querySelectorAll('.settings-preset-theme')).map((button) => button.textContent.trim()))
     .toEqual(['经典', '橙色', '蓝色', '青绿']);
-  expect(document.activeElement).toBe(container.querySelector('.settings-custom-theme-row'));
-  expect(scrollIntoView).toHaveBeenCalled();
+});
 
-  HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+test('keeps settings content scrollable and removes the selected-category rail', () => {
+  const css = fs.readFileSync(path.join(__dirname, 'components/SettingsPanel.css'), 'utf8');
+  expect(css).toMatch(/\.settings-panel\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)/s);
+  expect(css).toMatch(/\.settings-category-panel\s*\{[^}]*min-height:\s*0[^}]*overflow-y:\s*auto/s);
+  expect(css).not.toMatch(/\.settings-category-tab\[aria-selected=['"]true['"]\]::before/);
 });
 
 test('saves and reapplies a complete article theme without mutating its snapshot', () => {
@@ -172,15 +143,22 @@ test('saves and reapplies a complete article theme without mutating its snapshot
   expect(stored[0].settings).toMatchObject({ theme: 'blue', font: 'pingfang' });
   expect(Object.keys(stored[0].settings).sort()).toEqual(ARTICLE_THEME_SETTING_KEYS);
 
+  let savedRow = container.querySelector('.saved-theme-row');
+  expect(savedRow.getAttribute('aria-current')).toBe('true');
+  expect(savedRow.querySelector('.saved-theme-current-mark').textContent).toContain('当前');
+
   const orangeButton = Array.from(container.querySelectorAll('.settings-preset-theme')).find((button) => button.textContent.includes('橙色'));
   act(() => orangeButton.click());
   expect(orangeButton.classList.contains('active')).toBe(true);
+  savedRow = container.querySelector('.saved-theme-row');
+  expect(savedRow.hasAttribute('aria-current')).toBe(false);
+  expect(savedRow.querySelector('.saved-theme-current-mark')).toBeNull();
 
-  const savedRow = container.querySelector('.saved-theme-row');
   const applyButton = Array.from(savedRow.querySelectorAll('button')).find((button) => button.textContent === '应用');
   act(() => applyButton.click());
   const blueButton = Array.from(container.querySelectorAll('.settings-preset-theme')).find((button) => button.textContent.includes('蓝色'));
   expect(blueButton.classList.contains('active')).toBe(true);
+  expect(container.querySelector('.saved-theme-row').getAttribute('aria-current')).toBe('true');
 
   const beforeEdit = localStorage.getItem('feishu2wx_savedThemes');
   const invertButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent.includes('H1 反色'));
@@ -188,30 +166,21 @@ test('saves and reapplies a complete article theme without mutating its snapshot
   expect(localStorage.getItem('feishu2wx_savedThemes')).toBe(beforeEdit);
 });
 
-test('opens the saved theme menu and applies a persisted theme', () => {
+test('applies a persisted theme from settings', () => {
   localStorage.setItem('feishu2wx_theme', 'orange');
   localStorage.setItem('feishu2wx_savedThemes', JSON.stringify([{
     id: 'saved-blue', name: '蓝色长文', createdAt: 1, updatedAt: 1, settings: articleThemeSettings,
   }]));
 
   act(() => root.render(<App />));
-  const menuButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent.includes('我的主题'));
-  expect(menuButton.getAttribute('aria-haspopup')).toBe('menu');
-  expect(menuButton.getAttribute('aria-expanded')).toBe('false');
-  const chevron = menuButton.querySelector('svg.saved-theme-menu-chevron');
-  expect(chevron).not.toBeNull();
-  expect(chevron.getAttribute('aria-hidden')).toBe('true');
-  expect(chevron.getAttribute('data-open')).toBe('false');
-
-  act(() => menuButton.click());
-  expect(menuButton.getAttribute('aria-expanded')).toBe('true');
-  expect(chevron.getAttribute('data-open')).toBe('true');
-  const savedButton = container.querySelector('[role="menuitem"]');
-  expect(savedButton.textContent).toBe('蓝色长文');
-  act(() => savedButton.click());
+  act(() => container.querySelector('.settings-trigger').click());
+  const savedRow = container.querySelector('.saved-theme-row');
+  expect(savedRow.textContent).toContain('蓝色长文');
+  const applyButton = Array.from(savedRow.querySelectorAll('button')).find((button) => button.textContent === '应用');
+  act(() => applyButton.click());
 
   expect(container.querySelector('.app').classList.contains('theme-blue')).toBe(true);
-  expect(menuButton.getAttribute('aria-expanded')).toBe('false');
+  expect(savedRow.getAttribute('aria-current')).toBe('true');
 });
 
 test('toggles h1 inverted style on preview content', () => {

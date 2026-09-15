@@ -93,10 +93,10 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 - 5 种主题：经典（`#000000e6`）、橙色、蓝色、青绿、自定义；自定义主题由 `src/utils/themeColor.ts` 的 `buildCustomThemePalette()` 从单一主色推导完整色板（非法/空值回退 `#7c3aed`）。主题定义在 `src/styles/themes.css`。
 - 暗黑模式独立于主题配色，通过 `.theme-dark` CSS 类覆盖设计 token 值实现，可在任意主题下启用。
-- `ThemeSwitcher.tsx` 深色模式色值在 `ThemeSwitcher.css` 中独立控制，不通过 CSS 变量继承。
+- 主题选择 UI 统一位于 `SettingsPanel.tsx`，使用全局设计 token 适配明暗模式。
 - 预览区通过 CSS 类（`theme-{name}`）应用主题。
 - 微信输出通过 `wechatCopy.ts` 中的内联样式映射注入。
-- 主题配置分散在 `ThemeSwitcher.tsx`（UI）、`wechatCopy.ts`（导出样式）、`styles/themes.css`（预览样式）三处。
+- 主题配置涉及 `SettingsPanel.tsx`（UI）、`themePresets.ts`（预设元数据）、`wechatCopy.ts`（导出样式）与 `styles/themes.css`（预览样式）。
 
 ## 字体系统
 
@@ -132,13 +132,13 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ## 组件结构
 
-- `App.tsx`：主容器与状态中心，含顶部控制栏（主题、设置面板、复制/导出/推送）。
+- `App.tsx`：主容器与状态中心，顶部控制栏提供设置、复制、导出与推送；主题配置统一由设置面板承载。
 - `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、图片附件拖拽/粘贴插入为 data URI 图片（`src/utils/imageAttachment.ts`，后缀白名单优先识别 SVG，单图限 2MB）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式，含 `<svg>` 元素源码的标签/属性/属性值着色）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
-- `ThemeSwitcher.tsx`：顶栏文章主题双入口；「预设主题」弹层从 `src/utils/themePresets.ts` 读取经典、橙色、蓝色、青绿四个预设，「自定义主题」打开设置并定位到颜色编辑区域；两者复用 `App.tsx` 的主题状态与持久化逻辑。
+- `ThemeSwitcher.tsx`：保留的旧组件文件，当前不再由 `App.tsx` 挂载；主题入口已统一收敛到设置面板。
 - `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换（当前由 `PreviewPane` 内联渲染，此组件已不再被外部 import）。
-- `SettingsPanel.tsx`：排版设置弹出面板，按五个任务分类组织；主题与外观中包含共用数据源驱动的预设主题区和自定义颜色编辑区，并支持由顶栏自定义主题入口直接定位。其余区域统一管理智能粘贴转换、源码配色、主题模式、H1/H2 样式、文本对齐、字体、分割线/元数据/表格阴影、引用块（背景/边框色/间距）、图片（样式/圆角）、代码块样式、首尾模板、公众号凭证。
+- `SettingsPanel.tsx`：排版设置弹出面板，按五个任务分类组织；右侧分类内容独立滚动。主题与外观按字体、自定义主题色、预设主题排列，主题管理通过 `articleThemeSettingsEqual()` 完整比较当前配置与保存快照并标记“当前”。
 - `ImageViewer.tsx`：图片查看器，支持键盘左右切换预览区所有图片，底部显示序号。
 - `ShortcutsDrawer.tsx`：快捷键抽屉面板，展示所有键盘快捷键（格式、编辑、视图三组），支持 ESC 关闭和遮罩点击关闭。
 - `PublishDialog.tsx`：推送对话框（标题、作者、封面）。
