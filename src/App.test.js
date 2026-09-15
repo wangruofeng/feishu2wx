@@ -44,6 +44,53 @@ const articleThemeSettings = {
   blockquoteHeightMode: 'loose', textAlignMode: 'left', markerHighlightColor: 'purple',
 };
 
+test('organizes settings into five task-based categories and switches visible content', () => {
+  act(() => root.render(<App />));
+  act(() => container.querySelector('.settings-trigger').click());
+
+  const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
+  expect(tabs.map((tab) => tab.textContent.trim())).toEqual([
+    '◐主题与外观', '¶文章排版', '▦内容样式', '⌨编辑体验', '↑发布与数据',
+  ]);
+  expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+  expect(container.querySelector('.settings-category-nav')).not.toBeNull();
+  expect(container.querySelector('.settings-category-panel')).not.toBeNull();
+  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
+  expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('文章外观');
+  expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('主题管理'))).toBe(true);
+  expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('H1 底线'))).toBe(false);
+
+  act(() => tabs[1].click());
+  expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+  expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('H1 底线'))).toBe(true);
+  expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('主题管理'))).toBe(false);
+});
+
+test('supports arrow-key navigation between settings categories', () => {
+  act(() => root.render(<App />));
+  act(() => container.querySelector('.settings-trigger').click());
+
+  const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
+  act(() => tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+
+  expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+  expect(document.activeElement).toBe(tabs[1]);
+  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('文章排版');
+});
+
+test('returns to theme and appearance when settings is reopened', () => {
+  act(() => root.render(<App />));
+  const settingsTrigger = container.querySelector('.settings-trigger');
+  act(() => settingsTrigger.click());
+  act(() => container.querySelector('[role="tab"][aria-controls="settings-panel-editor"]').click());
+  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('编辑体验');
+
+  act(() => settingsTrigger.click());
+  act(() => settingsTrigger.click());
+
+  expect(container.querySelector('[role="tabpanel"] h2').textContent).toBe('主题与外观');
+});
+
 test('saves and reapplies a complete article theme without mutating its snapshot', () => {
   localStorage.setItem('feishu2wx_theme', 'blue');
   localStorage.setItem('feishu2wx_font', 'pingfang');

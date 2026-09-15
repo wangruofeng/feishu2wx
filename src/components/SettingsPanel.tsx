@@ -7,6 +7,16 @@ import { Button } from './ui';
 import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
 
+type SettingsCategory = 'appearance' | 'typography' | 'content' | 'editor' | 'publishing';
+
+const settingsCategories: Array<{ id: SettingsCategory; label: string; icon: string }> = [
+  { id: 'appearance', label: '主题与外观', icon: '◐' },
+  { id: 'typography', label: '文章排版', icon: '¶' },
+  { id: 'content', label: '内容样式', icon: '▦' },
+  { id: 'editor', label: '编辑体验', icon: '⌨' },
+  { id: 'publishing', label: '发布与数据', icon: '↑' },
+];
+
 interface Props {
   font: string;
   setFont: (font: string) => void;
@@ -237,10 +247,34 @@ const SettingsPanel: React.FC<Props> = ({
   const panelRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const themeImportInputRef = useRef<HTMLInputElement>(null);
+  const categoryTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [wechatDialogOpen, setWechatDialogOpen] = useState(false);
   const [configTransferStatus, setConfigTransferStatus] = useState('');
   const [themeName, setThemeName] = useState('');
   const [themeStatus, setThemeStatus] = useState('');
+  const [activeCategory, setActiveCategory] = useState<SettingsCategory>('appearance');
+
+  const selectCategory = (category: SettingsCategory, focus = false) => {
+    setActiveCategory(category);
+    if (focus) {
+      const index = settingsCategories.findIndex((item) => item.id === category);
+      categoryTabRefs.current[index]?.focus();
+    }
+  };
+
+  const handleCategoryKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const lastIndex = settingsCategories.length - 1;
+    let nextIndex: number | undefined;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = index === lastIndex ? 0 : index + 1;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = index === 0 ? lastIndex : index - 1;
+    if (event.key === 'Home') nextIndex = 0;
+    if (event.key === 'End') nextIndex = lastIndex;
+    if (nextIndex === undefined) return;
+
+    event.preventDefault();
+    selectCategory(settingsCategories[nextIndex].id, true);
+  };
 
   const handleImportSettings = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -271,6 +305,10 @@ const SettingsPanel: React.FC<Props> = ({
   };
 
   useEffect(() => {
+    if (isOpen) setActiveCategory('appearance');
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
@@ -294,16 +332,43 @@ const SettingsPanel: React.FC<Props> = ({
 
   return (
     <div className="settings-panel" ref={panelRef}>
+      <nav className="settings-category-nav" role="tablist" aria-label="配置分类">
+        {settingsCategories.map((category, index) => (
+          <Button
+            key={category.id}
+            ref={(node) => { categoryTabRefs.current[index] = node; }}
+            variant="settingsCategory"
+            id={`settings-tab-${category.id}`}
+            role="tab"
+            aria-selected={activeCategory === category.id}
+            aria-controls={`settings-panel-${category.id}`}
+            tabIndex={activeCategory === category.id ? 0 : -1}
+            onClick={() => selectCategory(category.id)}
+            onKeyDown={(event) => handleCategoryKeyDown(event, index)}
+          >
+            <span className="settings-category-icon" aria-hidden="true">{category.icon}</span>
+            <span>{category.label}</span>
+          </Button>
+        ))}
+      </nav>
+      <div
+        id={`settings-panel-${activeCategory}`}
+        role="tabpanel"
+        aria-labelledby={`settings-tab-${activeCategory}`}
+        className="settings-category-panel"
+      >
+        <h2 className="settings-category-title">
+          {settingsCategories.find((category) => category.id === activeCategory)?.label}
+        </h2>
 
       {/* ===== 通用 ===== */}
-      <section className="settings-group">
-        <h3 className="settings-group-title">通用</h3>
+      <section className="settings-group" hidden={activeCategory !== 'editor'}>
+        <h3 className="settings-group-title">编辑设置</h3>
         <ToggleSwitch
           label="智能粘贴转换"
           checked={shouldConvertPastedHtml}
           onClick={onToggleShouldConvertPastedHtml}
         />
-        <ToggleSwitch label="显示元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
         {/* 源码配色：编辑器 Markdown 源码语法高亮配色方案 */}
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">源码配色</span>
@@ -361,7 +426,7 @@ const SettingsPanel: React.FC<Props> = ({
         </div>
         {/* 主题模式：三选一 */}
         <div className="settings-row settings-row--block">
-          <span className="settings-row-label">主题模式</span>
+          <span className="settings-row-label">界面明暗</span>
           <div className="settings-segmented">
             <button
               type="button"
@@ -385,6 +450,24 @@ const SettingsPanel: React.FC<Props> = ({
               深色
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className="settings-group" hidden={activeCategory !== 'appearance'}>
+        <h3 className="settings-group-title">文章外观</h3>
+        <div className="settings-row settings-row--block">
+          <span className="settings-row-label">字体</span>
+          <select
+            className="settings-select"
+            value={font}
+            onChange={(e) => setFont(e.target.value)}
+          >
+            {fonts.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.name}
+              </option>
+            ))}
+          </select>
         </div>
         {/* 自定义主题色：选择后自动切换为「自定」主题，清空则恢复预设 */}
         <div className="settings-row settings-row--block">
@@ -415,7 +498,7 @@ const SettingsPanel: React.FC<Props> = ({
       </section>
 
       {/* ===== 标题 ===== */}
-      <section className="settings-group">
+      <section className="settings-group" hidden={activeCategory !== 'typography'}>
         <h3 className="settings-group-title">标题</h3>
         <ToggleSwitch label="H1 底线" checked={showH1Underline} onClick={onToggleH1Underline} />
         <ToggleSwitch label="H1 反色" checked={invertH1} onClick={onToggleInvertH1} />
@@ -434,7 +517,7 @@ const SettingsPanel: React.FC<Props> = ({
       </section>
 
       {/* ===== 正文 ===== */}
-      <section className="settings-group">
+      <section className="settings-group" hidden={activeCategory !== 'typography'}>
         <h3 className="settings-group-title">正文</h3>
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">文本对齐</span>
@@ -455,21 +538,6 @@ const SettingsPanel: React.FC<Props> = ({
             </Button>
           </div>
         </div>
-        {/* 字体 */}
-        <div className="settings-row settings-row--block">
-          <span className="settings-row-label">字体</span>
-          <select
-            className="settings-select"
-            value={font}
-            onChange={(e) => setFont(e.target.value)}
-          >
-            {fonts.map((f) => (
-              <option key={f.key} value={f.key}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </div>
         <ToggleSwitch label="分割线" checked={showHorizontalRule} onClick={onToggleHorizontalRule} />
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">荧光笔颜色</span>
@@ -487,11 +555,10 @@ const SettingsPanel: React.FC<Props> = ({
             ))}
           </div>
         </div>
-        <ToggleSwitch label="表格阴影" checked={tableShadow} onClick={onToggleTableShadow} />
       </section>
 
       {/* ===== 引用块 ===== */}
-      <section className="settings-group">
+      <section className="settings-group" hidden={activeCategory !== 'content'}>
         <h3 className="settings-group-title">引用块</h3>
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">背景</span>
@@ -553,7 +620,7 @@ const SettingsPanel: React.FC<Props> = ({
       </section>
 
       {/* ===== 图片 ===== */}
-      <section className="settings-group">
+      <section className="settings-group" hidden={activeCategory !== 'content'}>
         <h3 className="settings-group-title">图片</h3>
         {/* 图片模式：独立选择 */}
         <div className="settings-row settings-row--block">
@@ -586,7 +653,7 @@ const SettingsPanel: React.FC<Props> = ({
       </section>
 
       {/* ===== 代码块 ===== */}
-      <section className="settings-group">
+      <section className="settings-group" hidden={activeCategory !== 'content'}>
         <h3 className="settings-group-title">代码块</h3>
         {/* 二选一，保留循环 toggle */}
         <div className="settings-row settings-row--block">
@@ -610,8 +677,13 @@ const SettingsPanel: React.FC<Props> = ({
         </div>
       </section>
 
+      <section className="settings-group" hidden={activeCategory !== 'content'}>
+        <h3 className="settings-group-title">表格</h3>
+        <ToggleSwitch label="表格阴影" checked={tableShadow} onClick={onToggleTableShadow} />
+      </section>
+
       {/* ===== 主题管理 ===== */}
-      <section className="settings-group saved-theme-manager">
+      <section className="settings-group saved-theme-manager" hidden={activeCategory !== 'appearance'}>
         <h3 className="settings-group-title">主题管理</h3>
         <div className="saved-theme-create-row">
           <input
@@ -661,8 +733,9 @@ const SettingsPanel: React.FC<Props> = ({
       </section>
 
       {/* ===== 模板 ===== */}
-      <section className="settings-group">
-        <h3 className="settings-group-title">模板</h3>
+      <section className="settings-group" hidden={activeCategory !== 'typography'}>
+        <h3 className="settings-group-title">文章结构</h3>
+        <ToggleSwitch label="显示元数据" checked={showFrontMatter} onClick={onToggleShowFrontMatter} />
         <TemplateField
           label="文章首部片段"
           value={headerTemplate}
@@ -681,8 +754,8 @@ const SettingsPanel: React.FC<Props> = ({
         />
       </section>
 
-      <section className="settings-group">
-        <h3 className="settings-group-title">配置迁移</h3>
+      <section className="settings-group" hidden={activeCategory !== 'publishing'}>
+        <h3 className="settings-group-title">完整配置</h3>
         <div className="settings-row settings-row--block">
           <div className="settings-toggles">
             <Button variant="toggle" onClick={onExportSettings}>导出 JSON</Button>
@@ -702,7 +775,7 @@ const SettingsPanel: React.FC<Props> = ({
       </section>
 
       {/* ===== 公众号 ===== */}
-      <section className="settings-group">
+      <section className="settings-group" hidden={activeCategory !== 'publishing'}>
         <h3 className="settings-group-title">公众号</h3>
         <ToggleSwitch
           label="微信公众号链接自动适配"
@@ -723,6 +796,8 @@ const SettingsPanel: React.FC<Props> = ({
           </Button>
         </div>
       </section>
+
+      </div>
 
       <WechatConfigDialog
         open={wechatDialogOpen}

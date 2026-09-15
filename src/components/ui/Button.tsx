@@ -9,7 +9,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     | 'publishBtnCancel' | 'publishBtnPrimary'
     | 'wcDialogBtnCancel' | 'wcDialogBtnSave' | 'wcDialogBtnDanger'
     | 'imageViewerClose' | 'imageViewerArrow' | 'editorToolbar'
-    | 'deviceBtn' | 'aiIconBtn' | 'aiApplyBtn' | 'aiSendBtn';
+    | 'deviceBtn' | 'aiIconBtn' | 'aiApplyBtn' | 'aiSendBtn'
+    | 'settingsCategory';
   /** toggle/ghost/themeOption/tab 变体支持 active 状态 */
   active?: boolean;
 }
@@ -43,6 +44,7 @@ const variantClassMap: Record<string, string> = {
   aiIconBtn: 'ai-icon-btn',
   aiApplyBtn: 'ai-apply-btn',
   aiSendBtn: 'ai-send-btn',
+  settingsCategory: 'settings-category-tab',
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
