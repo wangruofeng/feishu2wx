@@ -63,7 +63,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - 配置与显示状态保存在 localStorage 中（键名前缀 `feishu2wx_`）
 - 设置迁移：设置面板「发布与数据 → 完整配置」支持导出/导入排版设置 JSON（`SettingsPanel.tsx` 按钮与隐藏 file input + `App.tsx` 的 `handleExportSettings`/`handleImportSettings`），`src/utils/settingsBackup.ts` 的 `createSettingsBackup()`/`parseSettingsBackup()` 使用与用户级 CLI 配置同构的 v1 结构（`theme`/`editor`/`header`/`footer`/`wechatLinkAutoAdapt` 分组，导出时附带 CLI 兼容的 `showBlockquoteBg` 布尔），逐字段白名单校验、不含任何凭证；导出文件名 `feishu2wx-config.json`
 - 配置面板按「主题与外观 / 文章排版 / 内容样式 / 编辑体验 / 发布与数据」五类组织；桌面端为左侧导航，移动端为顶部横向标签。右侧分类内容区使用 `min-height: 0` + `overflow-y: auto` 独立滚动，分类导航保持稳定；当前分类只保存在 `SettingsPanel` 临时状态中，不写入 localStorage
-- 保存主题：`src/utils/savedThemes.ts` 以 localStorage 键 `feishu2wx_savedThemes` 保存多份具名文章排版快照；主题仅包含颜色/自定义主色、字体、标题、正文、代码块、图片、表格、引用块与荧光笔等排版字段，不含正文、模板、发布行为、应用偏好或凭证。顶栏 `SavedThemeMenu` 负责快速应用，其 14px 线性 Chevron 关闭时向右、展开时旋转向下；设置面板负责保存、应用、逐份导出、导入与删除；单主题文件固定为 `version: 1`、`type: feishu2wx-theme`，不得与完整「配置迁移」格式混用
+- 保存主题：`src/utils/savedThemes.ts` 以 localStorage 键 `feishu2wx_savedThemes` 保存多份具名文章排版快照；主题仅包含颜色/自定义主色、字体、标题、正文、代码块、图片、表格、引用块与荧光笔等排版字段，不含正文、模板、发布行为、应用偏好或凭证。保存、应用（「主题管理」列表标记「当前」）、逐份导出、导入与删除全部在设置面板完成；`ThemeSwitcher.tsx` 与 `SavedThemeMenu.tsx` 是入口收敛后停止挂载但保留的旧组件，不要再往上面加新入口；单主题文件固定为 `version: 1`、`type: feishu2wx-theme`，不得与完整「配置迁移」格式混用
 - 公众号 AppID/AppSecret 通过前端 `publishApi.ts` 保存在 localStorage（键 `feishu2wx_wechat_config`），推送时随请求体发送到后端，不经过任何服务端存储
 - 快捷键：`EditorPane.tsx` 管理编辑区快捷键（Cmd+B 加粗切换、Cmd+I 斜体切换、Cmd+U 下划线切换、Cmd+K 链接、Cmd+Z 撤销、Cmd+Shift+Z 重做），`App.tsx` 管理全局快捷键（Option+E 编辑/预览切换）；所有快捷键在 `ShortcutsDrawer` 组件中展示
 - Markdown 原文查找替换：`Cmd/Ctrl+F` 在 `EditorPane.tsx` 打开工具栏下方双行栏，支持普通文本、大小写敏感与正则表达式，当前/全部替换均进入现有撤销栈；纯匹配逻辑位于 `src/utils/findReplace.ts`，全部匹配与当前项由独立 `.md-find-highlight-layer` 绘制并随 textarea 同步滚动

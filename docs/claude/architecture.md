@@ -133,9 +133,10 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ## 组件结构
 
 - `App.tsx`：主容器与状态中心，顶部控制栏提供设置、复制、导出与推送；主题配置统一由设置面板承载。
-- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、图片附件拖拽/粘贴插入为 data URI 图片（`src/utils/imageAttachment.ts`，后缀白名单优先识别 SVG，单图限 2MB）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式，含 `<svg>` 元素源码的标签/属性/属性值着色）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
+- `EditorPane.tsx`：编辑区、飞书粘贴检测、本地 `.md` 文件导入（按钮 + 拖拽到编辑区，见「历史文档」小节）、图片附件拖拽/粘贴插入为 data URI 图片（`src/utils/imageAttachment.ts`，后缀白名单优先识别 SVG，单图限 2MB）、行内格式化工具栏、Markdown 源码语法高亮（textarea overlay 模式，含 `<svg>` 元素源码的标签/属性/属性值着色）、快捷键（B/I/U/K/Z）、自定义撤销（50 步历史）、Markdown 原文查找替换（Cmd/Ctrl+F 打开双行查找栏，普通/大小写/正则匹配，`src/utils/findReplace.ts` 纯函数，独立 `.md-find-highlight-layer` 高亮层随 textarea 同步滚动，替换进入撤销栈）、文章大纲（解析 H1-H3，跳过 frontmatter 与代码块，点击大纲项滚动 textarea 定位到对应标题）、历史文档按钮与存档触发。
 - `PreviewPane.tsx`：渲染预览，处理桌面端/移动端宽度，应用字体和代码块 CSS 变量。
 - `ThemeSwitcher.tsx`：保留的旧组件文件，当前不再由 `App.tsx` 挂载；主题入口已统一收敛到设置面板。
+- `SavedThemeMenu.tsx`：保留的旧组件文件，原先的顶栏保存主题快速应用入口，随 `ThemeSwitcher` 一并停止挂载；保存主题的保存/应用/导入/导出/删除统一在设置面板「主题管理」。
 - `FontSelector.tsx`：导出 `fonts` 常量（供 `PreviewPane` / `SettingsPanel` 复用），不再作为独立 UI 组件挂载。
 - `DevicePreviewToggle.tsx`：桌面/手机双按钮切换（当前由 `PreviewPane` 内联渲染，此组件已不再被外部 import）。
 - `SettingsPanel.tsx`：排版设置弹出面板，按五个任务分类组织；右侧分类内容独立滚动。主题与外观按字体、自定义主题色、预设主题排列，主题管理通过 `articleThemeSettingsEqual()` 完整比较当前配置与保存快照并标记“当前”。
@@ -211,7 +212,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 
 ### 快捷键系统
 
-- 编辑区快捷键在 `EditorPane.tsx` 中实现：Cmd+B（加粗）、Cmd+I（斜体）、Cmd+U（下划线）、Cmd+K（链接）、Cmd+Z（撤销）、Cmd+Shift+Z（重做）。
+- 编辑区快捷键在 `EditorPane.tsx` 中实现：Cmd+B（加粗）、Cmd+I（斜体）、Cmd+U（下划线）、Cmd+K（链接）、Cmd+Z（撤销）、Cmd+Shift+Z（重做）、Cmd/Ctrl+F（打开查找替换）。
 - 全局快捷键在 `App.tsx` 中实现：Option+E（编辑/预览切换）。
 - 所有快捷键在 `ShortcutsDrawer` 组件中展示，通过抽屉面板查看。
 

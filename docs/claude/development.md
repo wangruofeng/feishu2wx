@@ -54,7 +54,7 @@ npm run cf:dev
 
 1. 使用多种 Markdown 输入测试标题、列表、代码块、表格和引用。
 2. 测试从飞书文档粘贴 HTML。
-3. 验证预览区的主题切换（5 种主题 + 系统暗黑模式自适应）。
+3. 在设置面板中验证主题切换（4 种预设 + 自定义主题色 + 系统暗黑模式自适应）。
 4. 验证复制公众号后是否保留内联样式（classic 和 modern 代码块都要测）。
 5. 验证桌面端和移动端预览宽度。
 6. 测试选中部分内容复制 vs 全文复制。
@@ -63,14 +63,12 @@ npm run cf:dev
 
 ## 现有测试
 
-- `src/utils/wechatCopy.test.js`：覆盖 H1 反显、代码块对齐、图片间距、modern 代码块样式、缩进空白保留、公众号链接自动适配等。
-- `src/utils/markdownRenderer.test.js`：覆盖 Markdown 渲染（frontmatter 卡片、`==text==` 标记、Mermaid 占位等）。
-- `src/utils/mdSourceHighlight.test.js`：覆盖编辑器源码语法高亮 tokenizer 与配色方案。
-- `src/utils/htmlToMarkdown.test.js`：覆盖飞书 HTML 转 Markdown。
-- `src/utils/pasteDetection.test.js`：覆盖飞书标记、HTML 表格、渲染后 Markdown 检测等粘贴场景。
-- `src/utils/helper.test.js`：helper 工具函数测试。
-- `src/App.test.js`：基础渲染测试。
-- `scripts/start-script.test.mjs`：启动脚本测试。
+- `src/utils/*.test.js`：渲染与工具逻辑（wechatCopy、markdownRenderer、mdSourceHighlight、htmlToMarkdown、pasteDetection、findReplace、docHistory、savedThemes、imageAttachment、aiChat、aiDiff、settingsBackup、apiBase、helper）。
+- `src/App.test.js`：应用级渲染与交互测试（含查找替换、保存主题等组件行为）。
+- `src/setupProxy.test.js`：开发代理配置测试。
+- `src/components/ai/*.test.js`：AI 面板组件测试（AiChatPanel、AiMessageBubble）。
+- `functions/lib/*.test.ts`：Cloudflare Functions 库测试，用 `npx tsx --test` 运行，不在 jest 套件内。
+- `scripts/start-script.test.mjs`：启动脚本约束测试（node:test），不在 jest 套件内，需手动 `node --test scripts/start-script.test.mjs` 运行。
 
 运行测试：
 
@@ -124,7 +122,7 @@ CLI 只读取用户级 `~/.feishu2wx/config.json`。AppID/AppSecret 仅保存在
 
 ## 配置注意事项
 
-- 主题配置分散在三处：`ThemeSwitcher.tsx`（UI 定义，5 种主题：经典、橙色、蓝色、青绿、自定）、`wechatCopy.ts`（导出内联样式映射，含额外 `light` / `dark` 两种内部主题）、`styles/themes.css`（预览样式，含 `.theme-custom`）。新增或修改主题时三处都要同步。
+- 主题预设统一定义在 `src/utils/themePresets.ts`（经典、橙色、蓝色、青绿 4 种，自定义走 `customThemeColor`），入口为右上角设置面板；输出样式分布在 `wechatCopy.ts`（导出内联样式映射，含额外 `light` / `dark` 两种内部主题）与 `styles/themes.css`（预览样式，含 `.theme-custom`），新增或修改主题时两处都要同步。`ThemeSwitcher.tsx` / `SavedThemeMenu.tsx` 为停止挂载后保留的旧组件，不要再往上面加新入口。
 - 字体配置分散在两处：`FontSelector.tsx`（UI 下拉）和 `wechatCopy.ts`（导出字体映射）。新增字体时两处都要同步。
 - Google Fonts 链接在 `public/index.html` 中预加载，新增 Google Font 需在此添加 `<link>`。
 - `patch-package` 在 `postinstall` 时自动运行，用于修补第三方依赖。
