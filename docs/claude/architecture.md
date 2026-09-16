@@ -31,7 +31,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 ### `src/utils/markdownRenderer.ts`
 
 - 使用 markdown-it 将 Markdown 渲染为 HTML，维护两个实例（classic / modern 代码块样式），均加载 `markdown-it-footnote` 脚注插件。
-- 使用 highlight.js 和 Atom One Dark 主题做语法高亮。
+- 使用 highlight.js（`highlight.js/lib/common` 子集 + dart/dockerfile/nginx/powershell 显式注册，共约 40 种语言）和 Atom One Dark 主题做语法高亮，未注册语言回退 `highlightAuto` 自动检测；新增语言需在文件顶部显式 `registerLanguage`。
 - 自动检测语言，失败时回退到默认语言。
 - `==text==` 高亮语法：通过自定义 `mark` 规则（`markRule`）解析，渲染为 `<mark>` 标签；与 `htmlToMarkdown.ts` 中飞书高亮标记的输入端配合，形成端到端支持。
 - 在网页预览中将 YAML front matter（`---...---`）展示为元数据卡片，复制和推送到公众号时会剥离该预览专用节点。卡片内数组字段默认渲染为标签徽章（`frontmatter-tags`），但 `ai_summary` 字段渲染为无序列表（`frontmatter-summary-list`）。

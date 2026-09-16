@@ -1,7 +1,18 @@
 import MarkdownIt from 'markdown-it';
-import hljs from 'highlight.js';
+// highlight.js 改用 common 子集（约 40 种常用语言）而非全量 190+ 种，
+// 主包体积从 1.6MB 降至此前的约 1/3；小众语言需要高亮时在此显式追加注册。
+import hljs from 'highlight.js/lib/common';
+import dart from 'highlight.js/lib/languages/dart';
+import dockerfile from 'highlight.js/lib/languages/dockerfile';
+import nginx from 'highlight.js/lib/languages/nginx';
+import powershell from 'highlight.js/lib/languages/powershell';
 import footnote from 'markdown-it-footnote';
 import DOMPurify from 'dompurify';
+
+hljs.registerLanguage('dart', dart);
+hljs.registerLanguage('dockerfile', dockerfile);
+hljs.registerLanguage('nginx', nginx);
+hljs.registerLanguage('powershell', powershell);
 
 // 创建一个临时的 MarkdownIt 实例用于 escapeHtml
 const tempMd = new MarkdownIt();

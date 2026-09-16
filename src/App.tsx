@@ -670,7 +670,7 @@ const App: React.FC = () => {
     >
       {/* 顶栏 */}
       <div className="top-bar">
-        <span className="top-bar-brand" title="飞书文档转公众号排版一键排版工具，秒级完成排版，效率起飞还免费">feishu<span className="brand-accent">2wx</span></span>
+        <h1 className="top-bar-brand" title="飞书文档转公众号排版一键排版工具，秒级完成排版，效率起飞还免费">feishu<span className="brand-accent">2wx</span></h1>
         <a
           className="github-link"
           href="https://github.com/wangruofeng/feishu2wx"

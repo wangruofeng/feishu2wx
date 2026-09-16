@@ -248,6 +248,9 @@ Functions 使用独立的 `functions/tsconfig.json`，避免受到前端 CRA 的
 
 当前使用 Cloudflare 控制台的 Git 集成自动部署，不需要在 GitHub 仓库中保存 Cloudflare API Token。
 
+静态资源缓存由 `public/_headers` 控制：`/static/*`（文件名含内容哈希）返回
+`Cache-Control: public, max-age=31536000, immutable`，Cloudflare Pages 会自动发布该文件，无需控制台配置。
+
 ### GitHub 登录与云端 AI 配置
 
 若启用跨设备保存 AI 供应商配置，需要在 Pages 项目中配置 KV binding `AI_CONFIGS_KV`，并创建以下加密 Secret：`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`、`AI_CONFIG_ENCRYPTION_KEY`、`AUTH_SESSION_SIGNING_KEY`。GitHub OAuth 回调地址固定为 `https://feishu2wx.wangruofeng007.com/api/auth/github/callback`。Secret 不得写入 `wrangler.toml` 或 Git；本地 Pages 调试使用未提交的 `.dev.vars`。部署后应验证 GitHub 登录、云端配置读取不返回 API Key、以及已登录 AI 对话。
