@@ -12,9 +12,6 @@ npm run build
 # 测试
 npm test
 
-# 部署到 GitHub Pages
-npm run deploy
-
 # 提交前检查
 npm run pre-commit-check
 
@@ -80,8 +77,8 @@ npm test
 ## 部署
 
 - 构建输出目录：`build/`
-- 部署方式：通过 `gh-pages` 发布到 GitHub Pages
-- 部署命令：`npm run deploy`
+- 部署方式：Cloudflare Pages（Git 集成自动部署为主，`npm run cf:deploy` 本地手动备用）
+- 详见 [DEPLOY.md](../../DEPLOY.md)
 
 ## 文件导入功能
 

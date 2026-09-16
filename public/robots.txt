@@ -7,5 +7,5 @@ Allow: /
 # API 路径无 SEO 价值，禁用
 Disallow: /api/
 
-# 主域 sitemap（两个部署均指向主域 canonical）
+# 主域 sitemap（canonical 恒为主域）
 Sitemap: https://feishu2wx.wangruofeng007.com/sitemap.xml

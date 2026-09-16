@@ -102,7 +102,7 @@ feishu2wx publish article.md --title "文章标题"          # 推送到公众�
 | [使用指南](docs/usage.md) | 界面功能、排版设置、导出推送、AI 面板的详细说明与 FAQ |
 | [快速启动](QUICKSTART.md) | 本地开发环境搭建与安装验证 |
 | [CLI 文档](cli/README.md) | 命令行工具全部命令、配置与环境变量 |
-| [部署指南](DEPLOY.md) | GitHub Pages + Cloudflare Pages 部署（含后端 Functions） |
+| [部署指南](DEPLOY.md) | Cloudflare Pages 部署（前端 + 后端 Functions） |
 | [架构说明](docs/claude/architecture.md) | 数据流、核心模块、主题与状态管理 |
 | [开发指南](docs/claude/development.md) | 开发命令、测试、提交流程 |
 

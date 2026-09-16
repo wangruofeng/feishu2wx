@@ -6,7 +6,6 @@ import { loadCloudConfig } from '../../lib/cloud-ai-config';
 const MAX_REQUEST_BYTES = 16 * 1024 * 1024;
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://feishu2wx.wangruofeng007.com',
-  'https://wangruofeng.github.io',
 ];
 
 type PagesContext = {

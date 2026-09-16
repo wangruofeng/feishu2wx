@@ -165,7 +165,7 @@
 - **标题自动填充**：优先读 frontmatter `title`，其次正文首个 H1，均为空时显示「未命名文章」
 - **封面自动读取**：frontmatter `cover` 字段；未指定时取正文首图
 - 凭证仅保存在浏览器 localStorage，推送时随请求发送给后端调用微信 API，服务端不存储
-- 推送需要后端：本地用 `npm run dev` 启动，或使用 Cloudflare 部署版；纯前端部署（GitHub Pages 静态版）推送不可用
+- 推送需要后端：本地用 `npm run dev` 启动，或使用 Cloudflare 部署版；纯前端启动（`npm start`）推送不可用
 
 ## AI 聊天编辑
 

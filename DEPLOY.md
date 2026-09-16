@@ -1,280 +1,47 @@
-# GitHub Pages + Cloudflare Pages 部署指南
+# Cloudflare Pages 部署指南
 
-本指南将帮助您将项目部署到 GitHub Pages 和 Cloudflare Pages。
+本指南将帮助您将项目部署到 Cloudflare Pages（前端静态资源 + 后端 Functions 一体部署）。
 
 ## 📋 前置条件
 
 1. 项目已推送到 GitHub 仓库
-2. 拥有仓库的管理员权限
+2. 拥有 Cloudflare 账号
 3. Node.js 和 npm 已安装
 
 ## 🚀 部署方式
 
-### 方式一：使用 GitHub Actions 自动部署（推荐）
+### 方式一：Cloudflare Git 集成自动部署（推荐）
 
-这是最简单且推荐的方式，每次推送到 `main` 分支时会自动部署。
+在 Cloudflare 控制台将 Pages 项目连接到 GitHub 仓库，每次推送到 `main` 分支时自动构建部署，
+无需在 GitHub 仓库中保存 Cloudflare API Token。
 
-#### 步骤 1：启用 GitHub Pages
+#### 步骤 1：创建 Pages 项目
 
-1. 打开您的 GitHub 仓库页面
-2. 点击 **Settings**（设置）
-3. 在左侧菜单中找到并点击 **Pages**
-4. 在 **Source** 部分，选择 **GitHub Actions**
-5. 保存设置
-
-#### 步骤 2：推送代码
-
-```bash
-# 确保所有更改已提交
-git add .
-git commit -m "配置 GitHub Pages 部署"
-git push origin main
-```
-
-#### 步骤 3：查看部署状态
-
-1. 在 GitHub 仓库页面，点击 **Actions** 标签页
-2. 查看 "Deploy to GitHub Pages" 工作流的执行状态
-3. 等待部署完成（通常需要 2-5 分钟）
-
-#### 步骤 4：访问网站
-
-部署成功后，您的网站将可以通过以下地址访问：
-
-```
-https://你的用户名.github.io/你的仓库名
-```
-
-> **注意**：如果您的 GitHub 用户名或仓库名不同，请修改 `package.json` 中的 `homepage` 字段。
-
-### 方式二：使用 gh-pages 手动部署
-
-如果需要手动控制部署时机，可以使用这种方式。
-
-#### 步骤 1：安装依赖（如果尚未安装）
-
-```bash
-npm install
-```
-
-#### 步骤 2：执行部署
-
-```bash
-npm run deploy
-```
-
-这个命令会：
-
-1. 自动构建项目（`npm run build`）
-2. 将构建产物部署到 `gh-pages` 分支
-3. 推送到 GitHub
-
-#### 步骤 3：启用 GitHub Pages
-
-1. 打开 GitHub 仓库的 **Settings** > **Pages**
-2. 在 **Source** 中选择 **Deploy from a branch**
-3. 选择 **gh-pages** 分支和 **/ (root)** 目录
-4. 点击 **Save**
-
-#### 步骤 4：访问网站
-
-等待几分钟后，访问：
-
-```
-https://你的用户名.github.io/你的仓库名
-```
-
-## ⚙️ 自定义配置
-
-### 修改部署地址
-
-如果您的 GitHub 用户名或仓库名不同，需要修改 `package.json`：
-
-```json
-{
-  "homepage": "https://你的用户名.github.io/你的仓库名"
-}
-```
-
-例如：
-
-```json
-{
-  "homepage": "https://johndoe.github.io/my-project"
-}
-```
-
-### 使用自定义域名
-
-1. 在仓库根目录创建 `CNAME` 文件，内容为您的域名：
-
-   ```
-   example.com
-   ```
-
-2. 在您的域名 DNS 设置中添加 CNAME 记录，指向 `你的用户名.github.io`
-
-3. 修改 `package.json` 中的 `homepage` 字段为您的域名
-
-## 🔍 故障排查
-
-### 部署失败
-
-1. **检查 GitHub Actions 日志**
-
-   - 进入 **Actions** 标签页
-   - 查看失败的工作流日志
-   - 根据错误信息进行修复
-
-2. **检查构建是否成功**
-
-   ```bash
-   npm run build
-   ```
-
-   如果本地构建失败，需要先修复构建错误
-
-3. **检查权限设置**
-   - 确保仓库的 Pages 设置中已启用 GitHub Actions
-   - 确保工作流文件 `.github/workflows/deploy.yml` 已提交到仓库
-
-### 网站无法访问
-
-1. **检查部署状态**
-
-   - 在 **Actions** 标签页查看部署是否成功
-   - 在 **Settings** > **Pages** 查看部署状态
-
-2. **等待缓存更新**
-
-   - GitHub Pages 可能需要几分钟才能更新
-   - 尝试清除浏览器缓存或使用无痕模式访问
-
-3. **检查 URL**
-   - 确保 URL 格式正确：`https://用户名.github.io/仓库名`
-   - 注意仓库名的大小写必须完全匹配
-
-### 样式或资源加载失败
-
-1. **检查 homepage 配置**
-
-   - 确保 `package.json` 中的 `homepage` 字段正确
-   - 重新构建并部署
-
-2. **检查路径问题**
-   - 如果使用子路径（如 `/feishu2wx`），确保所有资源路径都是相对路径
-
-## 📝 更新部署
-
-### 自动更新（GitHub Actions）
-
-每次推送到 `main` 分支时，GitHub Actions 会自动：
-
-1. 检测代码更改
-2. 构建项目
-3. 部署到 GitHub Pages
-
-只需正常提交和推送代码即可：
-
-```bash
-git add .
-git commit -m "更新内容"
-git push origin main
-```
-
-### 手动更新（gh-pages）
-
-如果需要手动触发部署：
-
-```bash
-npm run deploy
-```
-
-## 🎉 完成
-
-部署成功后，您就可以通过 GitHub Pages 访问您的应用了！
-
----
-
-**提示**：建议使用 GitHub Actions 方式，因为它更自动化，每次代码更新都会自动部署。
-
----
-
-# Cloudflare Pages + Functions 部署（后端 API）
-
-如果要使用「推送到草稿箱」功能，需要将后端 API 部署到 Cloudflare Pages。
-
-## 前置条件
-
-1. 拥有 Cloudflare 账号
-2. Node.js 和 npm 已安装
-
-## 部署步骤
-
-### 1. 部署
-
-```bash
-npm run cf:deploy
-```
-
-Cloudflare Pages 项目名为 `feishu2wx`，生产访问地址为：
-
-```
-https://feishu2wx.wangruofeng007.com/
-```
-
-Cloudflare 专用构建必须从域名根路径 `/` 加载静态资源；请在 Cloudflare Pages 的环境变量中设置
-`PUBLIC_URL=/`。
-
-**不要**在 Cloudflare Pages 环境变量中把 `REACT_APP_API_URL` 指向 `*.pages.dev` 地址：部署在自定义域名上时，
-这会让 `/api/auth/session` 等请求跨域发往 pages.dev，浏览器不会携带会话 cookie，登录状态永远检测不到。
-Cloudflare 部署正确做法是**不设置** `REACT_APP_API_URL`（同源相对路径）；该变量仅供 GitHub Pages 构建
-指向 `https://feishu2wx.wangruofeng007.com`。前端 `src/utils/apiBase.ts` 已对「配置域名与页面同域」或
-「自定义域名上误配 pages.dev」两种情况回退为同源相对路径，但环境变量本身仍应保持干净。
-
-由于项目使用 CRA 5 和 TypeScript 5，建议关闭 Cloudflare 的自动依赖安装，并使用仓库中的兼容安装配置：
+1. 进入 Cloudflare 控制台 **Workers & Pages → Create → Pages → Connect to Git**
+2. 选择 GitHub 仓库并授权
+3. 配置构建：
 
 ```text
 Build command: npm install --legacy-peer-deps && npm run build
 Build output directory: build
+```
+
+4. 在 **Settings → Variables** 中配置环境变量：
+
+```text
 SKIP_DEPENDENCY_INSTALL=1
 NODE_VERSION=22
 PUBLIC_URL=/
-ALLOWED_ORIGINS=https://feishu2wx.wangruofeng007.com,https://wangruofeng.github.io
+ALLOWED_ORIGINS=https://feishu2wx.wangruofeng007.com
 ```
+
+由于项目使用 CRA 5 和 TypeScript 5，建议关闭 Cloudflare 的自动依赖安装，并使用仓库中的兼容安装配置
+（`npm install --legacy-peer-deps`）。
 
 仓库根目录的 `functions/` 会由 Cloudflare Pages Git 集成部署为 Pages Functions。
 Functions 使用独立的 `functions/tsconfig.json`，避免受到前端 CRA 的 ES5 TypeScript 配置影响。
 
-当前使用 Cloudflare 控制台的 Git 集成自动部署，不需要在 GitHub 仓库中保存 Cloudflare API Token。
-
-静态资源缓存由 `public/_headers` 控制：`/static/*`（文件名含内容哈希）返回
-`Cache-Control: public, max-age=31536000, immutable`，Cloudflare Pages 会自动发布该文件，无需控制台配置。
-
-### GitHub 登录与云端 AI 配置
-
-若启用跨设备保存 AI 供应商配置，需要在 Pages 项目中配置 KV binding `AI_CONFIGS_KV`，并创建以下加密 Secret：`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`、`AI_CONFIG_ENCRYPTION_KEY`、`AUTH_SESSION_SIGNING_KEY`。GitHub OAuth 回调地址固定为 `https://feishu2wx.wangruofeng007.com/api/auth/github/callback`。Secret 不得写入 `wrangler.toml` 或 Git；本地 Pages 调试使用未提交的 `.dev.vars`。部署后应验证 GitHub 登录、云端配置读取不返回 API Key、以及已登录 AI 对话。
-
-若 GitHub 授权回调失败，重新发起登录获取新的授权码；授权码不可复用。授权码或 OAuth App 凭据不匹配会返回可读的 400 提示（不用 502，避免 Pages 替换错误正文）；回调返回“登录服务配置无效”时，检查上述 Secret 是否配置在 **Production** 环境，且两项随机密钥均为独立的 32 字节 base64url 值。授权码交换使用标准表单编码并显式传入同一回调 URL；交换与用户信息请求都必须携带 User-Agent 请求头（GitHub 边缘对无 UA 的 api.github.com 请求返回 403 纯文本拦截页，曾因此被误报为网络异常）。用户信息返回非 2xx 时回调返回带 HTTP 状态码的 400 提示，Workers Logs 中 `[auth]` 日志记录状态与响应体片段；仅真正的网络异常返回 503。登录成功后回调重定向到 `/?ai_login=1`，前端据此自动重开 AI 面板与模型设置弹窗；若登录后仍显示未登录，检查 `/api/auth/session` 请求是否与页面同域（跨域不携带会话 cookie）。
-请不要同时启用仓库内的 Cloudflare Direct Upload workflow，避免一次推送产生两次部署。
-`npm run cf:deploy` 仅作为本地手动发布备用入口，不要与 Cloudflare Git 集成同时使用。
-
-### 2. 配置 GitHub Actions 环境变量
-
-GitHub Pages 构建时需要知道后端 API 地址，已在 `.github/workflows/deploy.yml` 中配置：
-
-```yaml
-env:
-  REACT_APP_API_URL: https://feishu2wx.wangruofeng007.com
-```
-
-GitHub Pages 前端会通过该地址访问 Cloudflare Pages Function：
-`https://feishu2wx.wangruofeng007.com/api/publish/draft`。
-
-如果更换 Cloudflare 自定义域名，需要同步修改 `.github/workflows/deploy.yml` 中的
-`REACT_APP_API_URL`。
-
-### 3. 绑定 Cloudflare 自定义域名
+#### 步骤 2：绑定自定义域名
 
 在 Cloudflare 控制台进入 **Workers & Pages → feishu2wx → Custom domains → Set up a domain**，添加：
 
@@ -284,7 +51,55 @@ feishu2wx.wangruofeng007.com
 
 由于该域名已托管在 Cloudflare，确认后 Cloudflare 会自动创建或更新对应的 DNS 记录。
 
-## 本地测试 Cloudflare 模式
+生产访问地址为：
+
+```
+https://feishu2wx.wangruofeng007.com/
+```
+
+Cloudflare 专用构建必须从域名根路径 `/` 加载静态资源，因此必须设置 `PUBLIC_URL=/`。
+
+#### 步骤 3：推送代码
+
+```bash
+git add .
+git commit -m "更新内容"
+git push origin main
+```
+
+推送后在 Cloudflare 控制台 **Workers & Pages → feishu2wx → Deployments** 查看构建与部署状态。
+
+### 方式二：本地手动部署（备用）
+
+```bash
+npm run cf:deploy
+```
+
+该命令会以 `PUBLIC_URL=/` 构建并用 `wrangler pages deploy` 发布到 `feishu2wx` 项目。
+
+> **注意**：请不要与 Git 集成同时使用，避免一次推送产生两次部署。`npm run cf:deploy`
+> 仅作为本地手动发布备用入口。
+
+## ⚠️ 不要设置 REACT_APP_API_URL
+
+**不要**在 Cloudflare Pages 环境变量中把 `REACT_APP_API_URL` 指向 `*.pages.dev` 地址：部署在自定义域名上时，
+这会让 `/api/auth/session` 等请求跨域发往 pages.dev，浏览器不会携带会话 cookie，登录状态永远检测不到。
+Cloudflare 部署正确做法是**不设置** `REACT_APP_API_URL`（同源相对路径）。前端 `src/utils/apiBase.ts`
+已对「配置域名与页面同域」或「自定义域名上误配 pages.dev」两种情况回退为同源相对路径，
+但环境变量本身仍应保持干净。
+
+## 🔑 GitHub 登录与云端 AI 配置
+
+若启用跨设备保存 AI 供应商配置，需要在 Pages 项目中配置 KV binding `AI_CONFIGS_KV`，并创建以下加密 Secret：`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`、`AI_CONFIG_ENCRYPTION_KEY`、`AUTH_SESSION_SIGNING_KEY`。GitHub OAuth 回调地址固定为 `https://feishu2wx.wangruofeng007.com/api/auth/github/callback`。Secret 不得写入 `wrangler.toml` 或 Git；本地 Pages 调试使用未提交的 `.dev.vars`。部署后应验证 GitHub 登录、云端配置读取不返回 API Key、以及已登录 AI 对话。
+
+若 GitHub 授权回调失败，重新发起登录获取新的授权码；授权码不可复用。授权码或 OAuth App 凭据不匹配会返回可读的 400 提示（不用 502，避免 Pages 替换错误正文）；回调返回“登录服务配置无效”时，检查上述 Secret 是否配置在 **Production** 环境，且两项随机密钥均为独立的 32 字节 base64url 值。授权码交换使用标准表单编码并显式传入同一回调 URL；交换与用户信息请求都必须携带 User-Agent 请求头（GitHub 边缘对无 UA 的 api.github.com 请求返回 403 纯文本拦截页，曾因此被误报为网络异常）。用户信息返回非 2xx 时回调返回带 HTTP 状态码的 400 提示，Workers Logs 中 `[auth]` 日志记录状态与响应体片段；仅真正的网络异常返回 503。登录成功后回调重定向到 `/?ai_login=1`，前端据此自动重开 AI 面板与模型设置弹窗；若登录后仍显示未登录，检查 `/api/auth/session` 请求是否与页面同域（跨域不携带会话 cookie）。
+
+## 🗄️ 静态资源缓存
+
+静态资源缓存由 `public/_headers` 控制：`/static/*`（文件名含内容哈希）返回
+`Cache-Control: public, max-age=31536000, immutable`，Cloudflare Pages 会自动发布该文件，无需控制台配置。
+
+## 🧪 本地测试 Cloudflare 模式
 
 ```bash
 npm run cf:dev
@@ -292,7 +107,7 @@ npm run cf:dev
 
 这会在本地同时启动前端开发和 Cloudflare Functions 模拟环境。
 
-## 架构说明
+## 🏗️ 架构说明
 
 - `functions/api/publish/draft.ts` — Cloudflare Function，处理推送到微信草稿箱
 - `server/lib/wechat-pages.ts` — Cloudflare Function 使用的微信 API 封装，不依赖 Node 原生图片处理库
@@ -300,9 +115,9 @@ npm run cf:dev
 - `server/lib/publish-handler.ts` — HTTP handler，前端提交的凭证（appId/appSecret）直接用于调用微信 API
 - 用户公众号凭证仅保存在浏览器 localStorage，不经过服务端存储
 
-## 重要提示
+## 📝 重要提示
 
-- GitHub Pages 部署的前端（无后端）排版功能不受影响，只是推送功能不可用
-- Cloudflare Pages 部署包含完整的前后端功能，推荐作为主要部署方式
+- Cloudflare Pages 部署包含完整的前后端功能
+- 更换自定义域名时，需同步更新 `functions/api/` 下 `DEFAULT_ALLOWED_ORIGINS`、Cloudflare 环境变量 `ALLOWED_ORIGINS`、GitHub OAuth 回调地址与 `public/` 中的 SEO 绝对地址
 - Cloudflare Pages Functions 暂不支持正文 WebP 图片归一化；推送前请先将 WebP 转为 PNG/GIF，本地 Node/CLI 模式不受影响
 - 多用户使用：每个用户在前端输入自己的公众号凭证即可，凭证保存在浏览器本地，互不干扰

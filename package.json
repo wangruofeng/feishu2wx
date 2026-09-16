@@ -1,9 +1,9 @@
 {
   "name": "feishu2wx",
-  "version": "1.27.59",
+  "version": "1.27.60",
   "description": "飞书文档转微信公众号排版工具",
   "private": true,
-  "homepage": "/feishu2wx",
+  "homepage": "/",
   "keywords": [
     "feishu",
     "wechat",
@@ -36,8 +36,6 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
     "server": "TS_NODE_PROJECT=server/tsconfig.json node --watch -r ts-node/register server/index.ts",
     "dev": "concurrently \"PORT=3100 npm start\" \"npm run server\"",
     "cf:dev": "concurrently \"CF_DEV=1 PORT=3100 react-scripts start\" \"sleep 5 && wrangler pages dev --proxy 3100 \"",
@@ -78,7 +76,6 @@
     "concurrently": "^8.0.0",
     "cors": "^2.8.5",
     "express": "^4.18.0",
-    "gh-pages": "^6.3.0",
     "husky": "^9.1.7",
     "patch-package": "^8.0.1",
     "ts-node": "^10.9.0",

@@ -5,7 +5,7 @@ describe('resolveApiBase', () => {
     expect(resolveApiBase('', 'feishu2wx.wangruofeng007.com')).toBe('');
   });
 
-  it('GitHub Pages 部署保留指向 Cloudflare 后端的绝对地址', () => {
+  it('配置指向其他域名时保留绝对地址', () => {
     expect(resolveApiBase('https://feishu2wx.wangruofeng007.com', 'wangruofeng007.github.io'))
       .toBe('https://feishu2wx.wangruofeng007.com');
   });
