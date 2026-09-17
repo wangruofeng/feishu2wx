@@ -334,6 +334,14 @@ npm run cli -- publish article.md \
 
 `publish` 会先按主题渲染 Markdown，再调用现有草稿箱发布逻辑。正文图片会沿用服务端微信图片上传与 WebP 归一化处理。
 
+**文章摘要**：`publish` 默认自动从 Markdown frontmatter 的 `description` 字段提取摘要写入草稿（微信上限 120 字，超长自动截断）；可用 `--digest` 显式覆盖：
+
+```bash
+npm run cli -- publish article.md --title "文章标题" --digest "自定义摘要"
+```
+
+未配置 `description` 且未传 `--digest` 时，摘要留空。
+
 ## 常用测试命令
 
 CLI 单元测试：

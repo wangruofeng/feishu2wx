@@ -41,6 +41,7 @@ export interface PublishParams {
   title: string;
   content: string;
   author?: string;
+  digest?: string;
   coverDataUrl?: string;
   coverUrl?: string;
 }

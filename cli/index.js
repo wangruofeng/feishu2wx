@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const fs = require('node:fs');
 const path = require('node:path');
 const { Command, Option } = require('commander');
 const {
@@ -102,6 +103,22 @@ function appendConfiguredFooter(markdown, footer) {
 function appendConfiguredHeader(markdown, header) {
   if (!header) return markdown;
   return `${header.trim()}\n\n${markdown}`;
+}
+
+// 从 Markdown frontmatter 提取 description 作为默认文章摘要；
+// 未配置时返回空字符串，不阻塞发布。
+function extractFrontmatterDescription(markdown) {
+  const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!match) return '';
+  const line = match[1].match(/^description:\s*(?:"([^"]*)"|'([^']*)'|([^\r\n]*))/m);
+  if (!line) return '';
+  return (line[1] ?? line[2] ?? line[3] ?? '').trim();
+}
+
+// 微信公众号摘要上限 120 字符，超长截断
+function clampDigest(text) {
+  const value = String(text || '').trim();
+  return value.length > 120 ? value.slice(0, 120) : value;
 }
 
 function printJson(value) {
@@ -346,6 +363,7 @@ async function main() {
     .description('推送文章到微信公众号草稿箱')
     .requiredOption('--title <title>', '文章标题')
     .option('--author <author>', '作者')
+    .option('--digest <digest>', '文章摘要，默认自动从 Markdown frontmatter 的 description 字段提取')
     .option('--cover <file>', '封面图片文件')
     .option('--no-footer', '不追加固定结尾文案')
     .option('--no-header', '不注入固定开头文案'))
@@ -368,9 +386,13 @@ async function main() {
       const themeConfig = resolveThemeConfig({ ...program.opts(), ...options });
       const content = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
+      // readMarkdownInput 会剥离 frontmatter，自动提取摘要需基于原始文件内容
+      const rawMarkdown = file ? fs.readFileSync(path.resolve(file), 'utf8') : markdown;
+      const digest = options.digest ?? clampDigest(extractFrontmatterDescription(rawMarkdown));
       const result = await publishMarkdown({
         ...options,
         author: options.author ?? config.author,
+        digest,
         content,
         baseDir,
         appId: config.wechat.appId,

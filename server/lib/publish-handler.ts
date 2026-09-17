@@ -1,9 +1,11 @@
 import { jsonResponse } from './config-handlers';
+import { hasWebpSignature } from './wechat-publish';
 
 interface PublishBody {
   title?: string;
   content?: string;
   author?: string;
+  digest?: string;
   coverDataUrl?: string;
   coverUrl?: string;
   appId?: string;
@@ -23,20 +25,72 @@ interface PublishWechatService {
     content: string;
     thumbMediaId: string;
     author?: string;
+    digest?: string;
   }, token: string): Promise<string>;
 }
 
 const MAX_TITLE_LENGTH = 200;
 const MAX_AUTHOR_LENGTH = 200;
+const MAX_DIGEST_LENGTH = 120;
 const MAX_CONTENT_LENGTH = 5_000_000;
 const MAX_COVER_DATA_URL_LENGTH = 12_000_000;
 const MAX_COVER_URL_LENGTH = 2_048;
 const MAX_CREDENTIAL_LENGTH = 256;
 
+// 微信封面素材仅支持 jpg/png/gif，遇到 webp/svg 自动转成 png（保持静态画质）
+function bytesToLatin1(data: Uint8Array, max: number): string {
+  const len = Math.min(data.length, max);
+  let out = '';
+  for (let i = 0; i < len; i++) out += String.fromCharCode(data[i]);
+  return out;
+}
+
+function hasSvgContent(data: Uint8Array): boolean {
+  const head = bytesToLatin1(data, 512).replace(/^\uFEFF/, '').trimStart();
+  return head.startsWith('<svg') || head.startsWith('<?xml');
+}
+
+// librsvg 要求 XML 声明位于文档最前，去掉 BOM 与前导空白
+function stripSvgPreamble(data: Uint8Array): Uint8Array {
+  let i = 0;
+  while (i < data.length) {
+    const ch = data[i];
+    if (ch === 0xEF || ch === 0xBB || ch === 0xBF || ch === 0x20 || ch === 0x09 || ch === 0x0A || ch === 0x0D) {
+      i += 1;
+      continue;
+    }
+    break;
+  }
+  return data.slice(i);
+}
+
+async function normalizeCoverImage(
+  data: Uint8Array,
+  inferredExt: string
+): Promise<{ data: Uint8Array; ext: 'jpg' | 'png' | 'gif' }> {
+  const isWebp = inferredExt === 'webp' || hasWebpSignature(data);
+  const isSvg = inferredExt === 'svg' || hasSvgContent(data);
+
+  if (!isWebp && !isSvg) {
+    return { data, ext: inferredExt === 'png' || inferredExt === 'gif' ? inferredExt : 'jpg' };
+  }
+
+  const { default: sharp } = await import('sharp');
+  const input = isSvg ? stripSvgPreamble(data) : data;
+  const png = await sharp(Buffer.from(input)).png().toBuffer();
+  return { data: new Uint8Array(png), ext: 'png' };
+}
+
+function coverContentType(ext: 'jpg' | 'png' | 'gif'): string {
+  if (ext === 'png') return 'image/png';
+  if (ext === 'gif') return 'image/gif';
+  return 'image/jpeg';
+}
+
 export function createPublishDraftHandler(wechat: PublishWechatService) {
   return async function handlePublishDraft(body: PublishBody): Promise<Response> {
     try {
-      const { title, content, author, coverDataUrl, coverUrl, appId, appSecret } = body;
+      const { title, content, author, digest, coverDataUrl, coverUrl, appId, appSecret } = body;
 
       if (
         typeof title !== 'string'
@@ -46,6 +100,7 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
         || title.length > MAX_TITLE_LENGTH
         || content.length > MAX_CONTENT_LENGTH
         || (author !== undefined && (typeof author !== 'string' || author.length > MAX_AUTHOR_LENGTH))
+        || (digest !== undefined && (typeof digest !== 'string' || digest.length > MAX_DIGEST_LENGTH))
         || (coverDataUrl !== undefined && (typeof coverDataUrl !== 'string' || coverDataUrl.length > MAX_COVER_DATA_URL_LENGTH))
         || (coverUrl !== undefined && (typeof coverUrl !== 'string' || coverUrl.length > MAX_COVER_URL_LENGTH))
       ) {
@@ -72,11 +127,21 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
       let thumbMediaId: string;
 
       if (coverDataUrl) {
-        const matches = coverDataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+        const matches = coverDataUrl.match(/^data:image\/([\w.+-]+);base64,(.+)$/);
         if (matches) {
-          const ext = matches[1] === 'png' ? 'png' : 'jpg';
+          const mime = matches[1].toLowerCase();
+          const baseMime = mime.split('+')[0];
+          if (!['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(baseMime)) {
+            return jsonResponse({ error: '封面图格式无效' }, 400);
+          }
           const data = wechat.base64ToUint8Array(matches[2]);
-          thumbMediaId = await wechat.uploadCoverImage(data, `cover.${ext}`, token, ext === 'png' ? 'image/png' : 'image/jpeg');
+          const cover = await normalizeCoverImage(data, baseMime === 'jpeg' ? 'jpg' : baseMime);
+          thumbMediaId = await wechat.uploadCoverImage(
+            cover.data,
+            `cover.${cover.ext}`,
+            token,
+            coverContentType(cover.ext)
+          );
         } else {
           return jsonResponse({ error: '封面图格式无效' }, 400);
         }
@@ -97,10 +162,19 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
           if (!imgRes.ok) throw new Error(`HTTP ${imgRes.status}`);
           const data = new Uint8Array(await imgRes.arrayBuffer());
           const contentType = imgRes.headers.get('content-type')?.split(';')[0];
-          const extension = contentType === 'image/png' ? 'png' : contentType === 'image/gif' ? 'gif' : 'jpg';
-          thumbMediaId = await wechat.uploadCoverImage(data, `cover.${extension}`, token, contentType || undefined);
+          const extension = contentType === 'image/png' ? 'png'
+            : contentType === 'image/gif' ? 'gif'
+            : contentType === 'image/webp' ? 'webp'
+            : contentType === 'image/svg+xml' ? 'svg' : 'jpg';
+          const cover = await normalizeCoverImage(data, extension);
+          thumbMediaId = await wechat.uploadCoverImage(
+            cover.data,
+            `cover.${cover.ext}`,
+            token,
+            coverContentType(cover.ext)
+          );
         } catch {
-          return jsonResponse({ error: '封面图片加载失败，请确认 URL 可公开访问' }, 400);
+          return jsonResponse({ error: '封面图片加载失败，请确认 URL 可公开访问且格式受支持' }, 400);
         }
       } else if (firstImageUrl) {
         try {
@@ -120,6 +194,7 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
         content: processedContent,
         thumbMediaId,
         author: author || '',
+        digest: digest || '',
       }, token);
 
       return jsonResponse({

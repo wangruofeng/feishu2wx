@@ -20,24 +20,27 @@ interface Props {
   onClose: () => void;
   title: string;
   cover: string;
+  digest?: string;
   htmlContent: string;
 }
 
-const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, htmlContent }) => {
+const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, digest, htmlContent }) => {
   const [articleTitle, setArticleTitle] = useState(title);
   const [author, setAuthor] = useState(() => localStorage.getItem('feishu2wx_author') || '');
+  const [digestText, setDigestText] = useState(digest || '');
   const [coverUrl, setCoverUrl] = useState(cover);
   const [publishing, setPublishing] = useState(false);
   const [msg, setMsg] = useState<{ type: 'ok' | 'err'; element: React.ReactNode } | null>(null);
 
-  // 每次打开时，从 frontmatter 同步标题与封面
+  // 每次打开时，从 frontmatter 同步标题、封面与摘要
   useEffect(() => {
     if (open) {
       setArticleTitle(title);
       setCoverUrl(cover);
+      setDigestText(digest || '');
       setMsg(null);
     }
-  }, [open, title, cover]);
+  }, [open, title, cover, digest]);
 
   if (!open) return null;
 
@@ -54,6 +57,7 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, htmlConte
         title: articleTitle,
         content: htmlContent,
         author: author || undefined,
+        digest: digestText.trim() || undefined,
         coverDataUrl,
         coverUrl: coverUrl || undefined,
       });
@@ -110,6 +114,18 @@ const PublishDialog: React.FC<Props> = ({ open, onClose, title, cover, htmlConte
                 setAuthor(val);
                 localStorage.setItem('feishu2wx_author', val);
               }}
+            />
+          </div>
+
+          <div className="publish-field">
+            <label>文章摘要（可选）</label>
+            <input
+              className="publish-input"
+              type="text"
+              placeholder="留空则微信自动截取正文开头，最多 120 字"
+              maxLength={120}
+              value={digestText}
+              onChange={(e) => setDigestText(e.target.value.slice(0, 120))}
             />
           </div>
 

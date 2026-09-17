@@ -112,6 +112,7 @@ async function publishMarkdown(options) {
     content: processedContent,
     thumbMediaId,
     author: options.author || '',
+    digest: options.digest || '',
   }, token);
 
   return { success: true, mediaId, message: '已推送到公众号草稿箱' };

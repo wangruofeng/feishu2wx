@@ -247,6 +247,9 @@ const App: React.FC = () => {
 
   const articleCover = useMemo(() => getFrontMatterField(markdown, 'cover'), [markdown]);
 
+  // 文章摘要优先取 front matter 的 description 字段，供推送弹窗预填（可选，用户可改）
+  const articleDigest = useMemo(() => getFrontMatterField(markdown, 'description'), [markdown]);
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     setIsSystemDark(mediaQuery.matches);
@@ -892,6 +895,7 @@ const App: React.FC = () => {
         onClose={() => setPublishOpen(false)}
         title={articleTitle}
         cover={articleCover}
+        digest={articleDigest}
         htmlContent={publishHtml}
       />
 

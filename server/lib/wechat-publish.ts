@@ -147,6 +147,7 @@ export async function createDraft(params: {
   content: string;
   thumbMediaId: string;
   author?: string;
+  digest?: string;
 }, token: string): Promise<string> {
   const url = `https://api.weixin.qq.com/cgi-bin/draft/add?access_token=${token}`;
 
@@ -154,6 +155,7 @@ export async function createDraft(params: {
     articles: [{
       title: params.title,
       author: params.author || '',
+      digest: params.digest || '',
       content: params.content,
       thumb_media_id: params.thumbMediaId,
       content_source_url: '',
