@@ -1381,6 +1381,22 @@ function applyThemeStyles(
     });
   });
 
+  // 微信 iPhone 端会裁剪 outside 的原生 ol marker。将 marker 放回内容盒内，
+  // 保留 ol/li 语义，并以 24px 悬挂缩进维持折行对齐。
+  const orderedLists = container.querySelectorAll('ol');
+  orderedLists.forEach((list) => {
+    const listEl = list as HTMLElement;
+    listEl.style.paddingLeft = '0';
+    listEl.style.listStylePosition = 'inside';
+
+    Array.from(listEl.children).forEach((item) => {
+      if (item.tagName !== 'LI') return;
+      const itemEl = item as HTMLElement;
+      itemEl.style.paddingLeft = '24px';
+      itemEl.style.textIndent = '-24px';
+    });
+  });
+
   // 处理列表项
   const listItems = container.querySelectorAll('li');
   listItems.forEach((li) => {

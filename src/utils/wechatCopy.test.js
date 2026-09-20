@@ -643,7 +643,7 @@ test('removes formatting whitespace from loose lists before wechat publish', () 
   });
 });
 
-test('keeps ordered-list semantics and uses a 6px marker for unordered lists in WeChat', () => {
+test('keeps ordered-list markers inside the content box and uses a 6px marker for unordered lists in WeChat', () => {
   const formattedHtml = formatForWeChat(
     '<ol><li>第一项</li><li>第二项</li></ol><ul><li>无序项</li></ul>',
     'green',
@@ -658,13 +658,17 @@ test('keeps ordered-list semantics and uses a 6px marker for unordered lists in 
   const container = document.createElement('div');
   container.innerHTML = formattedHtml;
   const orderedList = container.querySelector('ol');
+  const orderedItems = orderedList.querySelectorAll('li');
   const unorderedList = container.querySelector('ul');
   const unorderedItem = unorderedList.querySelector('li');
   const bullet = unorderedItem.querySelector('.wechat-list-bullet');
 
-  expect(orderedList.style.paddingLeft).toBe('24px');
+  expect(orderedList.style.paddingLeft).toBe('0px');
   expect(orderedList.style.listStyle).toBe('');
-  expect(orderedList.style.listStylePosition).toBe('outside');
+  expect(orderedList.style.listStylePosition).toBe('inside');
+  expect(orderedItems[0].style.paddingLeft).toBe('24px');
+  expect(orderedItems[0].style.textIndent).toBe('-24px');
+  expect(orderedItems[0].querySelector('.wechat-list-number')).toBeNull();
   expect(unorderedList.style.paddingLeft).toBe('0px');
   expect(unorderedList.style.listStyle).toBe('none');
   expect(unorderedItem.style.paddingLeft).toBe('16px');

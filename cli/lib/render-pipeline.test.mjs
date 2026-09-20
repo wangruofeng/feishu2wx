@@ -20,7 +20,7 @@ test('renderWechatHtml converts markdown to inline-styled WeChat HTML', () => {
   assert.match(html, /const/);
 });
 
-test('renderWechatHtml keeps Markdown list hanging indents and a 6px unordered marker', () => {
+test('renderWechatHtml keeps native ordered markers inside the content box', () => {
   const { renderWechatHtml } = require('./render-pipeline.cjs');
   const { DEFAULT_THEME_CONFIG } = require('./config.cjs');
   const { JSDOM } = require('jsdom');
@@ -31,6 +31,7 @@ test('renderWechatHtml keeps Markdown list hanging indents and a 6px unordered m
   const unorderedItem = unorderedList?.querySelector('li');
   const bullet = unorderedItem?.querySelector('.wechat-list-bullet');
   const orderedList = document.querySelector('ol');
+  const orderedItem = orderedList?.querySelector('li');
 
   assert.equal(unorderedList?.style.listStyle, 'none');
   assert.equal(unorderedList?.style.paddingLeft, '0px');
@@ -40,6 +41,10 @@ test('renderWechatHtml keeps Markdown list hanging indents and a 6px unordered m
   assert.equal(bullet?.style.height, '6px');
   assert.equal(bullet?.style.marginRight, '10px');
   assert.equal(bullet?.textContent, '●');
-  assert.equal(orderedList?.style.listStylePosition, 'outside');
-  assert.equal(orderedList?.style.paddingLeft, '24px');
+  assert.equal(orderedList?.style.listStyle, '');
+  assert.equal(orderedList?.style.paddingLeft, '0px');
+  assert.equal(orderedList?.style.listStylePosition, 'inside');
+  assert.equal(orderedItem?.style.paddingLeft, '24px');
+  assert.equal(orderedItem?.style.textIndent, '-24px');
+  assert.equal(orderedItem?.querySelector('.wechat-list-number'), null);
 });
