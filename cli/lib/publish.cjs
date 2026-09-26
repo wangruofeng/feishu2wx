@@ -73,6 +73,29 @@ async function publishDraftWithCredentials(params) {
   return data;
 }
 
+// 微信封面素材仅支持 jpg/png/gif：webp 无损转 png（像素不变），
+// svg 按 144dpi（2x）渲染为高清 png，gif/png 原样透传
+async function normalizeCoverDataUrl(dataUrl) {
+  const match = dataUrl.match(/^data:image\/([\w.+-]+);base64,(.+)$/);
+  if (!match) throw new Error('封面 dataURL 格式不正确');
+  const mime = match[1];
+  let buffer = Buffer.from(match[2], 'base64');
+
+  if (mime === 'svg' || mime === 'svg+xml') {
+    const sharp = require('sharp');
+    buffer = await sharp(buffer, { density: 144 }).png().toBuffer();
+  } else if (mime === 'webp') {
+    const sharp = require('sharp');
+    buffer = await sharp(buffer).png().toBuffer();
+  } else if (mime !== 'png' && mime !== 'gif' && mime !== 'jpeg' && mime !== 'jpg') {
+    throw new Error(`不支持的封面格式: ${mime}`);
+  }
+
+  const ext = mime === 'gif' ? 'gif' : (mime === 'jpeg' || mime === 'jpg') ? 'jpg' : 'png';
+  const contentType = ext === 'gif' ? 'image/gif' : ext === 'jpg' ? 'image/jpeg' : 'image/png';
+  return { data: new Uint8Array(buffer), ext, contentType };
+}
+
 // CLI 直连服务端函数发布：不走 HTTP handler 的 5M 字符内容校验，
 // 多图文章 base64 内联后体积轻松超限（报「标题和内容不能为空」），而 CLI 本无传输瓶颈
 async function publishMarkdown(options) {
@@ -89,16 +112,10 @@ async function publishMarkdown(options) {
   const token = await wechat.getAccessTokenFromCredentials(options.appId, options.appSecret);
   const { html: processedContent, firstImageUrl } = await wechat.processContentImages(content, token);
 
-  const coverMatch = coverDataUrl ? coverDataUrl.match(/^data:image\/(\w+);base64,(.+)$/) : null;
   let thumbMediaId;
-  if (coverMatch) {
-    const ext = coverMatch[1] === 'png' ? 'png' : 'jpg';
-    thumbMediaId = await wechat.uploadCoverImage(
-      wechat.base64ToUint8Array(coverMatch[2]),
-      `cover.${ext}`,
-      token,
-      ext === 'png' ? 'image/png' : 'image/jpeg'
-    );
+  if (coverDataUrl) {
+    const cover = await normalizeCoverDataUrl(coverDataUrl);
+    thumbMediaId = await wechat.uploadCoverImage(cover.data, `cover.${cover.ext}`, token, cover.contentType);
   } else if (firstImageUrl) {
     const imgRes = await fetch(firstImageUrl);
     if (!imgRes.ok) throw new Error('封面图加载失败，请手动指定封面');
@@ -120,6 +137,7 @@ async function publishMarkdown(options) {
 
 module.exports = {
   inlineLocalImages,
+  normalizeCoverDataUrl,
   publishDraftWithCredentials,
   publishMarkdown,
 };

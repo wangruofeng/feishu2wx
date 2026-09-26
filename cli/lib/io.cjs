@@ -47,7 +47,9 @@ function imageFileToDataUrl(file) {
       ? 'image/gif'
       : ext === '.webp'
         ? 'image/webp'
-        : 'image/jpeg';
+        : ext === '.svg'
+          ? 'image/svg+xml'
+          : 'image/jpeg';
   const base64 = fs.readFileSync(target).toString('base64');
   return `data:${mime};base64,${base64}`;
 }
