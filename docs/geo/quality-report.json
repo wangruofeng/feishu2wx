@@ -1,0 +1,28 @@
+{
+  "markdown": {
+    "exists": true,
+    "wide_table_lines_gt5": []
+  },
+  "html": {
+    "exists": true,
+    "has_toc": true,
+    "has_sticky_or_fixed_toc": true,
+    "has_kami_parchment_rule": true,
+    "has_ink_blue_accent": true,
+    "has_no_rgba": true,
+    "has_compact_body_line_height": true
+  },
+  "docx": {
+    "exists": true,
+    "max_table_columns": 0,
+    "visible_url_tokens_gt40": [],
+    "zip_ok": true
+  },
+  "pdf": {
+    "exists": true,
+    "rendered_pages": 2,
+    "right_edge_issues": [],
+    "pdftoppm_available": true
+  },
+  "open_issues": []
+}

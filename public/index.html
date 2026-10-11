@@ -59,6 +59,8 @@
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
+      "@id": "https://feishu2wx.wangruofeng007.com/#app",
+      "sameAs": "https://github.com/wangruofeng/feishu2wx",
       "name": "feishu2wx",
       "alternateName": "飞书文档转微信公众号排版工具",
       "url": "https://feishu2wx.wangruofeng007.com/",
@@ -85,6 +87,7 @@
       ]
     }
     </script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "@id": "https://feishu2wx.wangruofeng007.com/#website", "url": "https://feishu2wx.wangruofeng007.com/", "name": "feishu2wx", "inLanguage": "zh-CN"}</script>
   </head>
   <body>
     <noscript>需要启用 JavaScript 才能使用 feishu2wx 编辑器，以下是功能简介：</noscript>
@@ -125,18 +128,20 @@
           font-size: 14px;
         }
       </style>
-      <div class="f2wx-static">
+      <main class="f2wx-static">
         <h1><em>feishu2wx</em> — 飞书文档转微信公众号排版工具</h1>
         <p>粘贴飞书文档或直接编写 Markdown，实时预览排版效果，一键复制到微信公众号编辑器；配置公众号凭证后可直接推送到草稿箱。</p>
         <ul>
-          <li>飞书文档粘贴自动转 Markdown，高亮标记完整保留</li>
+          <li>飞书文档粘贴自动转 Markdown，支持高亮标记转换</li>
           <li>5 种主题、17 种免费字体、逐项可调的排版选项，浅色 / 深色模式</li>
-          <li>代码语法高亮、Mermaid 图表、表格、脚注、任务列表全支持</li>
+          <li>代码语法高亮、Mermaid 图表、表格、脚注、任务列表</li>
           <li>导出 Markdown / HTML / PDF，AI 辅助改稿，开源免费（MIT）</li>
         </ul>
         <p>开源地址：<a href="https://github.com/wangruofeng/feishu2wx">github.com/wangruofeng/feishu2wx</a></p>
+        <p><a href="%PUBLIC_URL%/guide/index.html">使用指南</a> · <a href="%PUBLIC_URL%/guide/faq.html">常见问题</a></p>
+        <p>基础排版免费，AI 调用费用由模型服务商决定。推送需要公众号凭证和后端支持，只创建草稿，不自动发布。</p>
         <p class="f2wx-loading">正在加载编辑器…</p>
-      </div>
+      </main>
     </div>
   </body>
 </html>

@@ -687,6 +687,7 @@ const App: React.FC = () => {
         </a>
 
         <div className="top-bar-right">
+          <a href={`${process.env.PUBLIC_URL}/guide/index.html`} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', fontSize: 13, whiteSpace: 'nowrap' }}>使用指南</a>
           <SettingsPanel
             font={font}
             setFont={setFont}

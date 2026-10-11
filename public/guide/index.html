@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>feishu2wx 使用指南：飞书与 Markdown 转微信公众号</title>
+<meta name="description" content="feishu2wx 使用指南：飞书与 Markdown 转微信公众号。说明输入方式、排版步骤、数据流与功能限制。">
+<link rel="canonical" href="https://feishu2wx.wangruofeng007.com/guide/">
+<link rel="icon" href="../favicon.svg">
+<style>:root{color-scheme:light dark}body{font-family:system-ui,"PingFang SC",sans-serif;max-width:780px;margin:auto;padding:24px;line-height:1.8}nav{display:flex;gap:20px;flex-wrap:wrap}a{color:#3370ff}h1{font-size:1.8rem;line-height:1.4}h2{font-size:1.3rem;margin-top:32px}dt{font-weight:700}dd{margin:0 0 16px}footer{border-top:1px solid #888;padding-top:16px;margin-top:36px}section{scroll-margin-top:20px}</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "@id": "https://feishu2wx.wangruofeng007.com/guide/#page", "url": "https://feishu2wx.wangruofeng007.com/guide/", "name": "feishu2wx 使用指南：飞书与 Markdown 转微信公众号", "inLanguage": "zh-CN", "isPartOf": {"@id": "https://feishu2wx.wangruofeng007.com/#website"}, "dateModified": "2026-10-11"}</script>
+</head>
+<body>
+<nav aria-label="站点导航">
+<a href="../">打开编辑器</a>
+<a href="index.html">使用指南</a>
+<a href="faq.html">常见问题</a>
+</nav>
+<main>
+<article>
+<h1>feishu2wx 使用指南：飞书与 Markdown 转微信公众号</h1>
+<p>feishu2wx 是 MIT 开源的微信公众号排版工具。它将粘贴的飞书富文本转换为 Markdown，再将预览转换为带内联样式的公众号 HTML。适合已有飞书文档或 Markdown 文章、需要调整公众号排版的作者。</p>
+<h2 id="facts">功能与使用边界</h2>
+<dl>
+<dt>内容输入</dt>
+<dd>飞书富文本粘贴、Markdown 编写或 .md 文件导入；不通过飞书文档 URL 自动读取文档。</dd>
+<dt>排版与输出</dt>
+<dd>支持主题、代码高亮、表格、脚注、任务列表与 Mermaid；可复制到公众号编辑器，导出 Markdown、HTML、PDF。</dd>
+<dt>价格与许可</dt>
+<dd>项目以 MIT 许可证开源，基础排版可免费使用。AI 功能需要配置模型服务，费用与可用性由对应服务商决定。</dd>
+<dt>草稿发布</dt>
+<dd>推送草稿需要配置公众号 AppID、AppSecret，并使用支持发布 API 的后端部署。推送成功表示创建草稿，文章正式发布仍需在微信后台完成。</dd>
+</dl>
+<h2 id="steps">如何把飞书文档排版到公众号？</h2>
+<ol>
+<li>在飞书文档中复制需要的正文，在 feishu2wx 编辑区粘贴；检查标题、列表、图片和表格的转换结果。</li>
+<li>打开设置选择主题与字体，调整标题、引用块和代码块样式，在右侧预览。</li>
+<li>使用复制功能，将结果粘贴到微信公众号编辑器。预览区选中部分正文时，也可仅复制所选部分。</li>
+<li>在微信编辑器检查图片、列表、代码块和链接，再保存草稿或发布。</li>
+</ol>
+<h2 id="markdown">如何将 Markdown 转为公众号排版？</h2>
+<p>直接输入 Markdown 或导入 .md 文件，查看实时预览后复制到公众号编辑器。HTML 导出使用与公众号复制相同的内联样式管线；PDF 适合保存或阅读，不是微信草稿发布的输入格式。</p>
+<h2 id="data">数据会发送到哪里？</h2>
+<p>基础编辑与排版在浏览器中执行，设置和历史文档保存在 localStorage。推送草稿时，公众号凭证与文章通过后端发送给微信 API；使用 AI 时，请求内容通过后端发送给配置的模型供应商。支持云端配置的 Cloudflare 部署在 GitHub 登录后可加密同步模型配置。第三方图片和字体仍可能产生网络请求。</p>
+<h2 id="next">常见问题与来源</h2>
+<p>
+<a href="faq.html">查看复制、图片、链接与草稿箱常见问题</a>。功能说明依据项目源码与使用文档；遇到兼容问题请附上可复现内容反馈。</p>
+</article>
+</main>
+<footer>
+<p>维护：<a href="https://github.com/wangruofeng/feishu2wx">feishu2wx 开源项目</a> · 更新于 <time datetime="2026-10-11">2026-10-11</time>
+</p>
+<p>详细来源：<a href="https://github.com/wangruofeng/feishu2wx/blob/main/docs/usage.md">项目使用文档</a> · <a href="https://github.com/wangruofeng/feishu2wx/blob/main/cli/README.md">CLI 文档</a>
+</p>
+</footer>
+</body>
+</html>

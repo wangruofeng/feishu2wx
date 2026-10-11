@@ -97,6 +97,10 @@ feishu2wx publish article.md --title "文章标题"          # 推送到公众�
 
 ## 📚 文档导航
 
+在线帮助：[使用指南](https://feishu2wx.wangruofeng007.com/guide/) · [常见问题](https://feishu2wx.wangruofeng007.com/guide/faq)。静态页面说明输入步骤、功能边界、费用与数据传输，编辑器顶栏可直接打开。
+
+GEO 诊断与实施记录见 [诊断报告](docs/geo/audit.md)。
+
 | 文档 | 内容 |
 |------|------|
 | [使用指南](docs/usage.md) | 界面功能、排版设置、导出推送、AI 面板的详细说明与 FAQ |

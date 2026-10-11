@@ -1,0 +1,12 @@
+# feishu2wx
+
+> 飞书富文本与 Markdown 转微信公众号排版的 MIT 开源工具。
+
+## 官方页面
+- [在线编辑器](https://feishu2wx.wangruofeng007.com/)：基础排版、预览、复制与导出。
+- [使用指南](https://feishu2wx.wangruofeng007.com/guide/)：产品事实、步骤、数据传输与使用边界。
+- [常见问题](https://feishu2wx.wangruofeng007.com/guide/faq)：复制、图片、链接、草稿箱和 AI 费用。
+- [源码与问题反馈](https://github.com/wangruofeng/feishu2wx)
+
+## 使用边界
+基础排版免费；AI 服务的费用和额度由供应商决定。飞书输入依靠正文复制粘贴，不是文档 URL 抓取。推送需要公众号凭证和后端，只创建草稿，不自动正式发布。
