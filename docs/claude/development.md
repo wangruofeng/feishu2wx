@@ -66,6 +66,7 @@ npm run cf:dev
 - `src/components/ai/*.test.js`：AI 面板组件测试（AiChatPanel、AiMessageBubble）。
 - `functions/lib/*.test.ts`：Cloudflare Functions 库测试，用 `npx tsx --test` 运行，不在 jest 套件内。
 - `scripts/start-script.test.mjs`：启动脚本约束测试（node:test），不在 jest 套件内，需手动 `node --test scripts/start-script.test.mjs` 运行。
+- `scripts/about-motion.test.mjs`：关于页 FAQ 动画的展开/收起、快速反向、减少动态效果、无动画 API 与窗口缩放降级（node:test），运行 `node --test scripts/about-motion.test.mjs`。
 - `cli/*.test.mjs`、`cli/lib/*.test.mjs`：CLI 测试（node:test），不在 jest 套件内，需手动 `node --test cli/` 运行。
 
 运行测试：

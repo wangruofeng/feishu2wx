@@ -74,6 +74,8 @@
   /* 过渡 */
   --transition-fast: all 0.15s;
   --transition-normal: all 0.2s;
+  --motion-feedback: 140ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* 布局 */
   --top-bar-height: 48px;

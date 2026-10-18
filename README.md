@@ -97,7 +97,7 @@ feishu2wx publish article.md --title "文章标题"          # 推送到公众�
 
 ## 📚 文档导航
 
-在线帮助：[使用指南](https://feishu2wx.wangruofeng007.com/guide/) · [常见问题](https://feishu2wx.wangruofeng007.com/guide/faq)。静态页面说明输入步骤、功能边界、费用与数据传输，编辑器顶栏可直接打开。
+在线帮助统一为[关于与使用帮助](https://feishu2wx.wangruofeng007.com/about/)，编辑器顶栏仅保留「关于」入口。旧使用指南与 FAQ 页面已合并到关于页，部署后旧地址通过 301 跳转到对应章节（`public/_redirects`）。关于页为 `public/about/` 下的独立静态页面，包含可切换配色的排版示意、三步上手、功能介绍与 FAQ，不依赖编辑器或后端加载，移动端也可访问；配色示意不会修改用户的文章或设置。
 
 GEO 诊断与实施记录见 [诊断报告](docs/geo/audit.md)。
 

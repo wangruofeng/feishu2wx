@@ -3,9 +3,8 @@
 > 飞书富文本与 Markdown 转微信公众号排版的 MIT 开源工具。
 
 ## 官方页面
+- [关于项目与使用帮助](https://feishu2wx.wangruofeng007.com/about/)：功能介绍、排版示意、三步上手、图片兼容、草稿排错与常见问题。
 - [在线编辑器](https://feishu2wx.wangruofeng007.com/)：基础排版、预览、复制与导出。
-- [使用指南](https://feishu2wx.wangruofeng007.com/guide/)：产品事实、步骤、数据传输与使用边界。
-- [常见问题](https://feishu2wx.wangruofeng007.com/guide/faq)：复制、图片、链接、草稿箱和 AI 费用。
 - [源码与问题反馈](https://github.com/wangruofeng/feishu2wx)
 
 ## 使用边界

@@ -1,0 +1,9 @@
+# 统一产品介绍与帮助页，保留旧指南和 FAQ 链接。
+/guide /about/#start 301
+/guide/ /about/#start 301
+/guide/index /about/#start 301
+/guide/index/ /about/#start 301
+/guide/index.html /about/#start 301
+/guide/faq /about/#faq 301
+/guide/faq/ /about/#faq 301
+/guide/faq.html /about/#faq 301

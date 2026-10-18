@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f7f3">
+  <title>关于 feishu2wx · 从飞书到公众号，让好内容轻松出发</title>
+  <meta name="description" content="认识 feishu2wx：免费开源的公众号排版工具。复制飞书正文或导入 Markdown，选择主题、实时预览，一键复制到公众号。三步上手，了解 AI 编辑、草稿推送与数据存储。">
+  <link rel="canonical" href="https://feishu2wx.wangruofeng007.com/about/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="关于 feishu2wx · 让好内容轻松出发">
+  <meta property="og:description" content="飞书与 Markdown 转公众号排版。三步上手，免费开源，打开浏览器就能用。">
+  <meta property="og:url" content="https://feishu2wx.wangruofeng007.com/about/">
+  <meta property="og:image" content="https://feishu2wx.wangruofeng007.com/og-cover.png">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./about.css">
+  <script src="./about.js" defer></script>
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@graph":[{"@type":"AboutPage","@id":"https://feishu2wx.wangruofeng007.com/about/#page","url":"https://feishu2wx.wangruofeng007.com/about/","name":"关于 feishu2wx","description":"飞书与 Markdown 转微信公众号排版工具的功能介绍与上手说明","inLanguage":"zh-CN","isPartOf":{"@id":"https://feishu2wx.wangruofeng007.com/#website"},"about":{"@type":"SoftwareApplication","name":"feishu2wx","applicationCategory":"ProductivityApplication","operatingSystem":"Web","license":"https://opensource.org/licenses/MIT"}},{"@type":"FAQPage","@id":"https://feishu2wx.wangruofeng007.com/about/#faq","url":"https://feishu2wx.wangruofeng007.com/about/#faq","name":"feishu2wx 常见问题","inLanguage":"zh-CN","isPartOf":{"@id":"https://feishu2wx.wangruofeng007.com/about/#page"},"mainEntity":[{"@type":"Question","name":"需要付费、注册或安装吗？","acceptedAnswer":{"@type":"Answer","text":"基础编辑、排版、预览、复制与导出都可免费使用，打开浏览器即可，无需注册或安装。项目以 MIT 许可证开源。AI 功能需要自己的模型服务，可能产生服务商费用。"}},{"@type":"Question","name":"不会 Markdown，也能用吗？","acceptedAnswer":{"@type":"Answer","text":"可以。从飞书复制正文再粘贴，工具会自动转换；加粗、斜体和链接等操作也能通过编辑工具栏完成。先用默认排版，再按需要调整设置即可。"}},{"@type":"Question","name":"粘贴飞书文档链接，就能导入吗？","acceptedAnswer":{"@type":"Answer","text":"目前不能通过文档 URL 自动读取内容。请打开飞书文档，选中并复制需要的正文，再粘贴到编辑区。转换后，建议检查标题、图片、列表与表格。"}},{"@type":"Question","name":"「复制」和「推送」有什么区别？","acceptedAnswer":{"@type":"Answer","text":"「复制」把排版结果放入剪贴板，由你粘贴到微信编辑器，不需要公众号凭证。「推送」需要公众号 AppID、AppSecret、相应接口权限与可用后端，成功后创建微信草稿，不会自动正式发布。"}},{"@type":"Question","name":"文章和密钥会存在哪里？","acceptedAnswer":{"@type":"Answer","text":"基础编辑和排版在浏览器内完成，文章、设置和历史使用浏览器本地存储，建议定期导出重要内容；清理浏览器数据可能丢失这些记录。推送时文章与公众号凭证会经后端发送给微信；使用 AI 时，请求内容会经后端发送给你配置的模型供应商。支持云配置的部署在 GitHub 登录后可加密同步模型配置。外部图片、字体仍可能发起网络请求。"}},{"@type":"Question","name":"为什么图片、链接还需要检查？","acceptedAnswer":{"@type":"Answer","text":"微信对正文格式和外链有自己的限制，图片也可能受来源站点的访问权限或防盗链影响。默认会将正文超链接转换为「文字：URL」，SVG 和 Mermaid 图形在输出时转成图片。可以在设置中关闭链接适配，但仍需检查微信侧的实际效果。请在微信编辑器与手机预览中做最后确认。"}},{"@type":"Question","name":"已有 Markdown，如何导出到公众号？","acceptedAnswer":{"@type":"Answer","text":"直接编写 Markdown，或通过「导入」打开 .md 文件，再预览并复制到微信公众号编辑器。也可以在预览区选中部分正文，只复制所选内容。HTML 导出与公众号复制使用相同的内联样式；PDF 用于保存或阅读，不能直接作为微信草稿的发布输入。"}},{"@type":"Question","name":"SVG、Mermaid 和 WebP 图片如何处理？","acceptedAnswer":{"@type":"Answer","text":"复制、HTML 导出和推送前，SVG 图片与内联 SVG（包括 Mermaid 图表）会转成 PNG。服务端向微信上传 WebP 时，静态图转 PNG，动态图转 GIF。图片最终是否正常显示，仍需在微信编辑器检查。"}},{"@type":"Question","name":"草稿推送失败，应该检查什么？","acceptedAnswer":{"@type":"Answer","text":"先检查公众号 AppID、AppSecret、接口权限与后端是否启用，再查看微信返回的错误信息。如果提示 IP 白名单问题，请按实际部署的出口 IP 配置。前端预览正常，并不代表后端发布接口已经可用。"}}]}]}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header wrap">
+    <a class="wordmark" href="../" aria-label="feishu2wx 编辑器"><img src="../favicon.svg" width="32" height="32" alt="">feishu<span>2wx</span></a>
+    <nav aria-label="页面导航">
+      <a href="#features">功能</a>
+      <a href="#start">快速上手</a>
+      <a href="#faq">常见问题</a>
+      <a class="nav-editor" href="../">打开编辑器</a>
+    </nav>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title">好内容，<br>值得一个<span>好排版。</span></h1>
+      <p class="hero-description">从飞书文档到微信公众号，少一点格式折腾。<br class="desktop-break">粘贴正文，选好样式，把心思留给写作。</p>
+      <div class="hero-actions">
+        <a class="action action-primary" href="../">开始排版</a>
+        <a class="action action-secondary" href="#start">看看怎么用</a>
+      </div>
+      <p class="hero-note">基础排版免费 <span aria-hidden="true">·</span> 无需登录 <span aria-hidden="true">·</span> MIT 开源</p>
+    </section>
+
+    <section id="preview" class="preview-section" aria-labelledby="preview-title">
+      <div class="section-heading">
+        <div><h2 id="preview-title">同一篇文章，<span class="preview-title-phrase">换个好看的样子。</span></h2></div>
+        <p>左边专心写，右边实时看。</p>
+      </div>
+      <div class="showcase">
+        <div class="showcase-topbar">
+          <span class="showcase-brand">feishu<span>2wx</span></span>
+          <fieldset class="demo-themes">
+            <legend class="visually-hidden">切换排版示意配色</legend>
+            <label><input type="radio" name="demo-theme" value="classic"><span><i class="swatch swatch-classic" aria-hidden="true"></i>经典</span></label>
+            <label><input type="radio" name="demo-theme" value="blue"><span><i class="swatch swatch-blue" aria-hidden="true"></i>蓝色</span></label>
+            <label><input type="radio" name="demo-theme" value="teal" checked><span><i class="swatch swatch-teal" aria-hidden="true"></i>青绿</span></label>
+          </fieldset>
+          <span class="demo-label">排版效果示意</span>
+        </div>
+        <div class="demo-workspace">
+          <div class="demo-source">
+            <div class="pane-label"><span>MARKDOWN</span><span>你的内容</span></div>
+            <pre><code><span class="syntax-heading"># 把心思留给写作</span>
+
+好内容的起点，是一个值得分享的想法。
+排版这件小事，交给 <span class="syntax-emphasis">**feishu2wx**</span>。
+
+<span class="syntax-heading">## 从一篇飞书文档开始</span>
+
+<span class="syntax-quote">&gt; 写作的节奏，不该被格式打断。</span>
+
+<span class="syntax-bullet">-</span> 复制飞书正文，粘贴到编辑区
+<span class="syntax-bullet">-</span> 选一个喜欢的主题
+<span class="syntax-bullet">-</span> 复制到公众号，准备与读者见面
+
+把时间花在<span class="syntax-emphasis"> ==真正想表达的事== </span>上。</code></pre>
+            <div class="demo-source-footer"><span>内容与样式，各就各位。</span><span aria-hidden="true">MD</span></div>
+          </div>
+          <div class="demo-preview">
+            <div class="pane-label"><span>公众号预览</span><span class="live-label"><i aria-hidden="true"></i>排版示意</span></div>
+            <article class="demo-article" aria-label="排版效果示例">
+              <p class="article-kicker">关于写作的二三事</p>
+              <h3>把心思留给写作</h3>
+              <p>好内容的起点，是一个值得分享的想法。<br>排版这件小事，交给 <strong>feishu2wx</strong>。</p>
+              <h4>从一篇飞书文档开始</h4>
+              <blockquote>写作的节奏，不该被格式打断。</blockquote>
+              <ul><li>复制飞书正文，粘贴到编辑区</li><li>选一个喜欢的主题</li><li>复制到公众号，准备与读者见面</li></ul>
+              <p>把时间花在 <mark>真正想表达的事</mark> 上。</p>
+            </article>
+          </div>
+        </div>
+      </div>
+      <p class="figure-note">试着切换右上方的配色。这里是效果示意，具体样式可在编辑器的设置面板中调整。</p>
+    </section>
+
+    <section id="start" class="start-section" aria-labelledby="start-title">
+      <div class="section-heading">
+        <div><h2 id="start-title">第一篇，从复制粘贴开始。</h2></div>
+      </div>
+      <ol class="steps">
+        <li><span class="step-number" aria-hidden="true">1</span><h3>把内容放进来</h3><p>在飞书文档里复制正文，粘贴到左侧编辑区，自动转换为 Markdown。也可以直接写 Markdown，或用「导入」打开 .md 文件。</p><p class="step-hint">复制文档正文，而不是文档链接。</p></li>
+        <li><span class="step-number" aria-hidden="true">2</span><h3>调成喜欢的样子</h3><p>点击右上角的设置，选择主题和字体，调整标题、引用、图片与代码块。右侧预览会跟着变化，满意的排版还能存成主题。</p><p class="step-hint">第一次用？先保留默认设置就好。</p></li>
+        <li><span class="step-number" aria-hidden="true">3</span><h3>带到公众号里</h3><p>点击顶栏「复制」，到微信公众号编辑器中粘贴。最后检查图片、列表和链接，就可以保存草稿或发布了。</p><p class="step-hint">日常复制排版，无需配置公众号凭证。</p></li>
+      </ol>
+      <aside class="first-try"><p><strong>还没有现成文章？</strong>打开编辑器，点击底部「加载示例」，用示例内容走一遍。已有正文会先尝试存入历史；重要内容建议先导出备份。</p><a class="text-link" href="../">去试试看</a></aside>
+    </section>
+
+    <section id="features" class="features-section" aria-labelledby="features-title">
+      <div class="section-heading"><div><h2 id="features-title">从第一行，到发布前的最后一步。</h2></div></div>
+      <div class="feature-grid">
+        <article class="feature"><span class="feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 19 6-14 6 14M5 14h8M17 10h4v9m0-6c-6-2-7 7 0 5"/></svg></span><h3>一套自己的排版</h3><p>经典、橙色、蓝色、青绿，或选一个自己的主色。字体、标题、引用逐项可调，保存主题，下次接着用。</p><span class="feature-caption">主题 · 字体 · 首尾模板</span></article>
+        <article class="feature"><span class="feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 6-6 6 6 6m8-12 6 6-6 6M14 3l-4 18"/></svg></span><h3>复杂内容，也能好好呈现</h3><p>代码高亮、表格、脚注、任务列表，连 Mermaid 图表和 SVG 图形也支持。复制到微信前，会自动做兼容处理。</p><span class="feature-caption">适合教程、技术文章与知识分享</span></article>
+        <article class="feature"><span class="feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h10M4 9h8M4 14h4M4 19h5"/><circle cx="16" cy="15" r="4"/><path d="m19 18 3 3"/></svg></span><h3>写长文，依然顺手</h3><p>实时预览、文章大纲、查找替换、常用快捷键。双栏、仅编辑、仅预览随时切换，找回自己的写作节奏。</p><span class="feature-caption">导入与历史 · 专注工作区</span></article>
+        <article class="feature"><span class="feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14M10 3H4a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-6"/></svg></span><h3>写完，带去你需要的地方</h3><p>全文或选中部分复制到公众号，也能导出 Markdown、HTML、PDF。配置公众号凭证和后端后，可直接推送草稿箱。</p><span class="feature-caption">正式发布仍在微信后台完成</span></article>
+      </div>
+      <div class="optional-features">
+        <article><h3>让 AI 帮你改一稿。</h3><p>在 AI 面板中描述需求，润色语句、调整结构或修改文章。先查看变更，再决定是否应用。需要自行配置模型服务，费用与可用性由服务商决定。</p><a class="text-link" href="https://github.com/wangruofeng/feishu2wx/blob/main/docs/usage.md#ai-%E8%81%8A%E5%A4%A9%E7%BC%96%E8%BE%91">了解 AI 编辑</a></article>
+        <article><h3>也有命令行入口。</h3><p>用 CLI 渲染 Markdown、导出 HTML 或推送微信草稿箱，适合批量处理和自己的自动化工作流。安装与凭证配置请参考 CLI 文档。</p><code class="cli-example">feishu2wx render article.md --out article.html</code><a class="text-link" href="https://github.com/wangruofeng/feishu2wx/blob/main/cli/README.md">查看 CLI 文档</a></article>
+      </div>
+    </section>
+
+    <section id="faq" class="faq-section" aria-labelledby="faq-title">
+      <div class="faq-intro"><h2 id="faq-title">用之前，<br>你可能想知道。</h2></div>
+      <div class="faq-list">
+        <details open><summary>需要付费、注册或安装吗？</summary><div class="faq-answer"><p>基础编辑、排版、预览、复制与导出都可免费使用，打开浏览器即可，无需注册或安装。项目以 MIT 许可证开源。AI 功能需要自己的模型服务，可能产生服务商费用。</p></div></details>
+        <details><summary>不会 Markdown，也能用吗？</summary><div class="faq-answer"><p>可以。从飞书复制正文再粘贴，工具会自动转换；加粗、斜体和链接等操作也能通过编辑工具栏完成。先用默认排版，再按需要调整设置即可。</p></div></details>
+        <details><summary>粘贴飞书文档链接，就能导入吗？</summary><div class="faq-answer"><p>目前不能通过文档 URL 自动读取内容。请打开飞书文档，选中并复制需要的正文，再粘贴到编辑区。转换后，建议检查标题、图片、列表与表格。</p></div></details>
+        <details><summary>「复制」和「推送」有什么区别？</summary><div class="faq-answer"><p>「复制」把排版结果放入剪贴板，由你粘贴到微信编辑器，不需要公众号凭证。「推送」需要公众号 AppID、AppSecret、相应接口权限与可用后端，成功后创建微信草稿，不会自动正式发布。</p></div></details>
+        <details><summary>文章和密钥会存在哪里？</summary><div class="faq-answer"><p>基础编辑和排版在浏览器内完成，文章、设置和历史使用浏览器本地存储，建议定期导出重要内容；清理浏览器数据可能丢失这些记录。推送时文章与公众号凭证会经后端发送给微信；使用 AI 时，请求内容会经后端发送给你配置的模型供应商。支持云配置的部署在 GitHub 登录后可加密同步模型配置。外部图片、字体仍可能发起网络请求。</p></div></details>
+        <details><summary>为什么图片、链接还需要检查？</summary><div class="faq-answer"><p>微信对正文格式和外链有自己的限制，图片也可能受来源站点的访问权限或防盗链影响。默认会将正文超链接转换为「文字：URL」，SVG 和 Mermaid 图形在输出时转成图片。可以在设置中关闭链接适配，但仍需检查微信侧的实际效果。请在微信编辑器与手机预览中做最后确认。</p></div></details>
+        <details><summary>已有 Markdown，如何导出到公众号？</summary><div class="faq-answer"><p>直接编写 Markdown，或通过「导入」打开 .md 文件，再预览并复制到微信公众号编辑器。也可以在预览区选中部分正文，只复制所选内容。HTML 导出与公众号复制使用相同的内联样式；PDF 用于保存或阅读，不能直接作为微信草稿的发布输入。</p></div></details>
+        <details><summary>SVG、Mermaid 和 WebP 图片如何处理？</summary><div class="faq-answer"><p>复制、HTML 导出和推送前，SVG 图片与内联 SVG（包括 Mermaid 图表）会转成 PNG。服务端向微信上传 WebP 时，静态图转 PNG，动态图转 GIF。图片最终是否正常显示，仍需在微信编辑器检查。</p></div></details>
+        <details><summary>草稿推送失败，应该检查什么？</summary><div class="faq-answer"><p>先检查公众号 AppID、AppSecret、接口权限与后端是否启用，再查看微信返回的错误信息。如果提示 IP 白名单问题，请按实际部署的出口 IP 配置。前端预览正常，并不代表后端发布接口已经可用。</p></div></details>
+      </div>
+    </section>
+
+    <section class="closing" aria-labelledby="closing-title"><h2 id="closing-title">你负责写，<span>排版交给它。</span></h2><a class="action action-primary" href="../">打开 feishu2wx</a><p>从一篇飞书文档，或几行 Markdown 开始。</p></section>
+  </main>
+
+  <footer class="site-footer wrap"><div><a class="wordmark" href="../">feishu<span>2wx</span></a><p>从飞书到公众号，让好内容轻松出发。</p></div><nav aria-label="更多资源"><a href="#start">快速上手</a><a href="https://github.com/wangruofeng/feishu2wx">GitHub / 反馈问题</a><a href="https://github.com/wangruofeng/feishu2wx/blob/main/LICENSE">MIT 开源</a></nav></footer>
+</body>
+</html>

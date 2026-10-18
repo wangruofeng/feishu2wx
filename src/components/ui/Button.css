@@ -1,1 +1,18 @@
-/* Button 组件仅做抽象抽离，样式由各组件原始 CSS 文件定义 */
+/* 各组件保留自己的外观，共享操作按钮只补充按压反馈。 */
+.app :is(.copy-btn, .publish-btn-top, .edit-toggle-btn, .editor-footer-btn,
+  .settings-trigger, .settings-category-tab, .ai-send-btn, .ai-icon-btn),
+.app .editor-toolbar > button {
+  transition: color var(--motion-feedback), background-color var(--motion-feedback),
+    border-color var(--motion-feedback), box-shadow var(--motion-feedback),
+    opacity var(--motion-feedback), scale var(--motion-feedback) var(--motion-ease);
+}
+
+.app :is(.copy-btn, .publish-btn-top, .edit-toggle-btn, .editor-footer-btn,
+  .settings-trigger, .settings-category-tab, .ai-send-btn, .ai-icon-btn):not(:disabled):active,
+.app .editor-toolbar > button:not(:disabled):active {
+  scale: .97;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app button:active { scale: 1 !important; }
+}

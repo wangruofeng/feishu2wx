@@ -65,6 +65,22 @@
   flex: 1;
 }
 
+.top-bar-help-link {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.top-bar-help-link:hover {
+  color: var(--color-brand);
+}
+
+.top-bar-help-link:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+}
+
 /* 设置齿轮按钮 */
 .settings-trigger {
   padding: var(--space-2) var(--space-4);
@@ -416,5 +432,38 @@
 
   .workspace-mode-switch {
     margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .top-bar {
+    height: auto;
+    min-height: var(--top-bar-height-mobile);
+    padding-block: var(--space-2);
+  }
+
+  .top-bar .github-link {
+    display: none;
+  }
+
+  .top-bar-right {
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .top-bar .settings-trigger {
+    padding: var(--space-1);
+    width: 28px;
+  }
+
+  .top-bar .workspace-mode-btn {
+    width: 24px;
+  }
+
+  .top-bar .copy-btn,
+  .top-bar .publish-btn-top,
+  .top-bar .edit-toggle-btn {
+    padding-inline: var(--space-3);
   }
 }

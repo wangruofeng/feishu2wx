@@ -46,3 +46,13 @@ code {
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* 包括现有抽屉、弹层与开关在内，统一尊重系统的减少动态效果偏好。 */
+@media (prefers-reduced-motion: reduce) {
+  .app *, .app *::before, .app *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
