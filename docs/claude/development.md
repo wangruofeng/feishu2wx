@@ -60,6 +60,8 @@ npm run cf:dev
 
 ## 现有测试
 
+发布相关改动执行 `npm run test:publish`（Node/Pages 封面格式与运行时隔离回归），并在前端构建后执行 `npm run cf:check` 验证完整 Pages Functions 打包。
+
 - `src/utils/*.test.js`：渲染与工具逻辑（wechatCopy、markdownRenderer、mdSourceHighlight、htmlToMarkdown、pasteDetection、findReplace、docHistory、savedThemes、imageAttachment、aiChat、aiDiff、settingsBackup、apiBase、helper）。
 - `src/App.test.js`：应用级渲染与交互测试（含查找替换、保存主题等组件行为）。
 - `src/setupProxy.test.js`：开发代理配置测试。

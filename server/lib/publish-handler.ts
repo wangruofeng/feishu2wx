@@ -37,49 +37,28 @@ const MAX_COVER_DATA_URL_LENGTH = 12_000_000;
 const MAX_COVER_URL_LENGTH = 2_048;
 const MAX_CREDENTIAL_LENGTH = 256;
 
-// 微信封面素材仅支持 jpg/png/gif，遇到 webp/svg 自动转成 png（保持静态画质）
-function bytesToLatin1(data: Uint8Array, max: number): string {
-  const len = Math.min(data.length, max);
-  let out = '';
-  for (let i = 0; i < len; i++) out += String.fromCharCode(data[i]);
-  return out;
-}
-
-function hasSvgContent(data: Uint8Array): boolean {
-  const head = bytesToLatin1(data, 512).replace(/^\uFEFF/, '').trimStart();
+// 图片签名校验保持运行时无关；Node 专用转换通过工厂参数注入。
+export function hasSvgContent(data: Uint8Array): boolean {
+  const head = new TextDecoder().decode(data.subarray(0, 512)).trimStart();
   return head.startsWith('<svg') || head.startsWith('<?xml');
 }
 
-// librsvg 要求 XML 声明位于文档最前，去掉 BOM 与前导空白
-function stripSvgPreamble(data: Uint8Array): Uint8Array {
-  let i = 0;
-  while (i < data.length) {
-    const ch = data[i];
-    if (ch === 0xEF || ch === 0xBB || ch === 0xBF || ch === 0x20 || ch === 0x09 || ch === 0x0A || ch === 0x0D) {
-      i += 1;
-      continue;
-    }
-    break;
-  }
-  return data.slice(i);
-}
-
-async function normalizeCoverImage(
+export type CoverImageNormalizer = (
   data: Uint8Array,
   inferredExt: string
-): Promise<{ data: Uint8Array; ext: 'jpg' | 'png' | 'gif' }> {
-  const isWebp = inferredExt === 'webp' || hasWebpSignature(data);
-  const isSvg = inferredExt === 'svg' || hasSvgContent(data);
+) => Promise<{ data: Uint8Array; ext: 'jpg' | 'png' | 'gif' }>;
 
-  if (!isWebp && !isSvg) {
-    return { data, ext: inferredExt === 'png' || inferredExt === 'gif' ? inferredExt : 'jpg' };
+class UnsupportedCoverImageError extends Error {}
+
+// Pages 只透传微信支持的格式，不能在共享 handler 中导入原生图像库。
+const validatePagesCoverImage: CoverImageNormalizer = async (data, inferredExt) => {
+  const format = inferredExt === 'webp' || hasWebpSignature(data) ? 'WebP'
+    : inferredExt === 'svg' || hasSvgContent(data) ? 'SVG' : null;
+  if (format) {
+    throw new UnsupportedCoverImageError(`Cloudflare Pages 暂不支持 ${format} 封面转换，请先转换为 PNG/JPG/GIF 后重试`);
   }
-
-  const { default: sharp } = await import('sharp');
-  const input = isSvg ? stripSvgPreamble(data) : data;
-  const png = await sharp(Buffer.from(input)).png().toBuffer();
-  return { data: new Uint8Array(png), ext: 'png' };
-}
+  return { data, ext: inferredExt === 'png' || inferredExt === 'gif' ? inferredExt : 'jpg' };
+};
 
 function coverContentType(ext: 'jpg' | 'png' | 'gif'): string {
   if (ext === 'png') return 'image/png';
@@ -87,7 +66,10 @@ function coverContentType(ext: 'jpg' | 'png' | 'gif'): string {
   return 'image/jpeg';
 }
 
-export function createPublishDraftHandler(wechat: PublishWechatService) {
+export function createPublishDraftHandler(
+  wechat: PublishWechatService,
+  normalizeCoverImage: CoverImageNormalizer = validatePagesCoverImage
+) {
   return async function handlePublishDraft(body: PublishBody): Promise<Response> {
     try {
       const { title, content, author, digest, coverDataUrl, coverUrl, appId, appSecret } = body;
@@ -131,7 +113,7 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
         if (matches) {
           const mime = matches[1].toLowerCase();
           const baseMime = mime.split('+')[0];
-          if (!['png', 'jpg', 'jpeg', 'webp', 'svg'].includes(baseMime)) {
+          if (!['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(baseMime)) {
             return jsonResponse({ error: '封面图格式无效' }, 400);
           }
           const data = wechat.base64ToUint8Array(matches[2]);
@@ -173,7 +155,8 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
             token,
             coverContentType(cover.ext)
           );
-        } catch {
+        } catch (error) {
+          if (error instanceof UnsupportedCoverImageError) return jsonResponse({ error: error.message }, 400);
           return jsonResponse({ error: '封面图片加载失败，请确认 URL 可公开访问且格式受支持' }, 400);
         }
       } else if (firstImageUrl) {
@@ -204,7 +187,7 @@ export function createPublishDraftHandler(wechat: PublishWechatService) {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : '推送失败';
-      return jsonResponse({ error: message }, 500);
+      return jsonResponse({ error: message }, error instanceof UnsupportedCoverImageError ? 400 : 500);
     }
   };
 }

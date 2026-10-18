@@ -30,6 +30,7 @@ Feishu HTML Paste → convertHtmlToMarkdown() → Markdown State
 - `src/utils/helper.ts`：工具函数（内容感知 WebP 检测，检查文件签名 RIFF/WEBP 和 HTTP Content-Type，不依赖 URL 后缀）
 - `src/utils/helper.test.js`：helper 工具函数单元测试
 - `functions/api/publish/draft.ts`：Cloudflare Function，代理微信草稿箱 API
+- `server/lib/publish-handler.ts`：跨运行时共享的发布 handler，不得直接导入 `sharp`；封面转换通过工厂第二参数注入，Node 入口 `publish-node.ts` 使用 `cover-normalizer-node.ts`，Pages 入口保持纯 Web API；发布前同时运行 `npm run build` 和 `npm run cf:check`
 - `server/lib/wechat-worker.ts`：微信 API 封装（access_token、图片上传（WebP 上传前归一化为 PNG/GIF，MIME type 正确设置，优先用 HTTP 响应头检测类型）、创建草稿）
 - `src/components/ui/Button.tsx`：统一按钮组件，所有 `<button>` 应从该组件导入，通过 `variant` 映射原始 CSS 类名；`src/components/ui/GearIcon.tsx` 为共享设置齿轮图标（Lucide 线性齿轮），顶栏设置按钮与 AI 助手头部「模型设置」按钮复用同一组件；`src/components/ui/SettingsCategoryIcon.tsx` 统一提供设置面板五个分类的 17px / 1.7px 线性 SVG，禁止改回受平台字形影响的字符图标；AI 面板控件图标统一 16px（SVG 与文字字形）；`src/components/ui/WorkspaceModeIcon.tsx` 为顶栏仅编辑/仅预览图标，不要再恢复已删除的 `DevicePreviewToggle`
 

@@ -41,6 +41,20 @@ ALLOWED_ORIGINS=https://feishu2wx.wangruofeng007.com
 仓库根目录的 `functions/` 会由 Cloudflare Pages Git 集成部署为 Pages Functions。
 Functions 使用独立的 `functions/tsconfig.json`，避免受到前端 CRA 的 ES5 TypeScript 配置影响。
 
+发布前应同时检查前端和 Functions；仅 `npm run build` 成功不能证明 Functions 可部署：
+
+```bash
+npm run build
+npm run cf:check
+npm run test:publish
+```
+
+`cf:check` 实际执行 Wrangler Pages Functions 打包，产物写入已忽略的 `.wrangler/functions-check/`。
+若日志出现 `sharp`、`detect-libc`、`Could not resolve "child_process"` 或 `Could not resolve "fs"`，
+先检查 Functions 的共享模块是否误引入了 Node 原生库。`sharp` 依赖原生二进制，不能仅添加
+`nodejs_compat` 来解决；封面转换通过 `createPublishDraftHandler` 的转换器参数注入，
+只有 `publish-node.ts` 导入 `cover-normalizer-node.ts`。
+
 #### 步骤 2：绑定自定义域名
 
 在 Cloudflare 控制台进入 **Workers & Pages → feishu2wx → Custom domains → Set up a domain**，添加：
@@ -112,12 +126,13 @@ npm run cf:dev
 - `functions/api/publish/draft.ts` — Cloudflare Function，处理推送到微信草稿箱
 - `server/lib/wechat-pages.ts` — Cloudflare Function 使用的微信 API 封装，不依赖 Node 原生图片处理库
 - `server/lib/wechat-worker.ts` — Node/CLI 使用的微信 API 封装，支持通过 `sharp` 做 WebP 归一化
-- `server/lib/publish-handler.ts` — HTTP handler，前端提交的凭证（appId/appSecret）直接用于调用微信 API
+- `server/lib/publish-handler.ts` — 运行时无关的 HTTP handler；Pages 默认校验封面格式，Node 入口注入原生转换器
+- `server/lib/cover-normalizer-node.ts` — 仅供 Node HTTP 发布使用的 WebP/SVG 封面转换，不得被 Functions 导入
 - 用户公众号凭证仅保存在浏览器 localStorage，不经过服务端存储
 
 ## 📝 重要提示
 
 - Cloudflare Pages 部署包含完整的前后端功能
 - 更换自定义域名时，需同步更新 `functions/api/` 下 `DEFAULT_ALLOWED_ORIGINS`、Cloudflare 环境变量 `ALLOWED_ORIGINS`、GitHub OAuth 回调地址与 `public/` 中的 SEO 绝对地址
-- Cloudflare Pages Functions 暂不支持正文 WebP 图片归一化；推送前请先将 WebP 转为 PNG/GIF，本地 Node/CLI 模式不受影响
+- Cloudflare Pages Functions 暂不支持正文 WebP 图片归一化和 WebP/SVG 封面转换；封面请使用 PNG/JPG/GIF（网页自动生成的封面为 JPEG），本地 Node/CLI 转换不受影响。Pages 遇到不支持的封面返回 400 及格式转换提示，不上传原始不兼容格式。
 - 多用户使用：每个用户在前端输入自己的公众号凭证即可，凭证保存在浏览器本地，互不干扰
