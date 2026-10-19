@@ -19,6 +19,14 @@ md.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   return defaultLinkOpen(tokens, idx, options, env, self);
 };
 
+// 工具栏与 pre 分离，长代码横向滚动时复制入口仍留在右上角。
+(['fence', 'code_block'] as const).forEach((type) => {
+  const renderCode = md.renderer.rules[type]!;
+  md.renderer.rules[type] = (tokens, idx, options, env, self) => (
+    `<div class="ai-code-block"><div class="ai-code-toolbar"></div>${renderCode(tokens, idx, options, env, self)}</div>`
+  );
+});
+
 export function renderAiMarkdown(text: string): string {
   try {
     return md.render(text);

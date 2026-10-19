@@ -1,3 +1,4 @@
+import { confirmAction } from './ui/ConfirmDialog';
 import React, { useRef, useCallback, useState, useMemo, useEffect } from 'react';
 import { convertHtmlToMarkdown } from '../utils/htmlToMarkdown';
 import { shouldConvertPastedHtml, looksLikeSvgText } from '../utils/pasteDetection';
@@ -9,6 +10,7 @@ import { findMatches, replaceAllMatches, replaceMatch } from '../utils/findRepla
 import DocHistoryPopover from './DocHistoryPopover';
 import FindReplaceBar from './FindReplaceBar';
 import OutlinePopover from './OutlinePopover';
+import FormatPopover from './FormatPopover';
 import { Button } from './ui';
 import './EditorPane.css';
 
@@ -559,8 +561,8 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
     e.target.value = '';
   }, [importMarkdownFile]);
 
-  const handleClear = useCallback(() => {
-    if (window.confirm('确定要清空所有内容吗？')) {
+  const handleClear = useCallback(async () => {
+    if (await confirmAction('确定要清空所有内容吗？')) {
       archiveAndRefresh(markdown);
       setMarkdown('');
     }
@@ -637,7 +639,11 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
   }, [markdown]);
 
   // 切换大纲：先算按钮在视口内的位置，与历史浮层互斥
+  const [formatOpen, setFormatOpen] = useState(false);
+  const formatBtnRef = useRef<HTMLButtonElement>(null);
+
   const handleToggleOutline = useCallback(() => {
+    setFormatOpen(false);
     if (!outlineOpen && outlineBtnRef.current) {
       setOutlinePos(getFooterPopoverPosition(outlineBtnRef.current, OUTLINE_POPOVER_WIDTH));
     }
@@ -647,6 +653,7 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
 
   // 切换历史文档浮层，与大纲浮层互斥
   const handleToggleHistory = useCallback(() => {
+    setFormatOpen(false);
     if (!historyOpen && historyBtnRef.current) {
       setHistoryPos(getFooterPopoverPosition(historyBtnRef.current, HISTORY_POPOVER_WIDTH));
     }
@@ -699,24 +706,6 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
 
   return (
     <div className="editor-pane">
-      {/* 顶部：格式工具栏 */}
-      <div className="editor-toolbar">
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('# ', '')} title="标题1">H1</Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('## ', '')} title="标题2">H2</Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('### ', '')} title="标题3">H3</Button>
-        <div className="toolbar-divider" />
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('**', '**')} title="粗体">B</Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('*', '*')} title="斜体"><i>I</i></Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('`', '`')} title="行内代码">Code</Button>
-        <div className="toolbar-divider" />
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('- ', '')} title="无序列表">&#8226; List</Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('1. ', '')} title="有序列表">1. List</Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('> ', '')} title="引用">Quote</Button>
-        <div className="toolbar-divider" />
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('[链接文本](', ')')} title="链接">Link</Button>
-        <Button variant="editorToolbar" onClick={() => insertMarkdown('![图片描述](', ')')} title="图片">Image</Button>
-      </div>
-
       {findOpen && (
         <FindReplaceBar
           ref={findInputRef}
@@ -779,13 +768,21 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
 
       {/* 底部：文件操作 */}
       <div className="editor-footer">
+        <Button ref={formatBtnRef} variant="footer" className="editor-format-btn"
+          aria-label="格式" aria-haspopup="dialog" aria-expanded={formatOpen}
+          onClick={() => { setOutlineOpen(false); setHistoryOpen(false); setFormatOpen(value => !value); }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 7V4h16v3M12 4v16M8 20h8" />
+          </svg>
+          格式
+        </Button>
         <label className="editor-footer-btn" htmlFor="markdown-file-input" title="导入 Markdown 文件">
           📂 导入
         </label>
-        <Button variant="footer" onClick={handleLoadExampleClick}>
+        <Button variant="footer" className="editor-footer-secondary" onClick={handleLoadExampleClick}>
           加载示例
         </Button>
-        <Button variant="footer" onClick={handleClear}>
+        <Button variant="footer" className="editor-footer-secondary" onClick={handleClear}>
           清空
         </Button>
         <span className="editor-stats">
@@ -825,6 +822,10 @@ const EditorPane = React.forwardRef<EditorPaneHandle, Props>(({ markdown, setMar
           历史
         </button>
       </div>
+
+      {formatOpen && formatBtnRef.current && (
+        <FormatPopover anchor={formatBtnRef.current} onClose={() => setFormatOpen(false)} onInsert={insertMarkdown} />
+      )}
 
       {/* 文章大纲浮层（portal 进 .app 根节点，避免被 overflow:hidden 裁剪） */}
       <OutlinePopover

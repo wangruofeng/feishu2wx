@@ -1,3 +1,5 @@
+import PanelResizeHandle from '../ui/PanelResizeHandle';
+import { confirmAction } from '../ui/ConfirmDialog';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, GearIcon } from '../ui';
 import AiMessageBubble from './AiMessageBubble';
@@ -5,28 +7,27 @@ import type { AiLiveState } from './AiMessageBubble';
 import AiProviderSettings from './AiProviderSettings';
 import ModelSelect from './ModelSelect';
 import './AiChatPanel.css';
+import useAiConversations from './useAiConversations';
+import type { PendingAttachment } from './useAiConversations';
+import AiConversationBar from './AiConversationBar';
 import {
   MAX_AI_ATTACHMENTS,
+  AI_INPUT_HISTORY_LIMIT,
   newAiId,
-  restoreAiMessages,
-  persistAiMessages,
   loadAiProviderSettings,
   saveAiProviderSettings,
   getAiCloudSession,
   loadAiCloudSettings,
   saveAiCloudSettings,
   logoutAiCloudSession,
-  getActiveProvider,
-  getActiveModelId,
-  loadInputHistory,
-  pushInputHistory,
   readAiSseStream,
   createAiStreamParser,
   streamAiChat,
   isSameAiDay,
   formatAiDayDivider,
 } from '../../utils/aiChat';
-import type { AiCloudUser, AiChatHistoryMessage, AiChatMessage, AiImage, AiTextAttachment, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
+import type { AiCloudUser, AiChatHistoryMessage, AiChatMessage, AiImage, AiTextAttachment, AiTokenUsage, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
+import { normalizeAiTokenUsage } from '../../utils/aiTokenUsage';
 import { readImageFileAsAiImage } from '../../utils/aiImages';
 import { readTextFileAsAttachment } from '../../utils/aiFiles';
 
@@ -36,6 +37,9 @@ interface Props {
   markdown: string;
   onApplyArticle: (article: string) => void;
   autoOpenSettings?: boolean;
+  showTokenUsage?: boolean;
+  panelWidth?: number;
+  onWidthChange?: (width: number) => void;
   /** 显示方式：drawer 抽屉浮层（默认）｜sidebar 右侧侧栏（内容避让不重叠） */
   mode?: 'drawer' | 'sidebar';
 }
@@ -54,11 +58,6 @@ const toHistory = (messages: AiChatMessage[]): AiChatHistoryMessage[] => message
       ? m.attachments?.filter((file) => file.content)
       : undefined,
   }));
-
-/* 待发送附件：图片走多模态管线，文本文件以代码块注入消息内容 */
-type PendingAttachment =
-  | { kind: 'image'; image: AiImage }
-  | { kind: 'text'; file: AiTextAttachment };
 
 /* 线性描边图标（lucide 风格），发送/停止按钮内使用 */
 const IcoArrowUp = () => (
@@ -82,34 +81,55 @@ const IcoPlus = () => (
   </svg>
 );
 
-const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle, autoOpenSettings, mode = 'drawer' }) => {
-  const [messages, setMessages] = useState<AiChatMessage[]>(() => restoreAiMessages());
-  const [live, setLive] = useState<AiLiveState | null>(null);
-  const [streaming, setStreaming] = useState(false);
-  const [input, setInput] = useState('');
-  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
+const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle, autoOpenSettings, showTokenUsage = false, panelWidth = 420, onWidthChange, mode = 'drawer' }) => {
   const [providerSettings, setProviderSettings] = useState<AiProviderSettingsData>(() => loadAiProviderSettings());
+  const conversations = useAiConversations(providerSettings);
+  const { active, update, read, controllers } = conversations;
+  const conversationId = active.id;
+  const { messages, live, streaming, input, pendingFiles } = active;
+  const setMessages = useCallback((action: React.SetStateAction<AiChatMessage[]>) => update(conversationId, c => ({ messages: typeof action === 'function' ? action(c.messages) : action })), [conversationId, update]);
+  const setInput = useCallback((value: string) => update(conversationId, () => ({ input: value })), [conversationId, update]);
+  const setPendingFiles = useCallback((action: React.SetStateAction<PendingAttachment[]>) => update(conversationId, c => ({ pendingFiles: typeof action === 'function' ? action(c.pendingFiles) : action }), true), [conversationId, update]);
+  const setLive = useCallback((action: React.SetStateAction<AiLiveState | null>) => update(conversationId, c => ({ live: typeof action === 'function' ? action(c.live) : action }), true), [conversationId, update]);
+  const setStreaming = useCallback((value: boolean) => update(conversationId, () => ({ streaming: value }), true), [conversationId, update]);
   const [cloudUser, setCloudUser] = useState<AiCloudUser | null>(null);
   const [cloudSessionLoading, setCloudSessionLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
 
-  const abortRef = useRef<AbortController | null>(null);
-  const messagesRef = useRef(messages);
-  messagesRef.current = messages;
+  const [resizing, setResizing] = useState(false);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = '0px';
+    textarea.style.height = `${Math.max(32, Math.min(140, textarea.scrollHeight))}px`;
+  }, [input, open, conversationId]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputHistoryRef = useRef<string[]>(loadInputHistory());
   const historyCursorRef = useRef(-1);
   const draftRef = useRef('');
   const cloudSaveTimerRef = useRef<number | null>(null);
   const cloudSaveQueueRef = useRef(Promise.resolve());
 
-  const activeProvider = cloudUser
-    ? providerSettings.providers.find((provider) => provider.id === providerSettings.activeProviderId && provider.enabled && provider.baseUrl) ?? null
-    : getActiveProvider(providerSettings);
-  const activeModelId = getActiveModelId(providerSettings);
+  const selectedProvider = providerSettings.providers.find(p => p.id === active.providerId);
+  const activeProvider = selectedProvider && selectedProvider.enabled && selectedProvider.baseUrl.trim()
+    && (cloudUser || selectedProvider.apiKey.trim()) ? selectedProvider : null;
+  const activeModelId = activeProvider?.models.some(m => m.id && m.id === active.modelId) ? active.modelId : null;
+  const modelUnavailable = active.modelInitialized && (!activeProvider || !activeModelId);
+
+  useEffect(() => {
+    if (cloudSessionLoading) return;
+    if (active.modelInitialized || !providerSettings.activeProviderId || !providerSettings.activeModelId) return;
+    update(conversationId, () => ({ providerId: providerSettings.activeProviderId, modelId: providerSettings.activeModelId, modelInitialized: true }));
+  }, [cloudSessionLoading, active.modelInitialized, providerSettings.activeProviderId, providerSettings.activeModelId, conversationId, update]);
+  useEffect(() => {
+    historyCursorRef.current = -1;
+    draftRef.current = '';
+    setDragOver(false);
+    const container = messagesScrollRef.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [conversationId]);
   const canSend = (!streaming && !settingsOpen && (!!input.trim() || pendingFiles.length > 0) && !!activeProvider && !!activeModelId);
 
   useEffect(() => { if (autoOpenSettings) setSettingsOpen(true); }, [autoOpenSettings]);
@@ -140,7 +160,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     if (distance < SCROLL_FOLLOW_THRESHOLD + 200) {
       container.scrollTop = container.scrollHeight;
     }
-  }, [messages, live, open]);
+  }, [messages, live, open, conversationId]);
 
   // ---- Esc 层级：停止生成 → 关设置 → 关面板 ----
   useEffect(() => {
@@ -148,7 +168,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (streaming) {
-        abortRef.current?.abort();
+        controllers.current.get(conversationId)?.abort();
       } else if (settingsOpen) {
         setSettingsOpen(false);
       } else {
@@ -157,7 +177,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, streaming, settingsOpen, onClose]);
+  }, [open, streaming, settingsOpen, onClose, conversationId, controllers]);
 
   // ---- 供应商配置变更：即时持久化 ----
   const commitSettings = useCallback((next: AiProviderSettingsData) => {
@@ -176,11 +196,24 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     }, CLOUD_SAVE_DELAY);
   }, [cloudUser]);
 
+  // 获取云端模型目录前刷新待保存配置，避免读到新增供应商或连接地址的旧版本。
+  const flushCloudSettings = useCallback(async () => {
+    if (!cloudUser) return;
+    if (cloudSaveTimerRef.current !== null) {
+      window.clearTimeout(cloudSaveTimerRef.current);
+      cloudSaveTimerRef.current = null;
+    }
+    const pending = cloudSaveQueueRef.current.catch(() => {}).then(() => saveAiCloudSettings(providerSettings));
+    cloudSaveQueueRef.current = pending.then(() => {}).catch(() => {});
+    await pending;
+  }, [cloudUser, providerSettings]);
+
   // ---- 附件输入（图片 + 文本文件，共 ≤ MAX_AI_ATTACHMENTS 个）----
   const addFiles = useCallback(async (files: Iterable<File>) => {
     const additions: PendingAttachment[] = [];
     for (const file of Array.from(files)) {
-      if (pendingFiles.length + additions.length >= MAX_AI_ATTACHMENTS) break;
+      const current = read(conversationId);
+      if (!current || current.pendingFiles.length + additions.length >= MAX_AI_ATTACHMENTS) break;
       if (file.type.startsWith('image/')) {
         const image = await readImageFileAsAiImage(file);
         if (image) additions.push({ kind: 'image', image });
@@ -192,7 +225,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     if (additions.length) {
       setPendingFiles((prev) => [...prev, ...additions].slice(0, MAX_AI_ATTACHMENTS));
     }
-  }, [pendingFiles.length]);
+  }, [conversationId, read, setPendingFiles]);
 
   const handleComposerPaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const files = Array.from(e.clipboardData?.items ?? [])
@@ -228,7 +261,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
       handleSendRef.current?.();
       return;
     }
-    const history = inputHistoryRef.current;
+    const history = active.inputHistory;
     if (!history.length || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
     // 仅在光标位于首行末行时才触发回溯，避免干扰多行编辑
     const lines = input.split('\n');
@@ -252,7 +285,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
         setInput(history[historyCursorRef.current]);
       }
     }
-  }, [input]);
+  }, [input, active.inputHistory, setInput]);
 
   // ---- 流式生成一轮 assistant 回复（发送与编辑重发共用）----
   const runAssistantTurn = useCallback(async (params: {
@@ -261,11 +294,13 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     images: AiImage[];
     attachments: AiTextAttachment[];
     requestSource: string;
+    replyId: string;
   }) => {
     if (!activeProvider || !activeModelId) return;
 
     const startedAt = Date.now();
     let reasoningText = '';
+    let usage: AiTokenUsage | undefined;
     setStreaming(true);
     setLive({ reply: '', reasoning: '', articleStarted: false });
 
@@ -273,7 +308,8 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
       (reply) => setLive((l) => (l ? { ...l, reply } : l)),
       () => setLive((l) => (l ? { ...l, articleStarted: true } : l))
     );
-    abortRef.current = new AbortController();
+    const controller = new AbortController();
+    controllers.current.set(conversationId, controller);
     let errorMessage = '';
 
     try {
@@ -286,7 +322,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
         provider: activeProvider,
         cloudProviderId: cloudUser ? activeProvider.id : undefined,
         modelId: activeModelId,
-        signal: abortRef.current.signal,
+        signal: controller.signal,
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}) as any);
@@ -296,7 +332,10 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
         throw new Error(data?.error ?? `AI 请求失败（${response.status}）`);
       }
       await readAiSseStream(response, (event) => {
-        if (event.type === 'reasoning' && event.text) {
+        if (event.type === 'usage') {
+          const snapshot = normalizeAiTokenUsage(event.usage);
+          if (snapshot) usage = { ...usage, ...snapshot };
+        } else if (event.type === 'reasoning' && event.text) {
           reasoningText += event.text;
           setLive((l) => (l ? { ...l, reasoning: l.reasoning + event.text } : l));
         } else if (event.type === 'delta' && event.text) {
@@ -306,7 +345,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
         }
       });
     } catch (error) {
-      const aborted = abortRef.current?.signal.aborted === true;
+      const aborted = controller.signal.aborted;
       if (!aborted) {
         const message = error instanceof Error ? error.message : '';
         errorMessage = /Failed to fetch|NetworkError|fetch failed/i.test(message)
@@ -314,12 +353,12 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
           : message || 'AI 请求失败';
       }
     } finally {
-      const aborted = abortRef.current?.signal.aborted === true;
+      const aborted = controller.signal.aborted;
       const result = parser.finish();
       setMessages((prev) => {
         const next = [...prev];
         for (let i = next.length - 1; i >= 0; i -= 1) {
-          if (next[i].role === 'assistant' && next[i].content === '' && next[i].requestSource === params.requestSource) {
+          if (next[i].id === params.replyId) {
             next[i] = {
               ...next[i],
               content: result.replyText
@@ -327,20 +366,22 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
               article: result.articleText || undefined,
               reasoning: reasoningText || undefined,
               durationMs: Date.now() - startedAt,
+              usage,
+              interrupted: false,
               error: !result.replyText && !result.articleText && !!errorMessage && !aborted,
               truncated: !!result.articleText && !result.sawEndMarker,
             };
             break;
           }
         }
-        persistAiMessages(next);
         return next;
       });
+      update(conversationId, () => ({ updatedAt: Date.now() }));
       setLive(null);
       setStreaming(false);
-      abortRef.current = null;
+      if (controllers.current.get(conversationId) === controller) controllers.current.delete(conversationId);
     }
-  }, [activeProvider, activeModelId, cloudUser]);
+  }, [activeProvider, activeModelId, cloudUser, conversationId, update, controllers, setLive, setMessages, setStreaming]);
 
   // ---- 发送 ----
   const handleSend = useCallback(async () => {
@@ -355,7 +396,10 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
       || (attachments.length && images.length ? '请结合这些附件理解并回答。'
         : attachments.length ? '请结合附件内容理解并回答。'
           : '请结合这些图片理解并回答。');
-    const history = toHistory(messagesRef.current);
+    const current = read(conversationId);
+    if (!current || current.streaming) return;
+    const history = toHistory(current.messages);
+    const replyId = newAiId();
 
     setMessages((prev) => [
       ...prev,
@@ -368,8 +412,12 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
         createdAt: Date.now(),
       },
       {
-        id: newAiId(),
+        id: replyId,
         role: 'assistant',
+        providerId: activeProvider.id,
+        providerName: activeProvider.name || '未命名供应商',
+        modelId: activeModelId,
+        interrupted: true,
         content: '',
         requestSource,
         createdAt: Date.now(),
@@ -377,25 +425,32 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
     ]);
     setInput('');
     setPendingFiles([]);
-    inputHistoryRef.current = pushInputHistory(inputHistoryRef.current, instruction);
+    update(conversationId, c => ({
+      inputHistory: instruction ? [...c.inputHistory.filter(s => s !== instruction), instruction].slice(-AI_INPUT_HISTORY_LIMIT) : c.inputHistory,
+      title: !c.customTitle && c.messages.filter(m => m.role === 'user').length === 1 ? content.slice(0, 30) : c.title,
+      updatedAt: Date.now(),
+    }));
     historyCursorRef.current = -1;
 
-    await runAssistantTurn({ history, content, images, attachments, requestSource });
-  }, [input, pendingFiles, streaming, activeProvider, activeModelId, markdown, runAssistantTurn]);
+    await runAssistantTurn({ history, content, images, attachments, requestSource, replyId });
+  }, [input, pendingFiles, streaming, activeProvider, activeModelId, markdown, runAssistantTurn, conversationId, read, update, setInput, setMessages, setPendingFiles]);
 
   // ---- 编辑最后一条用户消息并重新发送（截断其后历史）----
   const handleEditResend = useCallback(async (id: string, text: string) => {
     const content = text.trim();
     if (!content || streaming) return;
     if (!activeProvider || !activeModelId) return;
-    const index = messagesRef.current.findIndex((m) => m.id === id);
-    if (index < 0 || messagesRef.current[index].role !== 'user') return;
+    const current = read(conversationId);
+    if (!current || current.streaming) return;
+    const index = current.messages.findIndex((m) => m.id === id);
+    if (index < 0 || current.messages[index].role !== 'user') return;
 
+    const replyId = newAiId();
     const requestSource = markdown;
-    const images = messagesRef.current[index].images ?? [];
+    const images = current.messages[index].images ?? [];
     // 持久化会剥离附件内容，重发时只带仍持有内容的附件
-    const attachments = (messagesRef.current[index].attachments ?? []).filter((file) => file.content);
-    const history = toHistory(messagesRef.current.slice(0, index));
+    const attachments = (current.messages[index].attachments ?? []).filter((file) => file.content);
+    const history = toHistory(current.messages.slice(0, index));
 
     setMessages((prev) => {
       const idx = prev.findIndex((m) => m.id === id);
@@ -403,37 +458,40 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
       const next = prev.slice(0, idx + 1);
       next[idx] = { ...next[idx], content, createdAt: Date.now() };
       return [...next, {
-        id: newAiId(),
+        id: replyId,
         role: 'assistant',
+        providerId: activeProvider.id,
+        providerName: activeProvider.name || '未命名供应商',
+        modelId: activeModelId,
+        interrupted: true,
         content: '',
         requestSource,
         createdAt: Date.now(),
       }];
     });
 
-    await runAssistantTurn({ history, content, images, attachments, requestSource });
-  }, [streaming, activeProvider, activeModelId, markdown, runAssistantTurn]);
+    await runAssistantTurn({ history, content, images, attachments, requestSource, replyId });
+  }, [streaming, activeProvider, activeModelId, markdown, runAssistantTurn, setMessages, conversationId, read]);
 
   handleSendRef.current = handleSend;
 
   // ---- 停止生成 ----
   const handleStop = useCallback(() => {
-    abortRef.current?.abort();
-  }, []);
+    controllers.current.get(conversationId)?.abort();
+  }, [conversationId, controllers]);
 
   // ---- 清空对话 ----
-  const handleClearChat = useCallback(() => {
+  const handleClearChat = useCallback(async () => {
     if (streaming) return;
-    if (messages.length && !window.confirm('确定清空当前对话记录吗？')) return;
+    if (messages.length && !await confirmAction('确定清空当前对话记录吗？')) return;
     setMessages([]);
-    persistAiMessages([]);
-  }, [messages.length, streaming]);
+  }, [messages.length, streaming, setMessages]);
 
   // ---- 应用修改 ----
-  const handleApply = useCallback((message: AiChatMessage) => {
+  const handleApply = useCallback(async (message: AiChatMessage) => {
     if (!message.article) return;
     if (message.requestSource !== undefined && markdown !== message.requestSource
-      && !window.confirm('文章在 AI 处理期间已被修改，应用修改稿会覆盖这些修改。是否继续？')) {
+      && !await confirmAction('文章在 AI 处理期间已被修改，应用修改稿会覆盖这些修改。是否继续？')) {
       return;
     }
     onApplyArticle(message.article);
@@ -441,22 +499,19 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
 
   // ---- 模型切换 ----
   const handleModelChange = useCallback((value: string) => {
-    const [providerId, modelId] = value.split('::');
-    commitSettings({
-      ...providerSettings,
-      activeProviderId: providerId,
-      activeModelId: modelId,
-    });
-  }, [providerSettings, commitSettings]);
+    const separator = value.indexOf('::');
+    const providerId = value.slice(0, separator);
+    const modelId = value.slice(separator + 2);
+    update(conversationId, () => ({ providerId, modelId, modelInitialized: true }));
+  }, [conversationId, update]);
 
   const modelOptions = providerSettings.providers
     .filter((p) => p.enabled)
     .flatMap((p) => p.models
       .filter((m) => m.id)
       .map((m) => ({ value: `${p.id}::${m.id}`, label: m.id, menuLabel: `${p.name || '未命名供应商'} · ${m.id}` })));
-  const activeModelValue = activeProvider && activeModelId
-    ? `${activeProvider.id}::${activeModelId}`
-    : '';
+  const activeModelValue = active.providerId && active.modelId ? `${active.providerId}::${active.modelId}` : '';
+  if (modelUnavailable && active.modelId) modelOptions.unshift({ value: activeModelValue, label: `${active.modelId}（不可用）`, menuLabel: '原模型不可用，请选择其他模型' });
 
   // 最后一条用户消息：常显复制/编辑入口，编辑后从该处重发
   const lastUserMessageId = useMemo(() => {
@@ -467,8 +522,12 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
   }, [messages]);
 
   return (
-    <div className="ai-chat-overlay">
+    <div className={`ai-chat-overlay${resizing ? ' is-resizing' : ''}`}>
       <aside className={`ai-chat-drawer${open ? ' open' : ''}${mode === 'sidebar' ? ' ai-chat-drawer--sidebar' : ''}`} aria-label="AI 助手">
+        {onWidthChange && open && (
+          <PanelResizeHandle label="调整 AI 助手宽度" width={panelWidth} onChange={onWidthChange}
+            reservedWidth={() => mode === 'sidebar' ? 320 : 32} onResizing={setResizing} />
+        )}
         <div className="ai-chat-header">
           <h3>AI 助手</h3>
           <ModelSelect
@@ -499,6 +558,16 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
           <Button variant="aiIconBtn" onClick={onClose} title="关闭" aria-label="关闭">✕</Button>
         </div>
 
+        <AiConversationBar
+          store={conversations.store}
+          generatingIds={Array.from(controllers.current.keys())}
+          onSelect={conversations.select}
+          onCreate={conversations.create}
+          onRename={(id, title) => update(id, () => ({ title, customTitle: true }))}
+          onDelete={conversations.remove}
+        />
+        {conversations.storageError && <p className="ai-conversation-warning" role="alert">会话保存失败，请释放浏览器存储空间；当前页面中的记录仍保留。</p>}
+        {modelUnavailable && <p className="ai-conversation-warning" role="status">当前会话的模型不可用，请重新选择模型或检查供应商设置。</p>}
         <div className="ai-chat-messages" ref={messagesScrollRef}>
           {messages.length === 0 && !live ? (
             <div className="ai-chat-empty">
@@ -525,6 +594,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
                   )}
                   <AiMessageBubble
                     message={message}
+                    showTokenUsage={showTokenUsage}
                     live={live && index === messages.length - 1 ? live : undefined}
                     isLastUser={message.id === lastUserMessageId}
                     onApply={handleApply}
@@ -568,7 +638,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
               ))}
             </div>
           )}
-          <div className="ai-composer-row">
+          <div className={`ai-composer-row${dragOver ? ' is-dragover' : ''}`}>
             <Button
               variant="aiIconBtn"
               onClick={() => fileInputRef.current?.click()}
@@ -589,8 +659,9 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
               onDragLeave={() => setDragOver(false)}
               onDrop={handleComposerDrop}
               rows={1}
-              placeholder={activeProvider ? '输入指令，Enter 发送，Shift+Enter 换行' : '请先在 ⚙ 中配置模型供应商'}
-              style={dragOver ? { borderColor: 'var(--color-brand)' } : undefined}
+              placeholder={activeProvider ? '输入消息…' : '请先配置模型供应商'}
+              aria-label="聊天消息"
+              title="Enter 发送，Shift+Enter 换行"
             />
             {streaming ? (
               <Button variant="aiSendBtn" className="ai-send-btn--stop" onClick={handleStop} title="停止生成" aria-label="停止生成">
@@ -605,7 +676,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
         </div>
       </aside>
 
-      {/* 模型设置模态（居中弹窗，portal 到 body） */}
+      {/* 模型设置模态（portal 到 app，继承明暗主题） */}
       {settingsOpen && (
           <AiProviderSettings
             settings={providerSettings}
@@ -613,6 +684,7 @@ const AiChatPanel: React.FC<Props> = ({ open, onClose, markdown, onApplyArticle,
             onClose={() => setSettingsOpen(false)}
             cloudUser={cloudUser}
             cloudLoading={cloudSessionLoading}
+            onBeforeModelFetch={flushCloudSettings}
             onLogin={() => { window.location.assign('/api/auth/github'); }}
             onLogout={() => { logoutAiCloudSession().then(() => { setCloudUser(null); setProviderSettings(loadAiProviderSettings()); }); }}
         />

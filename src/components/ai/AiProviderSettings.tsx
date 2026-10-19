@@ -1,7 +1,12 @@
+import { confirmAction } from '../ui/ConfirmDialog';
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { newAiId, normalizeProviderSettings } from '../../utils/aiChat';
 import type { AiCloudUser, AiProvider, AiProviderSettings as AiProviderSettingsData } from '../../utils/aiChat';
+import Button from '../ui/Button';
+import AiProviderTransfer from './AiProviderTransfer';
+import AiModelCatalog from './AiModelCatalog';
+import { AI_PROVIDER_LIMIT, AI_PROVIDER_MODEL_LIMIT } from '../../utils/aiProviderConfig';
 
 interface Props {
   settings: AiProviderSettingsData;
@@ -11,12 +16,14 @@ interface Props {
   cloudLoading: boolean;
   onLogin: () => void;
   onLogout: () => void;
+  onBeforeModelFetch?: () => Promise<void>;
 }
 
 const API_FORMAT_OPTIONS = [
   { id: 'chat-completions', label: 'Chat Completions (/chat/completions)' },
   { id: 'anthropic', label: 'Anthropic Messages (/v1/messages)' },
   { id: 'responses', label: 'Responses (/responses)' },
+  { id: 'google-generative-ai', label: 'Google Generative AI' },
 ] as const;
 
 /* 线性描边图标（lucide 风格） */
@@ -94,7 +101,7 @@ const IcoChevronDown = () => (
   </svg>
 );
 
-const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, cloudUser, cloudLoading, onLogin, onLogout }) => {
+const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, cloudUser, cloudLoading, onLogin, onLogout, onBeforeModelFetch }) => {
   const [selectedId, setSelectedId] = useState<string | null>(
     settings.activeProviderId ?? settings.providers[0]?.id ?? null
   );
@@ -102,13 +109,15 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
   const [showKey, setShowKey] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const latest = useRef({ settings, onChange });
+  latest.current = { settings, onChange };
 
   // 删除当前选中供应商后自动切换
   useEffect(() => {
-    if (selectedId && !settings.providers.some((p) => p.id === selectedId)) {
-      setSelectedId(settings.providers[0]?.id ?? null);
+    if (!selectedId || !settings.providers.some((p) => p.id === selectedId)) {
+      setSelectedId(settings.activeProviderId ?? settings.providers[0]?.id ?? null);
     }
-  }, [settings.providers, selectedId]);
+  }, [settings.providers, settings.activeProviderId, selectedId]);
 
   // 仅在切换选中供应商时退出名称编辑态；不能依赖 providers 引用，否则每敲一个字符都会退出编辑
   useEffect(() => {
@@ -137,6 +146,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
   };
 
   const handleAddProvider = () => {
+    if (settings.providers.length >= AI_PROVIDER_LIMIT) return;
     const id = newAiId();
     commit((draft) => ({
       ...draft,
@@ -153,8 +163,8 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
     setSelectedId(id);
   };
 
-  const handleDeleteProvider = (id: string) => {
-    if (!window.confirm('确定删除该供应商及其模型配置吗？')) return;
+  const handleDeleteProvider = async (id: string) => {
+    if (!await confirmAction('确定删除该供应商及其模型配置吗？')) return;
     commit((draft) => {
       const providers = draft.providers.filter((p) => p.id !== id);
       let { activeProviderId, activeModelId } = draft;
@@ -196,7 +206,9 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
     }
   };
 
-  const formatHint = selected?.baseUrl.includes('/anthropic')
+  const formatHint = selected?.apiFormat === 'google-generative-ai'
+    ? '官方根地址：https://generativelanguage.googleapis.com，自动使用 /v1beta/models。'
+    : selected?.baseUrl.includes('/anthropic')
     ? 'Base URL 含 /anthropic，将按 Anthropic Messages 格式发送'
     : null;
 
@@ -218,9 +230,9 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
             <h3>模型设置</h3>
             <p>管理自定义模型供应商，配置后可在聊天时选择使用。</p>
           </div>
-          <button type="button" className="ai-ps-close" onClick={onClose} aria-label="关闭">
+          <Button variant="editorToolbar" type="button" className="ai-ps-close" onClick={onClose} aria-label="关闭">
             <IcoClose />
-          </button>
+          </Button>
         </div>
 
         <div className={`ai-ps-body${cloudLoading ? ' is-loading' : ''}`} aria-busy={cloudLoading}>
@@ -232,14 +244,14 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                   ? <img className="ai-ps-account-avatar" src={cloudUser.avatarUrl} alt="" />
                   : <span className="ai-ps-account-icon"><IcoGitHub /></span>}
                 <span className="ai-ps-account-name">{cloudUser ? cloudUser.login : '未登录'}</span>
-                {cloudUser && <button type="button" className="ai-ps-toggle-btn ai-ps-account-logout" onClick={onLogout}>退出登录</button>}
+                {cloudUser && <Button variant="editorToolbar" type="button" className="ai-ps-toggle-btn ai-ps-account-logout" onClick={onLogout}>退出登录</Button>}
               </div>
               <p className="ai-ps-account-tip">{cloudLoading ? '正在加载云端模型配置…' : cloudUser ? '配置已加密保存到云端，其他设备登录同一账号可读取。' : '配置仅保存在本地浏览器，登录后加密同步到云端。'}</p>
               {!cloudUser && (
-                <button type="button" className="ai-ps-login-btn" onClick={handleLogin} disabled={loggingIn} aria-busy={loggingIn}>
+                <Button variant="editorToolbar" type="button" className="ai-ps-login-btn" onClick={handleLogin} disabled={loggingIn} aria-busy={loggingIn}>
                   {loggingIn ? <span className="ai-ps-login-spinner" aria-hidden="true" /> : <IcoGitHub />}
                   {loggingIn ? '正在跳转至 GitHub…' : '使用 GitHub 登录'}
-                </button>
+                </Button>
               )}
             </div>
             <div className="ai-ps-sidebar-label">自定义供应商</div>
@@ -249,7 +261,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                   key={provider.id}
                   className={`ai-ps-provider-item${provider.id === selectedId ? ' is-active' : ''}`}
                 >
-                  <button
+                  <Button variant="editorToolbar"
                     type="button"
                     className="ai-ps-provider-main"
                     onClick={() => setSelectedId(provider.id)}
@@ -258,9 +270,9 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                     <span className="ai-ps-provider-icon"><IcoBox /></span>
                     <span className="ai-ps-provider-name">{provider.name || '未命名供应商'}</span>
                     <span className={`ai-ps-provider-dot${provider.enabled ? '' : ' is-disabled'}`} />
-                  </button>
+                  </Button>
                   <span className="ai-ps-provider-move">
-                    <button
+                    <Button variant="editorToolbar"
                       type="button"
                       className="ai-ps-icon-btn ai-ps-icon-btn-sm"
                       onClick={() => handleMoveProvider(provider.id, -1)}
@@ -269,8 +281,8 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                       aria-label={`上移供应商 ${provider.name || '未命名供应商'}`}
                     >
                       <IcoChevronUp />
-                    </button>
-                    <button
+                    </Button>
+                    <Button variant="editorToolbar"
                       type="button"
                       className="ai-ps-icon-btn ai-ps-icon-btn-sm"
                       onClick={() => handleMoveProvider(provider.id, 1)}
@@ -279,14 +291,14 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                       aria-label={`下移供应商 ${provider.name || '未命名供应商'}`}
                     >
                       <IcoChevronDown />
-                    </button>
+                    </Button>
                   </span>
                 </div>
               ))}
             </div>
-            <button type="button" className="ai-ps-add-provider" onClick={handleAddProvider}>
+            <Button variant="editorToolbar" type="button" className="ai-ps-add-provider" onClick={handleAddProvider} disabled={settings.providers.length >= AI_PROVIDER_LIMIT} title={`最多 ${AI_PROVIDER_LIMIT} 个供应商`}>
               + 添加供应商
-            </button>
+            </Button>
           </aside>
 
           {/* 右栏：供应商表单 */}
@@ -295,7 +307,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
               <div className="ai-ps-empty">左侧选择或添加一个供应商</div>
             ) : (
               <>
-                {/* 名称行：名称 + 编辑 + 状态徽章 + 启/禁用 + 删除 */}
+                {/* 名称行：名称 + 编辑 + 状态徽章 + 启用开关 + 删除 */}
                 <div className="ai-ps-name-row">
                   {editingName ? (
                     <input
@@ -309,7 +321,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                       onKeyDown={handleNameKeyDown}
                     />
                   ) : (
-                    <button
+                    <Button variant="editorToolbar"
                       type="button"
                       className="ai-ps-name"
                       onClick={() => setEditingName(true)}
@@ -317,19 +329,21 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                     >
                       <span className="ai-ps-name-text">{selected.name || '未命名供应商'}</span>
                       <IcoPencil />
-                    </button>
+                    </Button>
                   )}
                   <span className={`ai-ps-badge${selected.enabled ? '' : ' is-off'}`}>
                     {selected.enabled ? '已启用' : '已禁用'}
                   </span>
-                  <button
+                  <Button variant="editorToolbar"
                     type="button"
-                    className="ai-ps-toggle-btn"
+                    className="settings-switch"
+                    role="switch"
+                    aria-checked={selected.enabled}
+                    aria-label="启用供应商"
+                    title={selected.enabled ? '禁用供应商' : '启用供应商'}
                     onClick={() => patchProvider(selected.id, { enabled: !selected.enabled })}
-                  >
-                    {selected.enabled ? '禁用' : '启用'}
-                  </button>
-                  <button
+                  />
+                  <Button variant="editorToolbar"
                     type="button"
                     className="ai-ps-icon-btn ai-ps-delete-provider"
                     onClick={() => handleDeleteProvider(selected.id)}
@@ -337,7 +351,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                     aria-label="删除供应商"
                   >
                     <IcoTrash />
-                  </button>
+                  </Button>
                 </div>
 
                 <label className="ai-ps-field">
@@ -346,7 +360,7 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                     type="text"
                     value={selected.baseUrl}
                     onChange={(e) => patchProvider(selected.id, { baseUrl: e.target.value.trim() })}
-                    placeholder="如：https://open.bigmodel.cn/api/anthropic"
+                    placeholder={selected.apiFormat === 'google-generative-ai' ? 'https://generativelanguage.googleapis.com' : '如：https://open.bigmodel.cn/api/anthropic'}
                     spellCheck={false}
                   />
                 </label>
@@ -371,11 +385,11 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                       type={showKey ? 'text' : 'password'}
                       value={selected.apiKey}
                       onChange={(e) => patchProvider(selected.id, { apiKey: e.target.value })}
-                      placeholder="仅保存在本地浏览器，不经过服务端存储"
+                      placeholder={cloudUser ? (selected.hasApiKey ? '云端已保存 API Key，留空继续使用' : '登录后加密保存到云端') : '仅保存在本地浏览器，不经过服务端存储'}
                       spellCheck={false}
                       autoComplete="off"
                     />
-                    <button
+                    <Button variant="editorToolbar"
                       type="button"
                       className="ai-ps-icon-btn"
                       onClick={() => setShowKey((v) => !v)}
@@ -383,13 +397,35 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                       aria-label={showKey ? '隐藏 API Key' : '显示 API Key'}
                     >
                       {showKey ? <IcoEyeOff /> : <IcoEye />}
-                    </button>
+                    </Button>
                   </span>
                 </label>
 
                 {/* 模型列表：分组卡片 */}
                 <div className="ai-ps-field">
                   <span className="ai-ps-field-label">模型列表</span>
+                  <AiModelCatalog
+                    provider={selected}
+                    cloud={Boolean(cloudUser)}
+                    onBeforeModelFetch={onBeforeModelFetch}
+                    onClear={() => patchProvider(selected.id, { models: [] })}
+                    onModels={(modelIds) => {
+                      const current = latest.current;
+                      const provider = current.settings.providers.find((item) => item.id === selected.id);
+                      if (!provider) return 0;
+                      const seen = new Set(provider.models.map((model) => model.id.trim()));
+                      const added = modelIds.map((id) => id.trim()).filter((id) => {
+                        if (!id || seen.has(id)) return false;
+                        seen.add(id);
+                        return true;
+                      }).slice(0, Math.max(0, AI_PROVIDER_MODEL_LIMIT - provider.models.length));
+                      if (added.length) current.onChange(normalizeProviderSettings({
+                        ...current.settings,
+                        providers: current.settings.providers.map((item) => item.id === provider.id ? { ...item, models: [...item.models, ...added.map((id) => ({ id }))] } : item),
+                      }));
+                      return added.length;
+                    }}
+                  />
                   {selected.models.length === 0 ? (
                     <div className="ai-ps-model-card">
                       <div className="ai-ps-model-row is-empty">暂无模型，点击下方按钮添加</div>
@@ -408,7 +444,8 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                             placeholder="如：glm-5.3"
                             spellCheck={false}
                           />
-                          <button
+                          <div className="ai-ps-model-actions">
+                          <Button variant="editorToolbar"
                             type="button"
                             className="ai-ps-icon-btn ai-ps-icon-btn-sm"
                             title="上移"
@@ -417,8 +454,8 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                             onClick={() => handleMoveModel(selected.id, index, -1)}
                           >
                             <IcoChevronUp />
-                          </button>
-                          <button
+                          </Button>
+                          <Button variant="editorToolbar"
                             type="button"
                             className="ai-ps-icon-btn ai-ps-icon-btn-sm"
                             title="下移"
@@ -427,37 +464,44 @@ const AiProviderSettings: React.FC<Props> = ({ settings, onChange, onClose, clou
                             onClick={() => handleMoveModel(selected.id, index, 1)}
                           >
                             <IcoChevronDown />
-                          </button>
-                          <button
+                          </Button>
+                          <Button variant="editorToolbar"
                             type="button"
                             className="ai-ps-icon-btn ai-ps-icon-btn-sm"
                             title="删除模型"
                             aria-label="删除模型"
-                            onClick={() => patchProvider(selected.id, {
-                              models: selected.models.filter((_, i) => i !== index),
-                            })}
+                            onClick={async () => {
+                              if (!await confirmAction(`确定删除模型“${model.id || '未命名模型'}”吗？`)) return;
+                              patchProvider(selected.id, {
+                                models: selected.models.filter((_, i) => i !== index),
+                              });
+                            }}
                           >
                             <IcoTrash size={14} />
-                          </button>
+                          </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  <button
+                  <Button variant="editorToolbar"
                     type="button"
                     className="ai-ps-add-model"
+                    disabled={selected.models.length >= AI_PROVIDER_MODEL_LIMIT}
+                    title={`最多 ${AI_PROVIDER_MODEL_LIMIT} 个模型`}
                     onClick={() => patchProvider(selected.id, { models: [...selected.models, { id: '' }] })}
                   >
                     + 添加模型
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
           </div>
         </div>
+        <AiProviderTransfer settings={settings} cloud={Boolean(cloudUser)} disabled={cloudLoading} onChange={onChange} />
       </div>
     </div>,
-    document.body
+    document.querySelector('.app') ?? document.body
   );
 };
 

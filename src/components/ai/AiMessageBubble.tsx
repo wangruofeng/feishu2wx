@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '../ui';
-import { renderAiMarkdown } from '../../utils/aiMarkdown';
+import AiMarkdown from './AiMarkdown';
+import AiTokenUsage from './AiTokenUsage';
 import { changedArticleHunks } from '../../utils/aiDiff';
 import { formatAiMessageTime, formatAiDuration } from '../../utils/aiChat';
 import type { AiChatMessage } from '../../utils/aiChat';
@@ -13,6 +14,7 @@ export interface AiLiveState {
 
 interface Props {
   message: AiChatMessage;
+  showTokenUsage?: boolean;
   /** 仅流式中的末条 assistant 消息传入 */
   live?: AiLiveState;
   /** 仅最后一条用户消息传入：常显复制/编辑入口 */
@@ -59,7 +61,7 @@ const IcoChevronRight = () => (
   </svg>
 );
 
-const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, onEdit }) => {
+const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, onEdit, showTokenUsage = false }) => {
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editDraft, setEditDraft] = useState('');
@@ -67,6 +69,7 @@ const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, 
   const isUser = message.role === 'user';
   const isError = message.error === true;
   const isLive = !!live;
+  const isWaiting = isLive && !live.reply.trim() && !live.reasoning.trim() && !live.articleStarted;
 
   const diffHunks = useMemo(
     () => (message.article && message.requestSource !== undefined
@@ -122,6 +125,12 @@ const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, 
 
   return (
     <div className={`ai-msg ai-msg--${isUser ? 'user' : 'assistant'}${isError ? ' ai-msg--error' : ''}${isUser && isLastUser ? ' ai-msg--last-user' : ''}`}>
+      {!isUser && (
+        <div className="ai-msg-source">
+          <strong>AI 助手</strong>
+          {message.modelId && <span>{message.providerName || '未命名供应商'} · {message.modelId}</span>}
+        </div>
+      )}
       {/* 用户图片 */}
       {!!message.images?.length && (
         <div className="ai-msg-images">
@@ -177,7 +186,7 @@ const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, 
         )}
 
         {/* 思考过程：流式中实时展示，完成后收进元信息行 */}
-        {isLive && live.reasoning && (
+        {isLive && live.reasoning.trim() && (
           <details className="ai-reasoning ai-reasoning--live" open>
             <summary>
               思考过程
@@ -188,13 +197,15 @@ const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, 
         )}
 
         {/* 正文 */}
-        {isUser || isError ? (
+        {isWaiting ? (
+          <div className="ai-msg-waiting" role="status">
+            正在回复
+            <span className="ai-typing" aria-hidden="true"><span /><span /><span /></span>
+          </div>
+        ) : isUser || isError ? (
           <span>{live?.reply ?? message.content}</span>
         ) : (
-          <div
-            className="ai-md"
-            dangerouslySetInnerHTML={{ __html: renderAiMarkdown(live?.reply ?? message.content) }}
-          />
+          <AiMarkdown text={live?.reply ?? message.content} />
         )}
 
         {/* 修改稿生成状态 */}
@@ -206,6 +217,8 @@ const AiMessageBubble: React.FC<Props> = ({ message, live, isLastUser, onApply, 
         )}
       </div>
       )}
+
+      {showTokenUsage && !isUser && !isLive && <AiTokenUsage usage={message.usage} />}
 
       {/* 助手操作行 */}
       {showActions && (

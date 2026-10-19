@@ -1,3 +1,5 @@
+import PanelResizeHandle from './ui/PanelResizeHandle';
+import { confirmAction } from './ui/ConfirmDialog';
 import React, { useEffect, useRef, useState } from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
 import { MdSyntaxThemeKey } from '../utils/mdSourceHighlight';
@@ -14,14 +16,17 @@ import WechatConfigDialog from './WechatConfigDialog';
 import './SettingsPanel.css';
 
 const settingsCategories: Array<{ id: SettingsCategory; label: string }> = [
-  { id: 'appearance', label: '主题与外观' },
+  { id: 'appearance', label: '主题外观' },
   { id: 'typography', label: '文章排版' },
   { id: 'content', label: '内容样式' },
   { id: 'editor', label: '编辑体验' },
-  { id: 'publishing', label: '发布与数据' },
+  { id: 'publishing', label: '发布数据' },
 ];
 
 interface Props {
+  panelWidth?: number;
+  onWidthChange?: (width: number) => void;
+  aiSidebarOpen?: boolean;
   font: string;
   setFont: (font: string) => void;
   shouldConvertPastedHtml: boolean;
@@ -79,6 +84,8 @@ interface Props {
   onDarkModeChange: (mode: 'system' | 'light' | 'dark') => void;
   syntaxTheme: MdSyntaxThemeKey;
   onChangeSyntaxTheme: (theme: MdSyntaxThemeKey) => void;
+  showAiTokenUsage: boolean;
+  onChangeShowAiTokenUsage: () => void;
   aiPanelMode: 'drawer' | 'sidebar';
   onChangeAiPanelMode: (mode: 'drawer' | 'sidebar') => void;
   customThemeColor: string;
@@ -237,6 +244,11 @@ const SettingsPanel: React.FC<Props> = ({
   onDarkModeChange,
   syntaxTheme,
   onChangeSyntaxTheme,
+  showAiTokenUsage,
+  onChangeShowAiTokenUsage,
+  panelWidth = 420,
+  onWidthChange,
+  aiSidebarOpen = false,
   aiPanelMode,
   onChangeAiPanelMode,
   customThemeColor,
@@ -294,9 +306,9 @@ const SettingsPanel: React.FC<Props> = ({
     setConfigTransferStatus(result.success ? '配置已导入。' : result.error || '配置导入失败。');
   };
 
-  const handleSaveTheme = () => {
+  const handleSaveTheme = async () => {
     let result = onSaveTheme(themeName);
-    if (result.needsOverwrite && window.confirm('已存在同名主题，是否覆盖？')) {
+    if (result.needsOverwrite && await confirmAction('已存在同名主题，是否覆盖？')) {
       result = onSaveTheme(themeName, true);
     }
     if (result.success) setThemeName('');
@@ -308,7 +320,7 @@ const SettingsPanel: React.FC<Props> = ({
     event.target.value = '';
     if (!file) return;
     let result = await onImportSavedTheme(file);
-    if (result.needsOverwrite && window.confirm('已存在同名主题，是否覆盖？')) {
+    if (result.needsOverwrite && await confirmAction('已存在同名主题，是否覆盖？')) {
       result = await onImportSavedTheme(file, true);
     }
     setThemeStatus(result.success ? '主题已导入。' : result.needsOverwrite ? '已取消覆盖。' : result.error || '主题导入失败。');
@@ -368,6 +380,10 @@ const SettingsPanel: React.FC<Props> = ({
 
   return (
     <div className="settings-panel" ref={panelRef}>
+      {onWidthChange && <PanelResizeHandle label="调整设置面板宽度" width={panelWidth} onChange={onWidthChange}
+        reservedWidth={() => 320 + (aiSidebarOpen ? Math.min(280, (window.innerWidth - 320) / 2) : 0)} />}
+
+      <div className="settings-category-header">
       <nav className="settings-category-nav" role="tablist" aria-label="配置分类">
         {settingsCategories.map((category, index) => (
           <Button
@@ -387,6 +403,16 @@ const SettingsPanel: React.FC<Props> = ({
           </Button>
         ))}
       </nav>
+      <div className="settings-category-compact">
+        <label htmlFor="settings-category-select">配置分类</label>
+        <select id="settings-category-select" value={activeCategory}
+          onChange={(event) => selectCategory(event.target.value as SettingsCategory)}>
+          {settingsCategories.map((category) => (
+            <option key={category.id} value={category.id}>{category.label}</option>
+          ))}
+        </select>
+      </div>
+      </div>
       <div
         id={`settings-panel-${activeCategory}`}
         role="tabpanel"
@@ -458,6 +484,8 @@ const SettingsPanel: React.FC<Props> = ({
           <span className="settings-row-hint">抽屉浮在内容上方，侧栏固定最右侧、编辑区自动避让</span>
         </div>
         {/* 主题模式：三选一 */}
+        <ToggleSwitch label="显示聊天 Token 统计" checked={showAiTokenUsage} onClick={onChangeShowAiTokenUsage} />
+
         <div className="settings-row settings-row--block">
           <span className="settings-row-label">界面明暗</span>
           <div className="settings-segmented">
@@ -769,7 +797,12 @@ const SettingsPanel: React.FC<Props> = ({
                   {savedTheme.name}
                   {isCurrent && (
                     <span className="saved-theme-current-mark">
-                      <span aria-hidden="true">✓</span> 当前
+                      <svg className="saved-theme-check-icon" width="14" height="14" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                        aria-hidden="true" focusable="false">
+                        <path d="m5 12 4 4L19 6" />
+                      </svg>
+                      当前
                     </span>
                   )}
                 </button>
@@ -778,8 +811,8 @@ const SettingsPanel: React.FC<Props> = ({
                     const result = onExportSavedTheme(savedTheme.id);
                     setThemeStatus(result.success ? '主题已导出。' : result.error || '主题导出失败。');
                   }}>导出</Button>
-                  <Button variant="toggle" onClick={() => {
-                    if (!window.confirm(`确定删除主题“${savedTheme.name}”吗？`)) return;
+                  <Button variant="toggle" onClick={async () => {
+                    if (!await confirmAction(`确定删除主题“${savedTheme.name}”吗？`)) return;
                     const result = onDeleteSavedTheme(savedTheme.id);
                     setThemeStatus(result.success ? '主题已删除。' : result.error || '主题删除失败。');
                   }}>删除</Button>

@@ -1,4 +1,6 @@
 .app {
+  --workspace-sidebar-width: min(var(--settings-preferred-width, 420px), calc(100vw - 320px));
+  --ai-panel-width: min(var(--ai-preferred-width, 420px), calc(100vw - 32px));
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -12,8 +14,9 @@
 .top-bar {
   display: flex;
   align-items: center;
-  height: var(--top-bar-height);
-  padding: 0 var(--space-6);
+  min-height: var(--top-bar-height);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-6);
   background: var(--color-bg-white);
   border-bottom: 1px solid var(--color-border-primary);
   flex-shrink: 0;
@@ -62,7 +65,10 @@
   justify-content: flex-end;
   gap: var(--space-3);
   position: relative;
-  flex: 1;
+  /* 根据侧栏让位后的实际宽度换行，避免操作按钮溢出到相邻面板。 */
+  flex: 1 1 280px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .top-bar-help-link {
@@ -240,9 +246,13 @@
   transition: margin-right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.app.ai-sidebar-open {
+  --ai-panel-width: min(var(--ai-preferred-width, 420px), calc(100vw - 320px));
+}
+
 .app.ai-sidebar-open .top-bar,
 .app.ai-sidebar-open .main-container {
-  margin-right: 420px;
+  margin-right: var(--ai-panel-width);
 }
 
 /* 侧栏展开时顶栏空间变窄，隐藏居中的主题色切换控件 */
@@ -252,13 +262,13 @@
 
 /* 浮动按钮组左移到面板左侧，避免被面板盖住 */
 .app.ai-sidebar-open .fab-group {
-  right: 440px;
+  right: calc(var(--ai-panel-width) + 20px);
 }
 
 /* ===== 设置侧栏：桌面端占据右侧布局位，移动端保留抽屉 ===== */
 .app.settings-sidebar-open .top-bar,
 .app.settings-sidebar-open .main-container {
-  margin-right: 420px;
+  margin-right: var(--workspace-sidebar-width);
 }
 
 .app.settings-sidebar-open .top-bar {
@@ -266,21 +276,38 @@
 }
 
 .app.settings-sidebar-open .fab-group {
-  right: 440px;
+  right: calc(var(--workspace-sidebar-width) + 20px);
+}
+
+/* 双侧栏共享宽度，窄桌面仍为主工作区保留至少 320px。 */
+.app.ai-sidebar-open.settings-sidebar-open {
+  --workspace-sidebar-width: min(var(--settings-preferred-width, 420px), calc(100vw - 320px - min(280px, (100vw - 320px) / 2)));
+  --ai-panel-width: min(var(--ai-preferred-width, 420px), calc(100vw - var(--workspace-sidebar-width) - 320px));
+}
+
+/* 三列布局优先保留编辑操作，收起低频外部入口。 */
+.app.ai-sidebar-open.settings-sidebar-open .top-bar .github-link,
+.app.ai-sidebar-open.settings-sidebar-open .top-bar .top-bar-help-link {
+  display: none;
+}
+
+.app.ai-sidebar-open.settings-sidebar-open .editor-footer-secondary,
+.app.ai-sidebar-open.settings-sidebar-open .editor-stats {
+  display: none;
 }
 
 /* 两个侧栏同时打开时并排显示，避免彼此遮挡。 */
 .app.ai-sidebar-open.settings-sidebar-open .top-bar,
 .app.ai-sidebar-open.settings-sidebar-open .main-container {
-  margin-right: 840px;
+  margin-right: calc(var(--workspace-sidebar-width) + var(--ai-panel-width));
 }
 
 .app.settings-sidebar-open .ai-chat-overlay {
-  right: 420px;
+  right: var(--workspace-sidebar-width);
 }
 
 .app.ai-sidebar-open.settings-sidebar-open .fab-group {
-  right: 860px;
+  right: calc(var(--workspace-sidebar-width) + var(--ai-panel-width) + 20px);
 }
 
 /* ===== Toast ===== */
@@ -337,9 +364,8 @@
 .fab-group {
   position: fixed;
   right: 20px;
-  /* 停靠在编辑器底栏(43px)上方，不再贴屏幕底缘与底栏重叠；
-     底栏高度变化时需同步调整 */
-  bottom: 56px;
+  /* 与底栏共享高度基准，并在其上方保留 16px 间距。 */
+  bottom: calc(var(--workspace-bottom-bar-height) + var(--space-6));
   z-index: 900;
   display: flex;
   flex-direction: column;
@@ -374,6 +400,7 @@
 
 /* ===== 响应式 ===== */
 @media (max-width: 768px) {
+  .app { --ai-panel-width: min(var(--ai-preferred-width, 420px), 100vw); }
   .app.settings-sidebar-open .top-bar,
   .app.settings-sidebar-open .main-container {
     margin-right: 0;
@@ -389,6 +416,7 @@
   }
 
   .top-bar {
+    min-height: var(--top-bar-height-mobile);
     height: var(--top-bar-height-mobile);
     padding: 0 10px;
     gap: var(--space-3);
@@ -467,3 +495,7 @@
     padding-inline: var(--space-3);
   }
 }
+
+/* 拖拽时立即让位，避免主区滞后于面板边界。 */
+.app:has(.panel-resize-handle.is-dragging) .top-bar,
+.app:has(.panel-resize-handle.is-dragging) .main-container { transition: none; }

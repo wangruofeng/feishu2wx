@@ -57,7 +57,7 @@ test('organizes settings into five task-based categories and switches visible co
 
   const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
   expect(tabs.map((tab) => tab.textContent.trim())).toEqual([
-    '主题与外观', '文章排版', '内容样式', '编辑体验', '发布与数据',
+    '主题外观', '文章排版', '内容样式', '编辑体验', '发布数据',
   ]);
   expect(tabs.map((tab) => tab.querySelector('svg.settings-category-icon')?.getAttribute('aria-hidden')))
     .toEqual(['true', 'true', 'true', 'true', 'true']);
@@ -65,7 +65,7 @@ test('organizes settings into five task-based categories and switches visible co
   expect(tabs[0].getAttribute('aria-selected')).toBe('true');
   expect(container.querySelector('.settings-category-nav')).not.toBeNull();
   expect(container.querySelector('.settings-category-panel')).not.toBeNull();
-  expect(container.querySelector('[role="tab"][aria-selected="true"]').textContent).toBe('主题与外观');
+  expect(container.querySelector('[role="tab"][aria-selected="true"]').textContent).toBe('主题外观');
   expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('文章外观');
   expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('主题管理'))).toBe(true);
   expect(Array.from(container.querySelectorAll('.settings-group:not([hidden])')).some((group) => group.textContent.includes('H1 底线'))).toBe(false);
@@ -130,8 +130,8 @@ test('keeps all theme controls in settings and orders custom color before preset
 test('keeps settings content scrollable under top tabs', () => {
   const css = fs.readFileSync(path.join(__dirname, 'components/SettingsPanel.css'), 'utf8');
   expect(css).toMatch(/\.settings-panel\s*\{[^}]*grid-template-rows:\s*auto\s+minmax\(0,\s*1fr\)/s);
-  expect(css).toMatch(/\.settings-category-nav\s*\{[^}]*flex-direction:\s*row[^}]*overflow-x:\s*auto/s);
-  expect(css).toMatch(/\.settings-category-nav\s*\{[^}]*height:\s*var\(--top-bar-height\)/s);
+  expect(css).toMatch(/\.settings-category-nav\s*\{[^}]*display:\s*grid/s);
+  expect(css).toContain('@container (max-width: 320px)');
   expect(css).not.toContain('.settings-category-title');
   expect(css).toMatch(/\.settings-group:not\(\[hidden\]\)\s*~\s*\.settings-group:not\(\[hidden\]\)\s*\{[^}]*border-top/s);
   expect(css).not.toMatch(/\.settings-group\s*\{[^}]*border-bottom/s);
@@ -837,4 +837,135 @@ test('shows an invalid-regex error and disables replacement', () => {
 
   expect(container.querySelector('.find-replace-error').textContent).toContain('无效');
   expect(container.querySelector('[aria-label="全部替换"]').disabled).toBe(true);
+});
+
+test('chat token statistics default off and remember the explicit toggle across remounts', async () => {
+  await act(async () => root.render(<App />));
+  await act(async () => { container.querySelector('.settings-trigger').click(); });
+  await act(async () => { Array.from(container.querySelectorAll('[role="tab"]')).find(tab => tab.textContent.includes('编辑体验')).click(); });
+  const toggle = () => container.querySelector('[aria-label="显示聊天 Token 统计"]');
+  expect(toggle().getAttribute('aria-checked')).toBe('false');
+  await act(async () => toggle().click());
+  expect(localStorage.getItem('feishu2wx_showAiTokenUsage')).toBe('true');
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  await act(async () => { container.querySelector('.settings-trigger').click(); });
+  expect(toggle().getAttribute('aria-checked')).toBe('true');
+  await act(async () => toggle().click());
+  expect(localStorage.getItem('feishu2wx_showAiTokenUsage')).toBe('false');
+});
+
+ test('compact category selector switches the same settings content as tabs', async () => {
+  await act(async () => root.render(<App />));
+  await act(async () => container.querySelector('.settings-trigger').click());
+  const select = container.querySelector('#settings-category-select');
+  expect(select.options).toHaveLength(5);
+  await act(async () => {
+    select.value = 'editor';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(container.querySelector('[role="tab"][aria-selected="true"]').textContent).toBe('编辑体验');
+  expect(container.querySelector('.settings-group:not([hidden])').textContent).toContain('编辑设置');
+});
+
+test('opens formatting from the footer and applies to the preserved editor selection', async () => {
+  localStorage.setItem('feishu2wx_markdown', 'hello world');
+  await act(async () => root.render(<App />));
+  expect(container.querySelector('.editor-toolbar')).toBeNull();
+  const editor = container.querySelector('.markdown-editor');
+  const original = editor.value;
+  editor.focus();
+  editor.setSelectionRange(0, 5);
+  const trigger = container.querySelector('[aria-label="格式"]');
+  await act(async () => trigger.click());
+  const popup = container.querySelector('[aria-label="Markdown 格式"]');
+  expect(popup).not.toBeNull();
+  expect(document.activeElement.textContent).toBe('一级标题');
+  await act(async () => {
+    Array.from(popup.querySelectorAll('button')).find(button => button.textContent === '粗体').click();
+    await new Promise(resolve => setTimeout(resolve, 5));
+  });
+  expect(editor.value).toBe(`**${original.slice(0, 5)}**${original.slice(5)}`);
+  expect(document.activeElement).toBe(editor);
+  expect(container.querySelector('[aria-label="Markdown 格式"]')).toBeNull();
+  await act(async () => trigger.click());
+  await act(async () => document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+  expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  expect(document.activeElement).toBe(trigger);
+});
+
+ test.each(['editor', 'preview'])('persists %s workspace mode and restores it after remount', async (mode) => {
+  await act(async () => root.render(<App />));
+  const label = mode === 'editor' ? '仅编辑' : '仅预览';
+  await act(async () => container.querySelector(`[aria-label="${label}"]`).click());
+  expect(localStorage.getItem('feishu2wx_workspaceMode')).toBe(mode);
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(container.querySelector(`[aria-label="${label}"]`).getAttribute('aria-pressed')).toBe('true');
+  expect(container.querySelector('.main-container').classList.contains(mode === 'editor' ? 'preview-hidden' : 'editor-hidden')).toBe(true);
+  await act(async () => container.querySelector(`[aria-label="${label}"]`).click());
+  expect(localStorage.getItem('feishu2wx_workspaceMode')).toBe('split');
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(container.querySelector('.main-container').classList.contains('preview-hidden')).toBe(false);
+  expect(container.querySelector('.main-container').classList.contains('editor-hidden')).toBe(false);
+});
+
+test('invalid saved workspace mode falls back to split view', async () => {
+  localStorage.setItem('feishu2wx_workspaceMode', 'invalid');
+  await act(async () => root.render(<App />));
+  expect(localStorage.getItem('feishu2wx_workspaceMode')).toBe('split');
+  expect(container.querySelector('[aria-label="仅编辑"]').getAttribute('aria-pressed')).toBe('false');
+  expect(container.querySelector('[aria-label="仅预览"]').getAttribute('aria-pressed')).toBe('false');
+});
+
+
+test('remembers AI assistant open and closed state across remounts', async () => {
+  await act(async () => root.render(<App />));
+  const drawer = () => container.querySelector('.ai-chat-drawer');
+  expect(drawer().classList.contains('open')).toBe(false);
+  await act(async () => Array.from(container.querySelectorAll('button')).find(button => button.textContent === 'AI').click());
+  expect(localStorage.getItem('feishu2wx_aiOpen')).toBe('true');
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(drawer().classList.contains('open')).toBe(true);
+  await act(async () => container.querySelector('.ai-chat-header [aria-label="关闭"]').click());
+  expect(localStorage.getItem('feishu2wx_aiOpen')).toBe('false');
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(drawer().classList.contains('open')).toBe(false);
+});
+
+
+test('resizes AI panel by keyboard, clamps the width, and remembers it after remount', async () => {
+  localStorage.setItem('feishu2wx_aiOpen', 'true');
+  await act(async () => root.render(<App />));
+  let handle = container.querySelector('[aria-label="调整 AI 助手宽度"]');
+  handle.parentElement.getBoundingClientRect = () => ({ right: 1200, width: 420 });
+  await act(async () => handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })));
+  expect(localStorage.getItem('feishu2wx_aiPanelWidth')).toBe('436');
+  await act(async () => handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true })));
+  expect(localStorage.getItem('feishu2wx_aiPanelWidth')).toBe('800');
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(container.querySelector('.app').style.getPropertyValue('--ai-preferred-width')).toBe('800px');
+});
+
+test('settings left boundary resizes and remembers its width', async () => {
+  await act(async () => root.render(<App />));
+  await act(async () => container.querySelector('.settings-trigger').click());
+  const handle = container.querySelector('[aria-label="调整设置面板宽度"]');
+  handle.parentElement.getBoundingClientRect = () => ({ right: 1400, width: 420 });
+  await act(async () => handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })));
+  expect(localStorage.getItem('feishu2wx_settingsPanelWidth')).toBe('436');
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(container.querySelector('.app').style.getPropertyValue('--settings-preferred-width')).toBe('436px');
 });

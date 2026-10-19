@@ -13,9 +13,71 @@ import {
   formatAiDuration,
   isSameAiDay,
   streamAiChat,
+  readAiSseStream,
+  fetchAiModels,
 } from './aiChat';
 
+test('reads usage in a final SSE line without newline and split UTF-8 text', async () => {
+  const { TextEncoder, TextDecoder } = require('util');
+  const originalDecoder = global.TextDecoder;
+  global.TextDecoder = TextDecoder;
+  const bytes = new TextEncoder().encode('data: {"type":"delta","text":"你好"}\n\ndata: {"type":"usage","usage":{"inputTokens":7,"outputTokens":2}}');
+  const firstChineseByte = bytes.findIndex((byte) => byte > 127);
+  const reader = {
+    read: jest.fn().mockResolvedValueOnce({ value: bytes.slice(0, firstChineseByte + 1), done: false })
+      .mockResolvedValueOnce({ value: bytes.slice(firstChineseByte + 1), done: false }).mockResolvedValueOnce({ done: true }),
+    cancel: jest.fn().mockResolvedValue(undefined), releaseLock: jest.fn(),
+  };
+  const events = [];
+  try {
+    await readAiSseStream({ body: { getReader: () => reader } }, (event) => events.push(event));
+    expect(events).toEqual([{ type: 'delta', text: '你好' }, { type: 'usage', usage: { inputTokens: 7, outputTokens: 2 } }]);
+    expect(reader.releaseLock).toHaveBeenCalled();
+  } finally { global.TextDecoder = originalDecoder; }
+});
+
+test('token usage round-trips with history and rejects invalid fields', () => {
+  persistAiMessages([{ id: 'usage', role: 'assistant', content: '回答', createdAt: 1,
+    usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120, cacheReadTokens: -1, reasoningTokens: 'invalid' } }]);
+  expect(restoreAiMessages()[0].usage).toEqual({ inputTokens: 100, outputTokens: 20, totalTokens: 120 });
+});
+
+test('model discovery keeps cloud API keys on the server and reports failures', async () => {
+  const originalFetch = global.fetch;
+  const provider = { id: 'google', baseUrl: 'https://api.example.com', apiKey: 'browser-key', apiFormat: 'google-generative-ai' };
+  global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ models: ['gemini'] }) });
+  try {
+    expect(await fetchAiModels(provider, true)).toEqual(['gemini']);
+    expect(JSON.parse(global.fetch.mock.calls[0][1].body)).toEqual({ providerId: 'google' });
+    await fetchAiModels(provider, false);
+    expect(JSON.parse(global.fetch.mock.calls[1][1].body).provider.apiKey).toBe('browser-key');
+    global.fetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: '请检查 API Key' }) });
+    await expect(fetchAiModels(provider, false)).rejects.toThrow('请检查 API Key');
+  } finally { global.fetch = originalFetch; }
+});
+
 describe('createAiStreamParser', () => {
+  test('emits short reply chunks immediately and holds only a possible article marker prefix', () => {
+    const replies = [];
+    const parser = createAiStreamParser((text) => replies.push(text), () => {});
+    parser.push('你好');
+    expect(replies).toEqual(['你好']);
+    parser.push('。<<<AR');
+    expect(replies[replies.length - 1]).toBe('你好。');
+    parser.push('TICLE\n# 修改稿\nARTICLE>>>');
+    expect(parser.finish()).toEqual({ replyText: '你好。', articleText: '# 修改稿', sawEndMarker: true });
+  });
+
+  test('releases a buffered prefix immediately when it is ordinary text', () => {
+    const replies = [];
+    const parser = createAiStreamParser((text) => replies.push(text), () => {});
+    parser.push('<');
+    expect(replies).toEqual([]);
+    parser.push('p>');
+    expect(replies).toEqual(['<p>']);
+    expect(parser.finish().replyText).toBe('<p>');
+  });
+
   test('splits reply and article on whole markers', () => {
     const replies = [];
     let articleDeltas = 0;

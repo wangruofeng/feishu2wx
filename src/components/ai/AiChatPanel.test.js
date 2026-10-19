@@ -37,6 +37,7 @@ afterEach(() => {
   act(() => root.unmount());
   container.remove();
   global.fetch = originalFetch;
+  jest.useRealTimers();
 });
 
 test('keeps API Key input after the cloud save response omits the key', async () => {
@@ -65,4 +66,28 @@ test('keeps API Key input after the cloud save response omits the key', async ()
 
   expect(fields[1].value).toBe('sk-test-key');
   expect(global.fetch.mock.calls.filter(([, options]) => options?.method === 'PUT')).toHaveLength(1);
+});
+
+test('flushes the latest cloud configuration before model discovery and waits for the save', async () => {
+  jest.useFakeTimers();
+  let finishSave;
+  const provider = { id: 'google', name: 'Google', enabled: true, baseUrl: 'https://old.example.com/v1beta',
+    apiFormat: 'google-generative-ai', hasApiKey: true, models: [{ id: 'gemini-test' }] };
+  global.fetch = jest.fn((url, options = {}) => {
+    if (String(url).endsWith('/api/auth/session')) return Promise.resolve({ ok: true, json: async () => ({ user: { login: 'octo' } }) });
+    if (options.method === 'PUT') return new Promise((resolve) => { finishSave = () => resolve({ ok: true, json: async () => ({}) }); });
+    if (String(url).endsWith('/api/ai/models')) return Promise.resolve({ ok: true, json: async () => ({ models: ['gemini-new'] }) });
+    return Promise.resolve({ ok: true, json: async () => ({ activeProviderId: 'google', activeModelId: 'gemini-test', providers: [provider] }) });
+  });
+  await act(async () => root.render(<AiChatPanel open onClose={() => {}} markdown="# 当前文章" onApplyArticle={() => {}} />));
+  await act(async () => container.querySelector('[aria-label="模型设置"]').click());
+  await act(async () => changeInput(document.querySelector('.ai-ps-field input'), 'https://latest.example.com/v1beta'));
+  await act(async () => Array.from(document.querySelectorAll('button')).find(button => button.textContent === '获取模型列表').click());
+  const writes = global.fetch.mock.calls.filter(([, options]) => options?.method === 'PUT');
+  expect(writes).toHaveLength(1);
+  expect(JSON.parse(writes[0][1].body).providers[0].baseUrl).toBe('https://latest.example.com/v1beta');
+  expect(global.fetch.mock.calls.some(([url]) => String(url).endsWith('/api/ai/models'))).toBe(false);
+  await act(async () => finishSave());
+  expect(global.fetch.mock.calls.some(([url]) => String(url).endsWith('/api/ai/models'))).toBe(true);
+  expect(document.querySelector('.ai-ps-catalog [role="status"]').textContent).toContain('新增 1 个');
 });

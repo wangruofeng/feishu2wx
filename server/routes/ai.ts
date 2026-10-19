@@ -1,7 +1,17 @@
 import { Router, Request, Response } from 'express';
 import { handleAiChat } from '../lib/ai-handler';
+import { handleAiModels } from '../lib/ai-models-handler';
 
 const router = Router();
+
+router.post('/models', async (req: Request, res: Response) => {
+  const controller = new AbortController();
+  res.on('close', () => { if (!res.writableEnded) controller.abort(); });
+  const response = await handleAiModels(req.body, { signal: controller.signal, allowPrivateHosts: process.env.NODE_ENV === 'development' });
+  res.status(response.status);
+  response.headers.forEach((value, key) => res.setHeader(key, value));
+  res.send(await response.text());
+});
 
 // POST /api/ai/chat — SSE 流式转发
 router.post('/chat', async (req: Request, res: Response) => {
@@ -12,7 +22,7 @@ router.post('/chat', async (req: Request, res: Response) => {
     if (!res.writableEnded) clientAbort.abort();
   });
 
-  const response = await handleAiChat(req.body, { signal: clientAbort.signal });
+  const response = await handleAiChat(req.body, { signal: clientAbort.signal, allowPrivateHosts: process.env.NODE_ENV === 'development' });
   res.status(response.status);
   response.headers.forEach((value, key) => res.setHeader(key, value));
   if (!response.ok || !response.body) {

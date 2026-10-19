@@ -1,3 +1,4 @@
+import { confirmAction } from './ui/ConfirmDialog';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { DocHistoryEntry, loadDocHistory, removeDocHistory, clearDocHistory } from '../utils/docHistory';
@@ -52,14 +53,15 @@ const DocHistoryPopover: React.FC<Props> = ({ open, position, anchorRef, onClose
     return () => document.removeEventListener('mousedown', handler);
   }, [open, anchorRef, onClose]);
 
-  const handleRemove = useCallback((id: string) => {
+  const handleRemove = useCallback(async (id: string) => {
+    if (!await confirmAction('确定删除这篇历史文档吗？删除后无法恢复。')) return;
     const rest = removeDocHistory(id);
     setEntries(rest);
     onCountChange(rest.length);
   }, [onCountChange]);
 
-  const handleClear = useCallback(() => {
-    if (window.confirm('确定要清空全部历史文档吗？')) {
+  const handleClear = useCallback(async () => {
+    if (await confirmAction('确定要清空全部历史文档吗？')) {
       clearDocHistory();
       setEntries([]);
       onCountChange(0);

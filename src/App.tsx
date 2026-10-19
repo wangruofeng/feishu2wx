@@ -114,7 +114,11 @@ const App: React.FC = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [exportMenuOpen, setExportMenuOpen] = useState<boolean>(false);
   const exportAnchorRef = useRef<HTMLButtonElement | null>(null);
-  const [workspaceMode, setWorkspaceMode] = useState<'split' | 'editor' | 'preview'>('split');
+  const [workspaceMode, setWorkspaceMode] = useState<'split' | 'editor' | 'preview'>(() => {
+    const saved = localStorage.getItem('feishu2wx_workspaceMode');
+    return saved === 'editor' || saved === 'preview' ? saved : 'split';
+  });
+  useEffect(() => { localStorage.setItem('feishu2wx_workspaceMode', workspaceMode); }, [workspaceMode]);
   const [font, setFont] = useState<string>(savedFont);
   const [shouldConvertPastedHtml, setShouldConvertPastedHtml] = useState<boolean>(savedShouldConvertPastedHtml);
   const [isSystemDark, setIsSystemDark] = useState<boolean>(false);
@@ -158,7 +162,19 @@ const App: React.FC = () => {
     window.history.replaceState(null, '', window.location.pathname);
     return true;
   });
-  const [aiOpen, setAiOpen] = useState<boolean>(aiLoginReturn);
+  const [aiOpen, setAiOpen] = useState<boolean>(() => aiLoginReturn || localStorage.getItem('feishu2wx_aiOpen') === 'true');
+  useEffect(() => { localStorage.setItem('feishu2wx_aiOpen', String(aiOpen)); }, [aiOpen]);
+  const [showAiTokenUsage, setShowAiTokenUsage] = useState(() => localStorage.getItem('feishu2wx_showAiTokenUsage') === 'true');
+  const [settingsPanelWidth, setSettingsPanelWidth] = useState(() => {
+    const saved = Number(localStorage.getItem('feishu2wx_settingsPanelWidth'));
+    return Number.isFinite(saved) && saved >= 240 && saved <= 800 ? saved : 420;
+  });
+  useEffect(() => { localStorage.setItem('feishu2wx_settingsPanelWidth', String(settingsPanelWidth)); }, [settingsPanelWidth]);
+  const [aiPanelWidth, setAiPanelWidth] = useState(() => {
+    const saved = Number(localStorage.getItem('feishu2wx_aiPanelWidth'));
+    return Number.isFinite(saved) && saved >= 240 && saved <= 800 ? saved : 420;
+  });
+  useEffect(() => { localStorage.setItem('feishu2wx_aiPanelWidth', String(aiPanelWidth)); }, [aiPanelWidth]);
   const [aiPanelMode, setAiPanelMode] = useState<'drawer' | 'sidebar'>(savedAiPanelMode);
   const editorPaneRef = useRef<EditorPaneHandle>(null);
   const [shortcutsOpen, setShortcutsOpen] = useState<boolean>(false);
@@ -225,6 +241,7 @@ const App: React.FC = () => {
 
   useEffect(() => { localStorage.setItem('feishu2wx_darkMode', darkMode); }, [darkMode]);
   useEffect(() => { localStorage.setItem('feishu2wx_syntaxTheme', syntaxTheme); }, [syntaxTheme]);
+  useEffect(() => { localStorage.setItem('feishu2wx_showAiTokenUsage', String(showAiTokenUsage)); }, [showAiTokenUsage]);
   useEffect(() => { localStorage.setItem('feishu2wx_aiPanelMode', aiPanelMode); }, [aiPanelMode]);
 
   // 文章首/尾固定模板：预览、复制、推送均基于组合后的 Markdown，编辑器仍只编辑正文
@@ -521,7 +538,7 @@ const App: React.FC = () => {
       invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode,
       blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate,
       showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode,
-      syntaxTheme, aiPanelMode,
+      syntaxTheme, aiPanelMode, showAiTokenUsage,
     };
     const url = URL.createObjectURL(new Blob([createSettingsBackup(backup)], { type: 'application/json' }));
     const link = document.createElement('a');
@@ -530,7 +547,7 @@ const App: React.FC = () => {
     // 合成 click 不冒泡，避免被「点击外部关闭」类浮层误判为用户交互
     link.dispatchEvent(new MouseEvent('click', { bubbles: false }));
     URL.revokeObjectURL(url);
-  }, [theme, customThemeColor, font, shouldConvertPastedHtml, codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate, showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode, syntaxTheme, aiPanelMode]);
+  }, [theme, customThemeColor, font, shouldConvertPastedHtml, codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate, showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode, syntaxTheme, aiPanelMode, showAiTokenUsage]);
 
   const handleImportSettings = useCallback(async (file: File) => {
     const result = parseSettingsBackup(await file.text());
@@ -564,6 +581,7 @@ const App: React.FC = () => {
     if (settings.markerHighlightColor) setMarkerHighlightColor(settings.markerHighlightColor);
     if (settings.darkMode) setDarkMode(settings.darkMode);
     if (settings.syntaxTheme) setSyntaxTheme(settings.syntaxTheme);
+    if (typeof settings.showAiTokenUsage === 'boolean') setShowAiTokenUsage(settings.showAiTokenUsage);
     if (settings.aiPanelMode) setAiPanelMode(settings.aiPanelMode);
     return { success: true };
   }, []);
@@ -669,7 +687,7 @@ const App: React.FC = () => {
   return (
     <div
       className={`app theme-${displayTheme}${isDark ? ' theme-dark' : ''}${aiSidebarOpen ? ' ai-sidebar-open' : ''}${settingsSidebarOpen ? ' settings-sidebar-open' : ''}`}
-      style={customThemeVars}
+      style={{ ...customThemeVars, '--ai-preferred-width': `${aiPanelWidth}px`, '--settings-preferred-width': `${settingsPanelWidth}px` } as React.CSSProperties}
     >
       {/* 顶栏 */}
       <div className="top-bar">
@@ -689,6 +707,9 @@ const App: React.FC = () => {
         <div className="top-bar-right">
           <a className="top-bar-help-link" href={`${process.env.PUBLIC_URL}/about/`} target="_blank" rel="noopener noreferrer">关于</a>
           <SettingsPanel
+            panelWidth={settingsPanelWidth}
+            onWidthChange={setSettingsPanelWidth}
+            aiSidebarOpen={aiSidebarOpen}
             font={font}
             setFont={setFont}
             shouldConvertPastedHtml={shouldConvertPastedHtml}
@@ -753,6 +774,8 @@ const App: React.FC = () => {
             onDarkModeChange={setDarkMode}
             syntaxTheme={syntaxTheme}
             onChangeSyntaxTheme={setSyntaxTheme}
+            showAiTokenUsage={showAiTokenUsage}
+            onChangeShowAiTokenUsage={() => setShowAiTokenUsage(value => !value)}
             aiPanelMode={aiPanelMode}
             onChangeAiPanelMode={setAiPanelMode}
             customThemeColor={customThemeColor}
@@ -943,6 +966,9 @@ const App: React.FC = () => {
         open={aiOpen}
         onClose={() => setAiOpen(false)}
         mode={aiPanelMode}
+        panelWidth={aiPanelWidth}
+        onWidthChange={setAiPanelWidth}
+        showTokenUsage={showAiTokenUsage}
         markdown={markdown}
         onApplyArticle={handleApplyAiArticle}
         autoOpenSettings={aiLoginReturn}

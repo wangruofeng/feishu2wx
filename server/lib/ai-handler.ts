@@ -1,7 +1,9 @@
 import { jsonResponse } from './config-handlers';
+import { TokenUsageAccumulator, type AiTokenUsage } from './ai-token-usage';
+export type { AiTokenUsage } from './ai-token-usage';
 
 // AI 聊天代理：把浏览器请求转发到用户自带的多供应商 LLM API（BYOK），
-// 上游 SSE 归一化为 {"type":"reasoning"|"delta"|"error"} 事件流。
+// 上游 SSE 归一化为 reasoning / delta / usage / error 事件流。
 // 供应商配置由前端 localStorage 持有并随请求体传入，服务端不存储任何 Key。
 
 const MAX_HISTORY_MESSAGES = 20;
@@ -14,17 +16,38 @@ const MAX_ATTACHMENT_NAME_CHARS = 120;
 const MAX_ATTACHMENT_CONTENT_CHARS = 100_000;
 const MAX_ATTACHMENT_TOTAL_CHARS = 200_000;
 // 阻止把上游指向内网/元数据地址（SSRF 防护）
-const BLOCKED_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]', '::1', '169.254.169.254']);
+function isPrivateHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/\.$/, '').replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+  const ipv4 = host.split('.').map(Number);
+  if (ipv4.length === 4 && ipv4.every(part => Number.isInteger(part) && part >= 0 && part <= 255)) {
+    const [a, b] = ipv4;
+    return a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) ||
+      (a === 198 && (b === 18 || b === 19));
+  }
+  if (!host.includes(':')) return false;
+  // URL 会把 IPv4-mapped IPv6 归一化为十六进制，如 ::ffff:7f00:1。
+  const mapped = host.match(/^::ffff:([\da-f]{1,4}):([\da-f]{1,4})$/);
+  if (mapped) {
+    const upper = parseInt(mapped[1], 16);
+    const lower = parseInt(mapped[2], 16);
+    return isPrivateHost(`${upper >> 8}.${upper & 255}.${lower >> 8}.${lower & 255}`);
+  }
+  return host === '::' || host === '::1' || /^(?:fc|fd|ff)/.test(host) || /^fe[89ab]/.test(host);
+}
 
 export const ARTICLE_START_MARKER = '<<<ARTICLE';
 export const ARTICLE_END_MARKER = 'ARTICLE>>>';
 
-export type AiApiFormat = 'anthropic' | 'chat-completions' | 'responses';
+export type AiApiFormat = 'anthropic' | 'chat-completions' | 'responses' | 'google-generative-ai';
 
 export const AI_FORMATS: { id: AiApiFormat; label: string; path: string }[] = [
   { id: 'anthropic', label: 'Anthropic Messages (/v1/messages)', path: '/v1/messages' },
   { id: 'chat-completions', label: 'Chat Completions (/chat/completions)', path: '/chat/completions' },
   { id: 'responses', label: 'Responses (/responses)', path: '/responses' },
+  { id: 'google-generative-ai', label: 'Google Generative AI', path: '/v1beta' },
 ];
 
 const FORMAT_IDS = new Set<string>(AI_FORMATS.map((format) => format.id));
@@ -60,16 +83,41 @@ export interface AiChatRequestBody {
 }
 
 export interface AiSseEvent {
-  type: 'reasoning' | 'delta' | 'error';
+  type: 'reasoning' | 'delta' | 'usage' | 'error';
   text?: string;
   message?: string;
+  usage?: AiTokenUsage;
 }
 
-export function resolveUpstreamUrl(baseUrl: string, apiFormat: AiApiFormat): string {
+export function isLoopbackUpstream(baseUrl: string): boolean {
+  return ['localhost', '127.0.0.1', '[::1]'].includes(new URL(baseUrl).hostname);
+}
+
+export function resolveUpstreamUrl(baseUrl: string, apiFormat: AiApiFormat, modelId = ''): string {
   const base = String(baseUrl ?? '').replace(/\/+$/, '');
+  if (apiFormat === 'google-generative-ai') {
+    const url = new URL(base);
+    url.pathname = url.pathname.replace(/\/+$/, '');
+    const model = encodeURIComponent(modelId.replace(/^models\//, ''));
+    const endpoint = /\/models\/[^/]+:streamGenerateContent$/;
+    if (endpoint.test(url.pathname)) {
+      url.pathname = url.pathname.replace(endpoint, `/models/${model}:streamGenerateContent`);
+    } else {
+      const root = url.pathname.replace(/\/+$/, '') || '/v1beta';
+      url.pathname = `${root}/models/${model}:streamGenerateContent`;
+    }
+    url.searchParams.set('alt', 'sse');
+    return url.toString();
+  }
   const format = AI_FORMATS.find((item) => item.id === apiFormat) ?? AI_FORMATS[1];
   if (!base) return format.path;
+  // 本地 OpenAI 兼容代理根地址默认使用 /v1，与模型目录保持一致。
+  if (isLoopbackUpstream(base) && new URL(base).pathname === '/'
+    && ['chat-completions', 'responses'].includes(apiFormat)) {
+    return `${base}/v1${format.path}`;
+  }
   if (base.endsWith(format.path)) return base;
+  if (apiFormat === 'anthropic' && base.endsWith('/v1')) return `${base}/messages`;
   return `${base}${format.path}`;
 }
 
@@ -89,7 +137,7 @@ export function buildUpstreamRequest({ provider, modelId, systemPrompt, messages
   messages: AiUpstreamMessage[];
 }): { url: string; apiFormat: AiApiFormat; headers: Record<string, string>; bodyJson: string } {
   const apiFormat = inferApiFormat(provider.baseUrl, provider.apiFormat);
-  const url = resolveUpstreamUrl(provider.baseUrl, apiFormat);
+  const url = resolveUpstreamUrl(provider.baseUrl, apiFormat, modelId);
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   const formatted = messages.map((message) => ({
     role: message.role,
@@ -99,7 +147,18 @@ export function buildUpstreamRequest({ provider, modelId, systemPrompt, messages
   }));
 
   let body: Record<string, unknown>;
-  if (apiFormat === 'anthropic') {
+  if (apiFormat === 'google-generative-ai') {
+    headers['x-goog-api-key'] = provider.apiKey;
+    if (new URL(provider.baseUrl).hostname !== 'generativelanguage.googleapis.com') headers.Authorization = `Bearer ${provider.apiKey}`;
+    body = {
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: formatted.map(message => ({
+        role: message.role === 'assistant' ? 'model' : 'user',
+        parts: typeof message.content === 'string' ? [{ text: message.content }] : message.content,
+      })),
+      generationConfig: { temperature: 0.3, maxOutputTokens: 16384 },
+    };
+  } else if (apiFormat === 'anthropic') {
     headers.Authorization = `Bearer ${provider.apiKey}`;
     headers['x-api-key'] = provider.apiKey;
     headers['anthropic-version'] = '2023-06-01';
@@ -127,6 +186,7 @@ export function buildUpstreamRequest({ provider, modelId, systemPrompt, messages
       model: modelId,
       messages: [{ role: 'system', content: systemPrompt }, ...formatted],
       stream: true,
+      stream_options: { include_usage: true },
       temperature: 0.3,
       max_tokens: 16384,
     };
@@ -135,6 +195,20 @@ export function buildUpstreamRequest({ provider, modelId, systemPrompt, messages
 }
 
 function extractFormatEvents(payload: any, apiFormat: AiApiFormat): AiSseEvent[] {
+  if (apiFormat === 'google-generative-ai') {
+    const candidate = payload.candidates?.[0];
+    const blocked = payload.promptFeedback?.blockReason;
+    if (blocked) return [{ type: 'error', message: `Google 拒绝了此次请求：${blocked}。请调整提示词或附件后重试。` }];
+    const events: AiSseEvent[] = [];
+    for (const part of candidate?.content?.parts ?? []) {
+      if (typeof part.text === 'string' && part.text) events.push({ type: part.thought ? 'reasoning' : 'delta', text: part.text });
+    }
+    const reason = candidate?.finishReason;
+    if (reason && !['STOP', 'MAX_TOKENS', 'FINISH_REASON_UNSPECIFIED'].includes(reason)) {
+      events.push({ type: 'error', message: `Google 未能完成回答：${reason}。请调整提示词或附件后重试。` });
+    }
+    return events;
+  }
   if (apiFormat === 'anthropic') {
     if (payload.type !== 'content_block_delta' || !payload.delta) return [];
     if (payload.delta.type === 'thinking_delta' && payload.delta.thinking) {
@@ -171,16 +245,26 @@ function extractFormatEvents(payload: any, apiFormat: AiApiFormat): AiSseEvent[]
   return events;
 }
 
+function detectPayloadFormat(payload: any, fallback: AiApiFormat): AiApiFormat {
+  if (payload?.usageMetadata || Array.isArray(payload?.candidates) || payload?.promptFeedback) return 'google-generative-ai';
+  const type = String(payload?.type ?? '');
+  if (type.startsWith('response.') || payload?.response?.usage) return 'responses';
+  if (/^(?:message_start|message_delta|message_stop|content_block_start|content_block_delta|content_block_stop)$/.test(type)) return 'anthropic';
+  if (Array.isArray(payload?.choices) || payload?.usage?.prompt_tokens !== undefined || payload?.usage?.completion_tokens !== undefined) return 'chat-completions';
+  // 裸 input_tokens / output_tokens 在 Anthropic 与 Responses 中含义不同，沿用该流已识别的协议。
+  return fallback;
+}
+
 export function extractUpstreamEvents(payload: any, apiFormat: AiApiFormat): AiSseEvent[] {
   if (!payload || typeof payload !== 'object') return [];
   const errorMessage = payload.error?.message ?? (typeof payload.error === 'string' ? payload.error : '');
   if (errorMessage) return [{ type: 'error', message: errorMessage }];
 
-  const preferred: AiApiFormat = FORMAT_IDS.has(apiFormat) ? apiFormat : 'chat-completions';
+  const preferred = detectPayloadFormat(payload, FORMAT_IDS.has(apiFormat) ? apiFormat : 'chat-completions');
   const events = extractFormatEvents(payload, preferred);
   if (events.length) return events;
-  // 声明格式与实际不符时自动回退尝试其他两种
-  for (const format of ['chat-completions', 'anthropic', 'responses'] as AiApiFormat[]) {
+  // 兼容声明格式与实际事件结构不一致的供应商。
+  for (const format of AI_FORMATS.map(format => format.id)) {
     if (format === preferred) continue;
     const fallback = extractFormatEvents(payload, format);
     if (fallback.length) return fallback;
@@ -250,7 +334,7 @@ export function normalizeAiAttachments(raw: unknown): AiUpstreamTextAttachment[]
   return attachments;
 }
 
-// 附件以「文件名 + 围栏代码块」拼进用户文本：不依赖模型多模态能力，三种 API 格式通用。
+// 附件以「文件名 + 围栏代码块」拼进用户文本：不依赖模型多模态能力，所有 API 格式通用。
 // 围栏长度取内容中最长反引号串 +1（至少 3），避免附件里的代码块截断外层围栏。
 const ATTACHMENT_LANGUAGES: Record<string, string> = {
   md: 'markdown', markdown: 'markdown', json: 'json', csv: 'csv', tsv: 'csv',
@@ -294,6 +378,9 @@ export function toUpstreamUserContent(
   // 文本附件本质是文本上下文。仅有文本时保持字符串，兼容只接受 string content 的
   // Chat Completions 兼容服务；只有图片需要各协议的多模态 content blocks。
   if (!images.length) return fullText;
+  if (apiFormat === 'google-generative-ai') {
+    return [{ text: fullText }, ...images.map(image => ({ inlineData: { mimeType: image.mimeType, data: image.data } }))];
+  }
   if (apiFormat === 'anthropic') {
     return [
       ...images.map((image) => ({
@@ -353,7 +440,7 @@ function parseAiMessages(rawMessages: unknown): { error: string } | { messages: 
   return { messages };
 }
 
-function validateProvider(raw: unknown): { error: string } | { provider: AiProviderConfig } {
+export function validateProvider(raw: unknown, opts: { allowPrivateHosts?: boolean } = {}): { error: string } | { provider: AiProviderConfig } {
   const provider = raw as any;
   if (!provider || typeof provider !== 'object') {
     return { error: 'provider is required.' };
@@ -372,13 +459,16 @@ function validateProvider(raw: unknown): { error: string } | { provider: AiProvi
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return { error: 'Base URL 仅支持 HTTP 或 HTTPS。' };
   }
-  if (BLOCKED_HOSTS.has(parsed.hostname) || BLOCKED_HOSTS.has(parsed.host)) {
+  if (parsed.username || parsed.password) {
+    return { error: 'Base URL 不能包含用户名或密码。' };
+  }
+  if (!opts.allowPrivateHosts && isPrivateHost(parsed.hostname)) {
     return { error: 'Base URL 不允许指向本地或内网地址。' };
   }
   return { provider: { baseUrl, apiKey, apiFormat: provider.apiFormat } };
 }
 
-export function parseAiChatBody(raw: unknown): { error: string; status: number } | { body: AiChatRequestBody } {
+export function parseAiChatBody(raw: unknown, opts: { allowPrivateHosts?: boolean } = {}): { error: string; status: number } | { body: AiChatRequestBody } {
   const payload = raw as any;
   if (!payload || typeof payload !== 'object') {
     return { error: 'Invalid JSON body.', status: 400 };
@@ -388,7 +478,7 @@ export function parseAiChatBody(raw: unknown): { error: string; status: number }
   }
   const parsed = parseAiMessages(payload.messages);
   if ('error' in parsed) return { error: parsed.error, status: 400 };
-  const providerResult = validateProvider(payload.provider);
+  const providerResult = validateProvider(payload.provider, opts);
   if ('error' in providerResult) return { error: providerResult.error, status: 400 };
   const modelId = String(payload.modelId ?? '').trim();
   if (!modelId) {
@@ -409,9 +499,9 @@ export function createAiChatHandler(options: { fetchUpstream?: typeof fetch } = 
 
   return async function handleAiChat(
     rawBody: unknown,
-    opts: { signal?: AbortSignal } = {}
+    opts: { signal?: AbortSignal; allowPrivateHosts?: boolean } = {}
   ): Promise<Response> {
-    const parsed = parseAiChatBody(rawBody);
+    const parsed = parseAiChatBody(rawBody, opts);
     if ('error' in parsed) return jsonResponse({ error: parsed.error }, parsed.status);
 
     const { source, messages, provider, modelId } = parsed.body;
@@ -428,6 +518,7 @@ export function createAiChatHandler(options: { fetchUpstream?: typeof fetch } = 
         method: 'POST',
         headers: upstreamRequest.headers,
         body: upstreamRequest.bodyJson,
+        redirect: 'manual',
         signal: opts.signal ?? AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       });
     } catch (error) {
@@ -464,33 +555,48 @@ export function createAiChatHandler(options: { fetchUpstream?: typeof fetch } = 
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
         let buffer = '';
         let finished = false;
-        let emitted = 0;
+        let emittedText = false;
+        let emittedError = false;
+        let streamFormat = upstreamRequest.apiFormat;
+        const usageParsers = new Map<AiApiFormat, TokenUsageAccumulator>();
+        const processLine = (line: string) => {
+          const data = line.replace(/\r$/, '').trim();
+          if (!data.startsWith('data:')) return;
+          const json = data.slice(5).trim();
+          if (json === '[DONE]') { finished = true; return; }
+          let payload: unknown;
+          try { payload = JSON.parse(json); } catch { return; }
+          streamFormat = detectPayloadFormat(payload, streamFormat);
+          let tokenUsage = usageParsers.get(streamFormat);
+          if (!tokenUsage) {
+            tokenUsage = new TokenUsageAccumulator(streamFormat);
+            usageParsers.set(streamFormat, tokenUsage);
+          }
+          const usage = tokenUsage.inspect(payload);
+          for (const event of extractUpstreamEvents(payload, streamFormat)) {
+            sendEvent(event);
+            if (event.type === 'delta' && event.text) emittedText = true;
+            if (event.type === 'error') emittedError = true;
+          }
+          if (usage) sendEvent({ type: 'usage', usage });
+        };
         try {
           while (!finished) {
             const { done, value } = await upstreamReader.read();
-            if (done) break;
+            if (done) {
+              buffer += decoder.decode();
+              if (buffer.trim()) processLine(buffer);
+              break;
+            }
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
             buffer = lines.pop() ?? '';
             for (const line of lines) {
-              const data = line.replace(/\r$/, '').trim();
-              if (!data.startsWith('data:')) continue;
-              const json = data.slice(5).trim();
-              if (json === '[DONE]') {
-                finished = true;
-                break;
-              }
-              try {
-                for (const event of extractUpstreamEvents(JSON.parse(json), upstreamRequest.apiFormat)) {
-                  sendEvent(event);
-                  emitted += 1;
-                }
-              } catch {
-                // 跳过不完整的事件行
-              }
+              processLine(line);
+              if (finished) break;
             }
           }
-          if (emitted === 0) {
+          if (!emittedText && !emittedError) {
             sendEvent({
               type: 'error',
               message: '模型没有返回文本。请核对模型 ID，以及 API 格式是否与 Base URL 匹配（例如 open.bigmodel.cn/api/anthropic 应选 Anthropic Messages）。',

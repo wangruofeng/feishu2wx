@@ -1,3 +1,4 @@
+import { confirmAction } from './ui/ConfirmDialog';
 import React, { useState } from 'react';
 import { Button } from './ui';
 import './WechatConfigDialog.css';
@@ -38,7 +39,7 @@ const WechatConfigDialog: React.FC<Props> = ({ open, configured, onClose, onSave
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('确定要清除公众号配置吗？')) return;
+    if (!await confirmAction('确定要清除公众号配置吗？')) return;
     setDeleting(true);
     await onDelete();
     setDeleting(false);

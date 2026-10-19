@@ -2,6 +2,9 @@
 // SSE 流读取、<<<ARTICLE 标记状态机解析、后端代理请求封装。
 
 import { API_BASE } from './apiBase';
+import { normalizeAiTokenUsage } from './aiTokenUsage';
+import type { AiTokenUsage } from './aiTokenUsage';
+export type { AiTokenUsage } from './aiTokenUsage';
 
 export const AI_START_MARKER = '<<<ARTICLE';
 export const AI_END_MARKER = 'ARTICLE>>>';
@@ -36,12 +39,18 @@ export interface AiChatMessage {
   reasoning?: string;
   /** 本轮生成耗时（毫秒），完成后写入，响应卡片元信息行展示 */
   durationMs?: number;
+  /** 生成时的来源快照，不跟随供应商配置变化。 */
+  providerId?: string;
+  providerName?: string;
+  modelId?: string;
+  interrupted?: boolean;
+  usage?: AiTokenUsage;
   error?: boolean;
   truncated?: boolean;
   createdAt: number;
 }
 
-export type AiApiFormat = 'anthropic' | 'chat-completions' | 'responses';
+export type AiApiFormat = 'anthropic' | 'chat-completions' | 'responses' | 'google-generative-ai';
 
 export interface AiProvider {
   id: string;
@@ -50,6 +59,7 @@ export interface AiProvider {
   baseUrl: string;
   apiFormat: AiApiFormat;
   apiKey: string;
+  hasApiKey?: boolean;
   models: { id: string }[];
 }
 
@@ -62,9 +72,10 @@ export interface AiProviderSettings {
 export interface AiCloudUser { login: string; avatarUrl: string; }
 
 export interface AiSseEvent {
-  type: 'reasoning' | 'delta' | 'error';
+  type: 'reasoning' | 'delta' | 'error' | 'usage';
   text?: string;
   message?: string;
+  usage?: AiTokenUsage;
 }
 
 export interface AiChatHistoryMessage {
@@ -73,7 +84,7 @@ export interface AiChatHistoryMessage {
   attachments?: AiTextAttachment[];
 }
 
-const FORMAT_IDS = new Set<string>(['anthropic', 'chat-completions', 'responses']);
+const FORMAT_IDS = new Set<string>(['anthropic', 'chat-completions', 'responses', 'google-generative-ai']);
 
 export function newAiId(): string {
   return globalThis.crypto?.randomUUID?.()
@@ -108,6 +119,7 @@ function normalizeProvider(raw: any, fallbackId = ''): AiProvider | null {
     baseUrl: String(raw.baseUrl ?? '').trim(),
     apiFormat: FORMAT_IDS.has(raw.apiFormat) ? raw.apiFormat : 'chat-completions',
     apiKey: String(raw.apiKey ?? ''),
+    ...(raw.hasApiKey === true ? { hasApiKey: true } : {}),
     models: normalizeModels(raw.models),
   };
 }
@@ -184,6 +196,22 @@ export async function saveAiCloudSettings(settings: AiProviderSettings): Promise
 
 export async function logoutAiCloudSession(): Promise<void> { await fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', credentials: 'same-origin' }); }
 
+export async function fetchAiModels(provider: AiProvider, cloud: boolean, signal?: AbortSignal): Promise<string[]> {
+  const response = await fetch(`${API_BASE}/api/ai/models`, {
+    method: 'POST', credentials: 'same-origin', signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cloud ? { providerId: provider.id } : {
+      provider: { baseUrl: provider.baseUrl, apiKey: provider.apiKey, apiFormat: provider.apiFormat },
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || '无法获取模型列表，请检查供应商配置。');
+  if (!Array.isArray(data.models) || !data.models.every((id: unknown) => typeof id === 'string')) {
+    throw new Error('模型列表格式无效。');
+  }
+  return data.models;
+}
+
 export function getActiveModelId(settings: AiProviderSettings): string | null {
   const provider = settings.providers.find((item) => item.id === settings.activeProviderId);
   if (!provider) return null;
@@ -221,32 +249,42 @@ export function persistAiMessages(messages: AiChatMessage[]): void {
 export function restoreAiMessages(): AiChatMessage[] {
   try {
     const raw = JSON.parse(localStorage.getItem(MESSAGES_KEY) ?? '[]');
-    if (!Array.isArray(raw)) return [];
-      return raw
-      .filter((item: any) => item && (item.role === 'user' || item.role === 'assistant'))
-      .map((item: any) => ({
-        id: String(item.id ?? newAiId()),
-        role: item.role,
-        content: String(item.content ?? ''),
-        article: typeof item.article === 'string' ? item.article : undefined,
-        requestSource: typeof item.requestSource === 'string' ? item.requestSource : undefined,
-        reasoning: typeof item.reasoning === 'string' ? item.reasoning : undefined,
-        durationMs: typeof item.durationMs === 'number' ? item.durationMs : undefined,
-        error: item.error === true,
-        truncated: item.truncated === true,
-        attachments: Array.isArray(item.attachments)
-          ? (item.attachments as any[]).map((file) => ({
-            name: String(file?.name ?? ''),
-            size: Number(file?.size) || 0,
-            content: String(file?.content ?? ''),
-          }))
-          : undefined,
-        createdAt: Number(item.createdAt) || 0,
-      }));
+    return normalizeAiMessages(raw);
   } catch {
     return [];
   }
 }
+
+export function normalizeAiMessages(raw: unknown): AiChatMessage[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item: any) => item && (item.role === 'user' || item.role === 'assistant'))
+    .map((item: any) => ({
+      id: String(item.id ?? newAiId()),
+      role: item.role,
+      content: String(item.content ?? ''),
+      article: typeof item.article === 'string' ? item.article : undefined,
+      requestSource: typeof item.requestSource === 'string' ? item.requestSource : undefined,
+      reasoning: typeof item.reasoning === 'string' ? item.reasoning : undefined,
+      providerId: typeof item.providerId === 'string' ? item.providerId : undefined,
+      providerName: typeof item.providerName === 'string' ? item.providerName : undefined,
+      modelId: typeof item.modelId === 'string' ? item.modelId : undefined,
+      interrupted: item.interrupted === true,
+      durationMs: typeof item.durationMs === 'number' ? item.durationMs : undefined,
+      usage: normalizeAiTokenUsage(item.usage),
+      error: item.error === true,
+      truncated: item.truncated === true,
+      attachments: Array.isArray(item.attachments)
+        ? (item.attachments as any[]).map((file) => ({
+          name: String(file?.name ?? ''),
+          size: Number(file?.size) || 0,
+          content: String(file?.content ?? ''),
+        }))
+        : undefined,
+      createdAt: Number(item.createdAt) || 0,
+    }));
+}
+
 
 // ---- 消息时间展示 ----
 
@@ -327,23 +365,32 @@ export async function readAiSseStream(response: Response, onEvent: (event: AiSse
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-    for (const line of lines) {
-      const data = line.trim();
-      if (!data.startsWith('data:')) continue;
-      const json = data.slice(5).trim();
-      if (json === '[DONE]') return;
-      try {
-        onEvent(JSON.parse(json));
-      } catch {
-        // 跳过不完整的事件行
+  const consume = (line: string): boolean => {
+    const data = line.trim();
+    if (!data.startsWith('data:')) return false;
+    const json = data.slice(5).trim();
+    if (json === '[DONE]') return true;
+    let event: AiSseEvent;
+    try { event = JSON.parse(json); } catch { return false; }
+    if (!event || typeof event !== 'object') return false;
+    onEvent(event);
+    return false;
+  };
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        consume(buffer + decoder.decode());
+        return;
       }
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) if (consume(line)) return;
     }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
   }
 }
 
@@ -381,8 +428,11 @@ export function createAiStreamParser(
             onArticleDelta();
             continue;
           }
-          // 缓冲末尾可能是被拆分的标记前缀，留到下一个 chunk 再判断
-          const keepLength = Math.min(buffer.length, AI_START_MARKER.length - 1);
+          // 只暂存真正匹配标记前缀的后缀，普通短回复无需等够 10 个字符。
+          let keepLength = Math.min(buffer.length, AI_START_MARKER.length - 1);
+          while (keepLength > 0 && !AI_START_MARKER.startsWith(buffer.slice(-keepLength))) {
+            keepLength -= 1;
+          }
           const safeLength = buffer.length - keepLength;
           if (safeLength > 0) {
             replyText += buffer.slice(0, safeLength);

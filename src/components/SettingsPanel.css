@@ -12,7 +12,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  width: 420px;
+  container-type: inline-size;
+  width: var(--workspace-sidebar-width, 420px);
   height: 100vh;
   max-width: 100vw;
   max-height: none;
@@ -42,23 +43,47 @@
 
 /* ========== 一级分类导航 ========== */
 
-/* 分类导航栏与顶栏等高，设置侧栏展开时两者连成一排 */
-.settings-category-nav {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-1);
-  height: var(--top-bar-height);
-  padding: 0 var(--space-3);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  background: var(--color-bg-subtle);
+/* 分类按面板宽度自动换行，避免横向滚动隐藏入口。 */
+.settings-category-header {
   border-bottom: 1px solid var(--color-border-primary);
+  background: var(--color-bg-white);
 }
 
-.settings-category-nav::-webkit-scrollbar {
+.settings-category-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+
+.settings-category-compact {
   display: none;
+  padding: var(--space-4);
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+.settings-category-compact label { flex-shrink: 0; }
+.settings-category-compact select {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding-left: var(--space-3);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-white);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+.settings-category-compact select:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+@container (max-width: 320px) {
+  .settings-category-nav { display: none; }
+  .settings-category-compact { display: flex; }
 }
 
 .settings-category-tab {
@@ -66,8 +91,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  width: auto;
-  min-width: max-content;
+  justify-content: center;
+  min-width: 0;
+  white-space: nowrap;
   min-height: 36px;
   padding: var(--space-2) var(--space-3);
   border: none;
@@ -111,10 +137,6 @@
 }
 
 @media (max-width: 768px) {
-  .settings-category-nav {
-    height: var(--top-bar-height-mobile);
-  }
-
   .settings-category-panel {
     padding: var(--space-5);
   }
@@ -509,11 +531,17 @@
 .saved-theme-current-mark {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: var(--space-1);
+  vertical-align: middle;
   margin-left: var(--space-2);
   color: var(--color-brand);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+}
+
+.saved-theme-check-icon {
+  display: block;
+  flex-shrink: 0;
 }
 
 .saved-theme-actions {

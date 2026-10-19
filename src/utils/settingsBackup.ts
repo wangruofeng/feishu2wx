@@ -27,6 +27,7 @@ export interface SettingsBackup {
   markerHighlightColor: 'purple' | 'yellow' | 'green' | 'blue' | 'pink';
   darkMode: 'system' | 'light' | 'dark';
   syntaxTheme: 'github' | 'dracula' | 'monokai' | 'none';
+  showAiTokenUsage?: boolean;
   aiPanelMode: 'drawer' | 'sidebar';
 }
 
@@ -49,7 +50,7 @@ const enumValues: Record<string, readonly string[]> = {
 const booleanFields = new Set([
   'shouldConvertPastedHtml', 'imageBorderRadius', 'showH1Underline', 'invertH1', 'alignH1Left',
   'invertH2', 'alignH2Left', 'showH2Underline', 'showHorizontalRule', 'showFrontMatter', 'tableShadow',
-  'showHeaderTemplate', 'showFooterTemplate', 'wechatLinkAutoAdapt',
+  'showHeaderTemplate', 'showFooterTemplate', 'wechatLinkAutoAdapt', 'showAiTokenUsage',
 ]);
 
 const stringFields = new Set(['customThemeColor', 'font', 'headerTemplate', 'footerTemplate']);
@@ -62,7 +63,7 @@ const themeFields = new Set([
 ]);
 const editorFields = new Set([
   'customThemeColor', 'shouldConvertPastedHtml', 'showFrontMatter', 'showHeaderTemplate',
-  'showFooterTemplate', 'darkMode', 'syntaxTheme', 'aiPanelMode',
+  'showFooterTemplate', 'darkMode', 'syntaxTheme', 'aiPanelMode', 'showAiTokenUsage',
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

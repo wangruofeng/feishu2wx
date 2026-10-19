@@ -37,6 +37,8 @@ npm run dev
 
 同时启动 CRA 开发服务器（端口 3100）和 Express 后端（端口 3101），CRA 通过 `src/setupProxy.js` 将 `/api` 请求代理到后端。适合开发推送草稿箱等需要后端的功能。
 
+本地 `npm run dev` / `npm run server` 将 Express 后端设为开发模式，AI 聊天和模型目录的 Base URL 允许使用 localhost、回环地址及内网地址（例如 `http://127.0.0.1:11434/v1`）。生产模式和 Cloudflare Pages 继续禁止这些地址；HTTP/HTTPS、凭证等其他校验保持生效。
+
 ### 前后端同时启动（Cloudflare Pages 本地模拟）
 
 ```bash
@@ -66,6 +68,13 @@ npm run cf:dev
 - `src/App.test.js`：应用级渲染与交互测试（含查找替换、保存主题等组件行为）。
 - `src/setupProxy.test.js`：开发代理配置测试。
 - `src/components/ai/*.test.js`：AI 面板组件测试（AiChatPanel、AiMessageBubble）。
+- AI 回复的围栏代码块和缩进代码块右上角提供「复制」按钮，仅复制该块的纯文本并保留缩进、换行；流式更新时复制当前内容，成功和失败均提供文字反馈。按钮工具栏独立于代码滚动区域，并支持键盘操作与深色主题。
+- AI 首段等待期间显示「正在回复」与三点提示，收到正文、推理或修改稿后切换至对应内容，避免空白小气泡；流式解析仅缓冲可能的 `<<<ARTICLE` 前缀，普通短回复即时显示。
+- AI 模型迁移工具位于 `src/utils/aiProviderConfig.ts` 与 `AiProviderTransfer.tsx`，Google / 其他三协议目录由 `server/lib/ai-models-handler.ts` 提供，Node 与 Pages 共用；Pages 的聊天和目录请求共用 `functions/lib/ai-request.ts` 的来源、体积和用户凭证校验。目录获取前需刷新云端待保存配置。
+- 「获取模型列表」位于模型卡片上方；`src/index.css` 统一单选下拉箭头的 12px 右侧留白及 36px 文字避让区域，模型等自定义下拉触发器同步留白。
+- Token 流事件为 `{ type: 'usage', usage: { inputTokens?, outputTokens?, totalTokens?, cacheReadTokens?, cacheWriteTokens?, reasoningTokens? } }`。`server/lib/ai-token-usage.ts` 按累计快照更新，Anthropic 输入包含缓存、Google 输出包含推理；前端 `AiTokenUsage.tsx` 仅在两项齐全时推导缺失总计，统计不与缓存/推理重复相加。
+- 回复底部 Token 入口使用 `formatCompactTokenCount()` 按十进制缩写为 K / M / B / T，保留一位小数并省略末尾 `.0`（1000 → 1K，1万 → 10K，100万 → 1M）；悬停和展开明细仍显示精确数字。
+- AI 后端测试：`TS_NODE_PROJECT=server/tsconfig.json node -r ts-node/register --test server/lib/ai-handler.test.ts server/lib/ai-token-usage.test.ts server/lib/ai-models-handler.test.ts`；发布前运行 `npm run build` 与 `npm run cf:check`。
 - `functions/lib/*.test.ts`：Cloudflare Functions 库测试，用 `npx tsx --test` 运行，不在 jest 套件内。
 - `scripts/start-script.test.mjs`：启动脚本约束测试（node:test），不在 jest 套件内，需手动 `node --test scripts/start-script.test.mjs` 运行。
 - `scripts/about-motion.test.mjs`：关于页 FAQ 动画的展开/收起、快速反向、减少动态效果、无动画 API 与窗口缩放降级（node:test），运行 `node --test scripts/about-motion.test.mjs`。
@@ -161,3 +170,9 @@ git commit --no-verify -m "message"
   3. 如有需要，同步更新文档。
   4. 运行 `npm run pre-commit-check`。
   5. 提交代码。
+
+### 本地 AI 代理模型目录
+
+参考 A2Make 的目录适配，本地代理（localhost / 127.0.0.1 / IPv6 回环）使用 Chat Completions 或 Responses 协议且仅填写根地址时，模型目录自动请求 `/v1/models`；填写 `/v1` 或完整聊天接口地址也支持。Anthropic / Google 协议保留各自目录路径和原生鉴权，并附带 Bearer 鉴权以兼容本地代理；目录支持返回 OpenAI 格式的 `data` 列表。Google Base URL 也可填写目录地址或完整的 `generateContent` / `streamGenerateContent` 地址。
+
+本地 OpenAI 兼容代理仅填写根地址时，聊天同样自动使用 `/v1/chat/completions` 或 `/v1/responses`，与模型目录的 `/v1/models` 保持一致；显式版本路径、自定义前缀及完整接口地址沿用配置。

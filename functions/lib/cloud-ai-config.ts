@@ -1,7 +1,7 @@
 import { decryptConfig, encryptConfig, type EncryptedValue } from './auth-crypto';
 import type { PagesAuthEnv } from './auth';
 
-export interface CloudProvider { id: string; name: string; enabled: boolean; baseUrl: string; apiFormat: 'anthropic' | 'chat-completions' | 'responses'; apiKey: string; models: { id: string }[]; }
+export interface CloudProvider { id: string; name: string; enabled: boolean; baseUrl: string; apiFormat: 'anthropic' | 'chat-completions' | 'responses' | 'google-generative-ai'; apiKey: string; models: { id: string }[]; }
 export interface CloudConfig { activeProviderId: string | null; activeModelId: string | null; providers: CloudProvider[]; }
 const keyFor = (userId: string) => `ai-config:v1:${userId}`;
 
@@ -24,7 +24,7 @@ export function mergeConfig(existing: CloudConfig, incoming: CloudConfig): Cloud
   const providers = incoming.providers.slice(0, 20).map((provider) => ({
     ...provider,
     id: String(provider.id ?? '').slice(0, 80), name: String(provider.name ?? '').slice(0, 120), baseUrl: String(provider.baseUrl ?? '').slice(0, 500),
-    apiKey: String(provider.apiKey ?? '') || oldKeys.get(provider.id) || '', models: Array.isArray(provider.models) ? provider.models.slice(0, 30).map((model) => ({ id: String(model?.id ?? '').slice(0, 160) })) : [],
+    apiKey: String(provider.apiKey ?? '') || oldKeys.get(provider.id) || '', models: Array.isArray(provider.models) ? provider.models.slice(0, 1000).map((model) => ({ id: String(model?.id ?? '').slice(0, 160) })) : [],
   })).filter((provider) => provider.id);
   return { activeProviderId: providers.some((provider) => provider.id === incoming.activeProviderId) ? incoming.activeProviderId : providers[0]?.id ?? null, activeModelId: String(incoming.activeModelId ?? '') || null, providers };
 }

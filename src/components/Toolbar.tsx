@@ -1,3 +1,4 @@
+import { confirmAction } from './ui/ConfirmDialog';
 import React from 'react';
 import { CodeBlockStyle } from '../utils/markdownRenderer';
 import { Button } from './ui';
@@ -22,8 +23,8 @@ interface Props {
 }
 
 const Toolbar: React.FC<Props> = ({ markdown, setMarkdown, onCopyToWeChat, isCopying, showH1Underline, onToggleH1Underline, invertH1, onToggleInvertH1, imageBorderStyle, onToggleImageBorder, codeBlockStyle, onToggleCodeBlockStyle, showHorizontalRule, onToggleHorizontalRule }) => {
-  const handleClear = () => {
-    if (window.confirm('确定要清空所有内容吗？')) {
+  const handleClear = async () => {
+    if (await confirmAction('确定要清空所有内容吗？')) {
       setMarkdown('');
     }
   };
