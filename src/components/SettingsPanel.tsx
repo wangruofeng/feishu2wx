@@ -76,6 +76,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   wechatConfigured: boolean;
+  wechatLinkFootnotes: boolean;
+  onToggleWechatLinkFootnotes: () => void;
   wechatLinkAutoAdapt: boolean;
   onToggleWechatLinkAutoAdapt: () => void;
   onSaveWechatConfig: (appId: string, appSecret: string) => Promise<{ success: boolean; error?: string }>;
@@ -236,6 +238,8 @@ const SettingsPanel: React.FC<Props> = ({
   isOpen,
   onClose,
   wechatConfigured,
+  wechatLinkFootnotes,
+  onToggleWechatLinkFootnotes,
   wechatLinkAutoAdapt,
   onToggleWechatLinkAutoAdapt,
   onSaveWechatConfig,
@@ -884,6 +888,12 @@ const SettingsPanel: React.FC<Props> = ({
           checked={wechatLinkAutoAdapt}
           onClick={onToggleWechatLinkAutoAdapt}
         />
+        <ToggleSwitch
+          label="链接转文末注脚"
+          checked={wechatLinkFootnotes}
+          onClick={onToggleWechatLinkFootnotes}
+        />
+        <p className="settings-row-hint">开启后正文保留编号，网址集中到文末，优先于链接自动适配。适用于预览、复制、导出和草稿推送。</p>
         <div className="settings-config-row">
           <div className="settings-config-info">
             <span className="settings-config-name">草稿箱推送</span>

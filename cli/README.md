@@ -342,6 +342,27 @@ npm run cli -- publish article.md --title "文章标题" --digest "自定义摘�
 
 未配置 `description` 且未传 `--digest` 时，摘要留空。
 
+## 链接转文末注脚
+
+默认关闭。单次发布或渲染时加 `--link-footnotes`，正文保留链接文字和上标编号，完整网址统一放到文末「参考资料」。重复网址复用编号，裸网址在正文只显示编号，代码和图片保持原样，源 Markdown 不变。
+
+```bash
+npm run cli -- publish article.md --title "文章标题" --cover cover.jpg --link-footnotes
+npm run cli -- render article.md --link-footnotes --out article.html
+```
+
+设置后续命令的默认行为：
+
+```bash
+npm run cli -- wechat-link footnotes on
+npm run cli -- wechat-link status
+npm run cli -- wechat-link footnotes off
+```
+
+配置保存在用户级 `~/.feishu2wx/config.json` 的 `wechatLinkFootnotes` 布尔字段；单次 `--link-footnotes` / `--no-link-footnotes` 优先于保存的配置。注脚模式优先于 `wechatLinkAutoAdapt` 的正文网址展开行为；关闭注脚模式后继续沿用原有设置。
+
+已有 Markdown 注脚会保留并参与编号，新增链接接着编号；已有注脚中的相同网址可复用。内部锚点和非 HTTP(S) 链接不收录为来源。
+
 ## 常用测试命令
 
 CLI 单元测试：

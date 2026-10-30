@@ -75,7 +75,9 @@ function renderWechatHtml(markdown, config) {
     config.blockquoteBackgroundMode,
     config.textAlignMode,
     config.wechatLinkAutoAdapt !== false,
-    config.markerHighlightColor
+    config.markerHighlightColor,
+    undefined,
+    config.wechatLinkFootnotes === true
   );
 }
 

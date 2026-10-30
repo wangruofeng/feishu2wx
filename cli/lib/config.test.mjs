@@ -288,3 +288,17 @@ test('mergeThemeOptions prefers blockquoteBackgroundMode over legacy showBlockqu
   assert.equal(theme.blockquoteBackgroundMode, 'theme');
   assert.equal(theme.showBlockquoteBg, true);
 });
+
+
+test('link footnotes default off and persist independently of inline adaptation', () => {
+  const { loadConfig, saveWechatLinkFootnotes } = require('./config.cjs');
+  const configPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'feishu2wx-footnotes-')), 'config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ wechatLinkAutoAdapt: false, author: '作者' }));
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkFootnotes, false);
+  saveWechatLinkFootnotes(configPath, true);
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkFootnotes, true);
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkAutoAdapt, false);
+  assert.equal(loadConfig({ configPath, env: {} }).author, '作者');
+  saveWechatLinkFootnotes(configPath, false);
+  assert.equal(loadConfig({ configPath, env: {} }).wechatLinkFootnotes, false);
+});

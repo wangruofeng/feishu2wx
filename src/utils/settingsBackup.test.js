@@ -78,3 +78,14 @@ test('rejects malformed or unsupported settings backups', () => {
   expect(parseSettingsBackup(JSON.stringify({ version: 3, settings }))).toEqual({ error: '不支持的配置文件版本。' });
   expect(parseSettingsBackup(JSON.stringify({ version: 1, theme: { darkMode: 'midnight' } }))).toEqual({ error: '配置字段 darkMode 无效。' });
 });
+
+
+test('link footnotes round-trip through the CLI-compatible backup without changing older backups', () => {
+  const json = createSettingsBackup({ ...settings, wechatLinkFootnotes: true });
+  expect(JSON.parse(json).wechatLinkFootnotes).toBe(true);
+  expect(parseSettingsBackup(json).settings.wechatLinkFootnotes).toBe(true);
+  const older = JSON.parse(json);
+  delete older.wechatLinkFootnotes;
+  expect(parseSettingsBackup(JSON.stringify(older)).settings.wechatLinkFootnotes).toBeUndefined();
+  expect(parseSettingsBackup(JSON.stringify({ ...older, wechatLinkFootnotes: 'on' })).error).toContain('wechatLinkFootnotes');
+});

@@ -1,3 +1,4 @@
+import { convertLinksToFootnotes } from './utils/linkFootnotes';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import EditorPane from './components/EditorPane';
 import type { EditorPaneHandle } from './components/EditorPane';
@@ -93,6 +94,7 @@ const App: React.FC = () => {
   const savedFooterTemplate = localStorage.getItem('feishu2wx_footerTemplate') || '';
   const savedShowHeaderTemplate = localStorage.getItem('feishu2wx_showHeaderTemplate') !== 'false';
   const savedShowFooterTemplate = localStorage.getItem('feishu2wx_showFooterTemplate') !== 'false';
+  const savedWechatLinkFootnotes = localStorage.getItem('feishu2wx_wechatLinkFootnotes') === 'true';
   const savedWechatLinkAutoAdapt = localStorage.getItem('feishu2wx_wechatLinkAutoAdapt') !== 'false';
   const savedMarkerHighlightColorValue = localStorage.getItem('feishu2wx_markerHighlightColor');
   const savedMarkerHighlightColor: MarkerHighlightColor = isMarkerHighlightColor(savedMarkerHighlightColorValue)
@@ -142,6 +144,7 @@ const App: React.FC = () => {
   const [footerTemplate, setFooterTemplate] = useState<string>(savedFooterTemplate);
   const [showHeaderTemplate, setShowHeaderTemplate] = useState<boolean>(savedShowHeaderTemplate);
   const [showFooterTemplate, setShowFooterTemplate] = useState<boolean>(savedShowFooterTemplate);
+  const [wechatLinkFootnotes, setWechatLinkFootnotes] = useState<boolean>(savedWechatLinkFootnotes);
   const [wechatLinkAutoAdapt, setWechatLinkAutoAdapt] = useState<boolean>(savedWechatLinkAutoAdapt);
   const [markerHighlightColor, setMarkerHighlightColor] = useState<MarkerHighlightColor>(savedMarkerHighlightColor);
   const [savedThemes, setSavedThemes] = useState<SavedArticleTheme[]>(() => loadSavedThemes());
@@ -254,6 +257,8 @@ const App: React.FC = () => {
       .join('\n\n');
   }, [headerTemplate, markdown, footerTemplate, showHeaderTemplate, showFooterTemplate]);
 
+  const previewHtml = useMemo(() => wechatLinkFootnotes ? convertLinksToFootnotes(html) : html, [html, wechatLinkFootnotes]);
+
   // 标题优先取 front matter 的 title 字段，其次从正文（raw markdown）首个 H1 提取
   const articleTitle = useMemo(() => {
     const fmTitle = getFrontMatterField(markdown, 'title');
@@ -346,6 +351,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('feishu2wx_footerTemplate', footerTemplate); }, [footerTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_showHeaderTemplate', String(showHeaderTemplate)); }, [showHeaderTemplate]);
   useEffect(() => { localStorage.setItem('feishu2wx_showFooterTemplate', String(showFooterTemplate)); }, [showFooterTemplate]);
+  useEffect(() => { localStorage.setItem('feishu2wx_wechatLinkFootnotes', String(wechatLinkFootnotes)); }, [wechatLinkFootnotes]);
   useEffect(() => { localStorage.setItem('feishu2wx_wechatLinkAutoAdapt', String(wechatLinkAutoAdapt)); }, [wechatLinkAutoAdapt]);
   useEffect(() => { localStorage.setItem('feishu2wx_markerHighlightColor', markerHighlightColor); }, [markerHighlightColor]);
 
@@ -537,7 +543,7 @@ const App: React.FC = () => {
       codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left,
       invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode,
       blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate,
-      showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode,
+      showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, wechatLinkFootnotes, markerHighlightColor, darkMode,
       syntaxTheme, aiPanelMode, showAiTokenUsage,
     };
     const url = URL.createObjectURL(new Blob([createSettingsBackup(backup)], { type: 'application/json' }));
@@ -547,7 +553,7 @@ const App: React.FC = () => {
     // 合成 click 不冒泡，避免被「点击外部关闭」类浮层误判为用户交互
     link.dispatchEvent(new MouseEvent('click', { bubbles: false }));
     URL.revokeObjectURL(url);
-  }, [theme, customThemeColor, font, shouldConvertPastedHtml, codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate, showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, markerHighlightColor, darkMode, syntaxTheme, aiPanelMode, showAiTokenUsage]);
+  }, [theme, customThemeColor, font, shouldConvertPastedHtml, codeBlockStyle, imageBorderStyle, imageBorderRadius, showH1Underline, invertH1, alignH1Left, invertH2, alignH2Left, showH2Underline, showHorizontalRule, showFrontMatter, tableShadow, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, headerTemplate, footerTemplate, showHeaderTemplate, showFooterTemplate, wechatLinkAutoAdapt, wechatLinkFootnotes, markerHighlightColor, darkMode, syntaxTheme, aiPanelMode, showAiTokenUsage]);
 
   const handleImportSettings = useCallback(async (file: File) => {
     const result = parseSettingsBackup(await file.text());
@@ -577,6 +583,7 @@ const App: React.FC = () => {
     if (settings.footerTemplate !== undefined) setFooterTemplate(settings.footerTemplate);
     if (settings.showHeaderTemplate !== undefined) setShowHeaderTemplate(settings.showHeaderTemplate);
     if (settings.showFooterTemplate !== undefined) setShowFooterTemplate(settings.showFooterTemplate);
+    if (settings.wechatLinkFootnotes !== undefined) setWechatLinkFootnotes(settings.wechatLinkFootnotes);
     if (settings.wechatLinkAutoAdapt !== undefined) setWechatLinkAutoAdapt(settings.wechatLinkAutoAdapt);
     if (settings.markerHighlightColor) setMarkerHighlightColor(settings.markerHighlightColor);
     if (settings.darkMode) setDarkMode(settings.darkMode);
@@ -608,7 +615,7 @@ const App: React.FC = () => {
 
       let result;
       if (hasValidSelection) {
-        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
+        result = await copySelectedToWeChat(wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme, wechatLinkFootnotes);
       } else {
         if (!html.trim()) {
           setCopyStatus({
@@ -619,7 +626,7 @@ const App: React.FC = () => {
           setIsCopying(false);
           return;
         }
-        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
+        result = await copyHtmlToWeChat(html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme, wechatLinkFootnotes);
       }
 
       setCopyStatus({
@@ -637,7 +644,7 @@ const App: React.FC = () => {
     } finally {
       setIsCopying(false);
     }
-  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme]);
+  }, [html, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, wechatLinkFootnotes, markerHighlightColor, syntaxTheme]);
 
   const handleExport = useCallback(async (format: ExportFormat) => {
     if (!html.trim()) {
@@ -653,7 +660,7 @@ const App: React.FC = () => {
         return;
       }
       const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
+      const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme, wechatLinkFootnotes);
       if (format === 'html') {
         exportHtmlToFile(formatted, `${filename}.html`);
         setCopyStatus({ visible: true, message: '导出成功，文件已开始下载', isError: false });
@@ -667,7 +674,7 @@ const App: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
-  }, [html, composedMarkdown, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme]);
+  }, [html, composedMarkdown, articleTitle, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode, blockquoteColorMode, blockquoteHeightMode, textAlignMode, wechatLinkAutoAdapt, wechatLinkFootnotes, markerHighlightColor, syntaxTheme]);
 
   const handleLoadExample = useCallback(() => {
     setMarkdown(exampleMd);
@@ -759,6 +766,8 @@ const App: React.FC = () => {
             isOpen={settingsOpen}
             onClose={() => setSettingsOpen(false)}
             wechatConfigured={wechatConfigured}
+            wechatLinkFootnotes={wechatLinkFootnotes}
+            onToggleWechatLinkFootnotes={() => setWechatLinkFootnotes(value => !value)}
             wechatLinkAutoAdapt={wechatLinkAutoAdapt}
             onToggleWechatLinkAutoAdapt={() => setWechatLinkAutoAdapt(!wechatLinkAutoAdapt)}
             onSaveWechatConfig={async (appId: string, appSecret: string) => {
@@ -856,7 +865,7 @@ const App: React.FC = () => {
             className="keep-settings-open"
             onClick={async () => {
               const htmlWithRasterizedSvg = await convertSvgImagesToPng(html);
-              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme);
+              const formatted = formatForWeChat(htmlWithRasterizedSvg, wechatTheme, font, showH1Underline, imageBorderStyle, imageBorderRadius, codeBlockStyle, invertH1, invertH2, alignH2Left, showH2Underline, blockquoteBackgroundMode !== 'none', blockquoteColorMode, blockquoteHeightMode, blockquoteBackgroundMode, textAlignMode, wechatLinkAutoAdapt, markerHighlightColor, syntaxTheme, wechatLinkFootnotes);
               setPublishHtml(formatted);
               setPublishOpen(true);
             }}
@@ -880,7 +889,7 @@ const App: React.FC = () => {
           syntaxTheme={syntaxTheme}
         />
         <PreviewPane
-          html={html}
+          html={previewHtml}
           font={font}
           showH1Underline={showH1Underline}
           invertH1={invertH1}

@@ -20,6 +20,7 @@ const {
   saveThemeConfig,
   saveWechatConfig,
   saveWechatLinkAutoAdapt,
+  saveWechatLinkFootnotes,
 } = require('./lib/config.cjs');
 const { writeClipboard } = require('./lib/clipboard.cjs');
 const { readMarkdownInput, writeOutputFile } = require('./lib/io.cjs');
@@ -308,10 +309,20 @@ async function main() {
       process.stdout.write(value === 'on' ? '公众号链接自动适配已开启\n' : '公众号链接自动适配已关闭\n');
     });
 
+  link.command('footnotes <on|off>')
+    .description('设置默认链接注脚模式，正文保留编号，网址集中到文末')
+    .action((value) => {
+      if (value !== 'on' && value !== 'off') {
+        throw new Error('取值只能是 on 或 off');
+      }
+      saveWechatLinkFootnotes(resolveActiveConfigPath(program.opts()), value === 'on');
+      process.stdout.write(value === 'on' ? '链接注脚模式已开启\n' : '链接注脚模式已关闭\n');
+    });
+
   link.command('status')
     .action(() => {
       const config = loadConfig({ configPath: resolveActiveConfigPath(program.opts()) });
-      printJson({ wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
+      printJson({ wechatLinkAutoAdapt: config.wechatLinkAutoAdapt, wechatLinkFootnotes: config.wechatLinkFootnotes });
     });
 
   addThemeOptions(program.command('render [file]')
@@ -320,6 +331,8 @@ async function main() {
     .option('--out <file>', '导出 HTML 文件')
     .option('--preview', '生成临时文件并打开预览')
     .option('--no-footer', '不追加固定结尾文案')
+    .option('--link-footnotes', '将正文链接整理为文末编号注脚')
+    .option('--no-link-footnotes', '关闭链接注脚模式，覆盖默认配置')
     .option('--no-header', '不注入固定开头文案'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
@@ -334,7 +347,7 @@ async function main() {
         options.footer === false ? undefined : config.footer
       );
       const themeConfig = resolveThemeConfig({ ...program.opts(), ...options });
-      let html = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
+      let html = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt, wechatLinkFootnotes: options.linkFootnotes ?? config.wechatLinkFootnotes });
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
       html = inlineLocalImages(html, baseDir);
 
@@ -366,6 +379,8 @@ async function main() {
     .option('--digest <digest>', '文章摘要，默认自动从 Markdown frontmatter 的 description 字段提取')
     .option('--cover <file>', '封面图片文件')
     .option('--no-footer', '不追加固定结尾文案')
+    .option('--link-footnotes', '将正文链接整理为文末编号注脚')
+    .option('--no-link-footnotes', '关闭链接注脚模式，覆盖默认配置')
     .option('--no-header', '不注入固定开头文案'))
     .addHelpText('after', THEME_HELP_TEXT)
     .action(async (file, options) => {
@@ -384,7 +399,7 @@ async function main() {
         options.footer === false ? undefined : config.footer
       );
       const themeConfig = resolveThemeConfig({ ...program.opts(), ...options });
-      const content = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt });
+      const content = renderWechatHtml(markdownWithFooter, { ...themeConfig, wechatLinkAutoAdapt: config.wechatLinkAutoAdapt, wechatLinkFootnotes: options.linkFootnotes ?? config.wechatLinkFootnotes });
       const baseDir = file ? path.resolve(path.dirname(file)) : process.cwd();
       // readMarkdownInput 会剥离 frontmatter，自动提取摘要需基于原始文件内容
       const rawMarkdown = file ? fs.readFileSync(path.resolve(file), 'utf8') : markdown;

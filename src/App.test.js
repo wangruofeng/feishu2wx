@@ -969,3 +969,29 @@ test('settings left boundary resizes and remembers its width', async () => {
   await act(async () => root.render(<App />));
   expect(container.querySelector('.app').style.getPropertyValue('--settings-preferred-width')).toBe('436px');
 });
+
+
+test('publishing settings expose a persistent link footnotes switch and preview without editing Markdown', async () => {
+  const markdown = '[官方资料](https://example.com/report)';
+  localStorage.setItem('feishu2wx_markdown', markdown);
+  await act(async () => root.render(<App />));
+  await act(async () => container.querySelector('.settings-trigger').click());
+  await act(async () => Array.from(container.querySelectorAll('[role="tab"]')).find(tab => tab.textContent.includes('发布数据')).click());
+  const toggle = () => container.querySelector('[aria-label="链接转文末注脚"]');
+  expect(toggle().getAttribute('aria-checked')).toBe('false');
+  expect(container.querySelector('.preview-content .footnotes')).toBeNull();
+  await act(async () => toggle().click());
+  expect(toggle().getAttribute('aria-checked')).toBe('true');
+  expect(localStorage.getItem('feishu2wx_wechatLinkFootnotes')).toBe('true');
+  expect(container.querySelector('.preview-content .footnote-ref').textContent).toBe('[1]');
+  expect(container.querySelector('.preview-content .footnotes').textContent).toContain('https://example.com/report');
+  expect(localStorage.getItem('feishu2wx_markdown')).toBe(markdown);
+  await act(async () => root.unmount());
+  root = ReactDOM.createRoot(container);
+  await act(async () => root.render(<App />));
+  expect(container.querySelector('.preview-content .footnotes')).not.toBeNull();
+  await act(async () => container.querySelector('.settings-trigger').click());
+  await act(async () => toggle().click());
+  expect(localStorage.getItem('feishu2wx_wechatLinkFootnotes')).toBe('false');
+  expect(container.querySelector('.preview-content .footnotes')).toBeNull();
+});

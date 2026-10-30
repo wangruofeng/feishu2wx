@@ -126,6 +126,7 @@ function loadConfig(options = {}) {
     footer: typeof saved.footer === 'string' && saved.footer ? saved.footer : undefined,
     header: typeof saved.header === 'string' && saved.header ? saved.header : undefined,
     wechatLinkAutoAdapt: saved.wechatLinkAutoAdapt !== false,
+    wechatLinkFootnotes: saved.wechatLinkFootnotes === true,
   };
 }
 
@@ -190,6 +191,14 @@ function saveWechatLinkAutoAdapt(configPath, enabled) {
   writeConfigFile(configPath, {
     ...saved,
     wechatLinkAutoAdapt: Boolean(enabled),
+  });
+}
+
+function saveWechatLinkFootnotes(configPath, enabled) {
+  const saved = readConfigFile(configPath);
+  writeConfigFile(configPath, {
+    ...saved,
+    wechatLinkFootnotes: Boolean(enabled),
   });
 }
 
@@ -296,6 +305,7 @@ module.exports = {
   saveHeaderConfig,
   clearHeaderConfig,
   saveWechatLinkAutoAdapt,
+  saveWechatLinkFootnotes,
   saveThemeConfig,
   saveWechatConfig,
 };

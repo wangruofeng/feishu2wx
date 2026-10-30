@@ -24,6 +24,7 @@ export interface SettingsBackup {
   showHeaderTemplate: boolean;
   showFooterTemplate: boolean;
   wechatLinkAutoAdapt: boolean;
+  wechatLinkFootnotes: boolean;
   markerHighlightColor: 'purple' | 'yellow' | 'green' | 'blue' | 'pink';
   darkMode: 'system' | 'light' | 'dark';
   syntaxTheme: 'github' | 'dracula' | 'monokai' | 'none';
@@ -50,7 +51,7 @@ const enumValues: Record<string, readonly string[]> = {
 const booleanFields = new Set([
   'shouldConvertPastedHtml', 'imageBorderRadius', 'showH1Underline', 'invertH1', 'alignH1Left',
   'invertH2', 'alignH2Left', 'showH2Underline', 'showHorizontalRule', 'showFrontMatter', 'tableShadow',
-  'showHeaderTemplate', 'showFooterTemplate', 'wechatLinkAutoAdapt', 'showAiTokenUsage',
+  'showHeaderTemplate', 'showFooterTemplate', 'wechatLinkAutoAdapt', 'wechatLinkFootnotes', 'showAiTokenUsage',
 ]);
 
 const stringFields = new Set(['customThemeColor', 'font', 'headerTemplate', 'footerTemplate']);
@@ -81,6 +82,7 @@ export function createSettingsBackup(settings: SettingsBackup): string {
     header: safeSettings.headerTemplate,
     footer: safeSettings.footerTemplate,
     wechatLinkAutoAdapt: safeSettings.wechatLinkAutoAdapt,
+    wechatLinkFootnotes: safeSettings.wechatLinkFootnotes,
   }, null, 2);
 }
 
@@ -118,6 +120,7 @@ export function parseSettingsBackup(json: string): { settings: Partial<SettingsB
     ...(isRecord(parsed.editor) ? parsed.editor : {}),
     ...(parsed.header === undefined ? {} : { headerTemplate: parsed.header }),
     ...(parsed.footer === undefined ? {} : { footerTemplate: parsed.footer }),
+    ...(parsed.wechatLinkFootnotes === undefined ? {} : { wechatLinkFootnotes: parsed.wechatLinkFootnotes }),
     ...(parsed.wechatLinkAutoAdapt === undefined ? {} : { wechatLinkAutoAdapt: parsed.wechatLinkAutoAdapt }),
   });
 }
